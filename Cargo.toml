@@ -1,6 +1,19 @@
+[workspace]
+members = ["route_router", "route_derive", "route_contract"]
+resolver = "2"
+
+
 [package]
-name = "router-rs"
-version = "0.1.0"
+name = "route"
 edition = "2021"
 
 [dependencies]
+route_router = {path = "./route_router", version = "0.1.0"}
+route_derive = {path = "./route_derive", version = "0.1.0"}
+route_contract = {path = "./route_contract", version = "0.1.0"}
+
+tokio = { version = "1.38.0", features = ["full"] }
+hyper = { version = "1", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+http-body-util = "0.1"
+dyn-clone = "1.0.17"
