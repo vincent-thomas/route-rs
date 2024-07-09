@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 pub mod method;
-pub mod respondable;
+pub mod response;
 pub mod variable;
 
 #[derive(Debug, Clone)]
