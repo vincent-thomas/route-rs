@@ -1,5 +1,5 @@
 [workspace]
-members = ["route_router", "route_derive", "route_contract"]
+members = ["route_router", "route_derive", "route_http"]
 resolver = "2"
 
 
@@ -10,7 +10,7 @@ edition = "2021"
 [dependencies]
 route_router = {path = "./route_router", version = "0.1.0"}
 route_derive = {path = "./route_derive", version = "0.1.0"}
-route_contract = {path = "./route_contract", version = "0.1.0"}
+route_http = {path = "./route_http", version = "0.1.0"}
 
 tokio = { version = "1.38.0", features = ["full"] }
 hyper = { version = "1", features = ["full"] }

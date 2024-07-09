@@ -12,4 +12,4 @@ harness = false
 
 [dependencies]
 dyn-clone = "1.0.17"
-route_contract = {path = "../route_contract", version = "0.1.0"}
+route_http = {path = "../route_http", version = "0.1.0"}

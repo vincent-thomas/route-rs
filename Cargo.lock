@@ -827,15 +827,11 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-util",
- "route_contract",
  "route_derive",
+ "route_http",
  "route_router",
  "tokio",
 ]
-
-[[package]]
-name = "route_contract"
-version = "0.1.0"
 
 [[package]]
 name = "route_derive"
@@ -848,12 +844,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "route_http"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "http",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "route_router"
 version = "0.1.0"
 dependencies = [
  "criterion",
  "dyn-clone",
- "route_contract",
+ "route_http",
 ]
 
 [[package]]

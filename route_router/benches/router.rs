@@ -1,19 +1,20 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use route_contract::method::HttpMethod;
+use route_http::{method::HttpMethod, response::Respondable, HttpRequest};
 use route_router::{Route, Router};
 
-#[derive(Clone)]
-struct Req {}
+async fn test(_: HttpRequest) -> impl Respondable {
+  "test".to_string()
+}
+
+async fn test2(_: HttpRequest) -> impl Respondable {
+  4322
+}
 
 fn criterion_benchmark(c: &mut Criterion) {
   let mut router = Router::mount_at("/");
 
-  router.route(HttpMethod::Get, "/user/test".to_string(), Route::new(|req: Req| Box::new("")));
-  router.route(
-    HttpMethod::Post,
-    "/user/{user_id}".to_string(),
-    Route::new(|req: Req| Box::new("")),
-  );
+  router.route(HttpMethod::Get, "/user/test".to_string(), Route::new(test));
+  // router.route(HttpMethod::Post, "/user/{user_id}".to_string(), Route::new(&test2));
 
   //     let output = router.match_route(RouteMethod::Post, "/user/testing");
   c.bench_function("router_match", |b| {
