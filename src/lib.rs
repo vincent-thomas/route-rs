@@ -16,17 +16,17 @@ use tokio::net::TcpListener;
 
 pub use route_http as http;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct App<T = ()> {
   routes: Router<T>,
   bound_address: Option<Address>,
 }
 
-impl<T> Default for App<T> {
-  fn default() -> App<T> {
-    App { routes: Router::new(), bound_address: None }
-  }
-}
+// impl<T> Default for App<T> {
+//   fn default() -> App<T> {
+//     App { routes: Router::default(), bound_address: None }
+//   }
+// }
 
 impl<T> App<T>
 where
@@ -40,10 +40,7 @@ where
   }
 }
 
-impl<T> App<T>
-where
-  T: Send + Sync,
-{
+impl<T> App<T> {
   pub async fn listen(self, port: u16) {
     let address: String = self.bound_address.expect("address is required for listening").into();
     let host = format!("{address}:{port}");
