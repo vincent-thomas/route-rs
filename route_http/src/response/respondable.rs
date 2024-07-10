@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::HttpRequest;
+use crate::request::HttpRequest;
 
 use super::HttpResponse;
 

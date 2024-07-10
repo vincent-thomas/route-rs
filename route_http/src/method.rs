@@ -1,4 +1,3 @@
-
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub enum HttpMethod {
   Get,
@@ -6,9 +5,7 @@ pub enum HttpMethod {
   Patch,
   Put,
   Delete,
-  Options,
   Head,
-  Trace,
 }
 
 pub struct InvalidHttpMethod;
@@ -23,9 +20,7 @@ impl TryFrom<&str> for HttpMethod {
       "PATCH" => Ok(HttpMethod::Patch),
       "PUT" => Ok(HttpMethod::Put),
       "DELETE" => Ok(HttpMethod::Delete),
-      "OPTIONS" => Ok(HttpMethod::Options),
       "HEAD" => Ok(HttpMethod::Head),
-      "TRACE" => Ok(HttpMethod::Trace),
       _ => Err(InvalidHttpMethod),
     }
   }
@@ -36,8 +31,6 @@ impl HttpMethod {
     match self {
       HttpMethod::Get
       | HttpMethod::Head
-      | HttpMethod::Options
-      | HttpMethod::Trace
       | HttpMethod::Delete
       | HttpMethod::Patch
       | HttpMethod::Put => true,
@@ -47,7 +40,7 @@ impl HttpMethod {
 
   pub fn is_safe(&self) -> bool {
     match self {
-      HttpMethod::Get | HttpMethod::Head | HttpMethod::Options | HttpMethod::Trace => true,
+      HttpMethod::Get | HttpMethod::Head => true,
       HttpMethod::Post | HttpMethod::Delete | HttpMethod::Patch | HttpMethod::Put => false,
     }
   }
@@ -55,12 +48,7 @@ impl HttpMethod {
   pub fn is_cacheable(&self) -> bool {
     match self {
       HttpMethod::Get | HttpMethod::Head => true,
-      HttpMethod::Options
-      | HttpMethod::Trace
-      | HttpMethod::Post
-      | HttpMethod::Delete
-      | HttpMethod::Patch
-      | HttpMethod::Put => false,
+      HttpMethod::Post | HttpMethod::Delete | HttpMethod::Patch | HttpMethod::Put => false,
     }
   }
 }

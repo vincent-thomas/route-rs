@@ -1,13 +1,9 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use route_http::{method::HttpMethod, response::Respondable, HttpRequest};
+use route_http::{method::HttpMethod, request::HttpRequest, response::Respondable};
 use route_router::{Route, Router};
 
 async fn test(_: HttpRequest) -> impl Respondable {
   "test".to_string()
-}
-
-async fn test2(_: HttpRequest) -> impl Respondable {
-  4322
 }
 
 fn criterion_benchmark(c: &mut Criterion) {

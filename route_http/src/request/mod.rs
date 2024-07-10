@@ -1,20 +1,56 @@
 use serde::Deserialize;
 
-use crate::{http_header_to_httpresponse, variable::VariableValue};
+use crate::{http_header_to_httpresponse, method::HttpMethod, variable::VariableValue};
 
-pub struct HttpRequest {
+pub struct HttpRequestBuilder {
   pub variables: std::collections::HashMap<String, VariableValue>,
   pub headers: http::HeaderMap,
-  body: &'static str,
+  pub body: &'static str,
+  pub path: &'static str,
+  pub method: HttpMethod,
+}
+
+impl HttpRequestBuilder {
+  pub fn build(self) -> HttpRequest {
+    HttpRequest {
+      variables: self.variables,
+      headers: self.headers,
+      body: self.body,
+      path: self.path,
+      method: self.method,
+    }
+  }
+}
+
+#[derive(Clone)]
+pub struct HttpRequest {
+  pub path: &'static str,
+  pub variables: std::collections::HashMap<String, VariableValue>,
+  pub headers: http::HeaderMap,
+  pub body: &'static str,
+  pub method: HttpMethod,
+}
+
+pub enum BodyErr {
+  NoBody,
+  UnparsableBody,
 }
 
 impl HttpRequest {
-  pub fn body<'a, B>(self) -> B
+  pub fn body<'a, B>(self) -> Result<B, BodyErr>
   where
     B: Deserialize<'a>,
   {
-    let body: B = serde_json::from_str(self.body).unwrap();
-    body
+    match self.headers.get("content-type") {
+      Some(header) if header == "application/json" => {
+        Ok(serde_json::from_str::<B>(self.body).unwrap())
+      }
+      Some(header) if header == "applicatin/x-www-form-urlencoded" => {
+        Ok(serde_urlencoded::from_str::<B>(self.body).unwrap())
+      }
+      Some(_) => Err(BodyErr::UnparsableBody),
+      None => Err(BodyErr::NoBody),
+    }
   }
 
   http_header_to_httpresponse!(host, HOST);
