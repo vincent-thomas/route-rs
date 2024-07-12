@@ -19,29 +19,22 @@ use tokio::net::TcpListener;
 
 pub use route_http as http;
 
+//#[derive(Clone)]
 pub struct App<S = ()> {
   inner: Arc<InnerApp<S>>,
 }
 
-impl<S> Clone for App<S> {
-  fn clone(&self) -> Self {
-    Self { inner: self.inner.clone() }
-  }
-}
-
+#[derive(Send, Sync)]
 struct InnerApp<T> {
   routes: Router<EndpointRouter<T>>,
   bound_address: Option<Address>,
 }
 
-impl<T> App<T>
-where
-  T: Clone,
-{
+impl<T> App<T> {
   pub fn new() -> Self {
     Self { inner: Arc::new(InnerApp { routes: Router::default(), bound_address: None }) }
   }
-  fn tap_inner_mut<F>(self, f: F) -> Self
+  fn inner_arc_mut<F>(self, f: F) -> Self
   where
     F: FnOnce(&mut InnerApp<T>),
   {
@@ -59,11 +52,11 @@ where
 }
 
 impl<S> App<S>
-where
-  S: Clone,
+// where
+//   S: Clone,
 {
   pub fn service(self, path: &str, route_service: EndpointRouter<S>) -> Self {
-    self.tap_inner_mut(|inner| {
+    self.inner_arc_mut(|inner| {
       inner.routes.insert(path, route_service);
     })
   }
@@ -71,7 +64,7 @@ where
 
 impl<T> App<T>
 where
-  T: Send + 'static + Sync + Send,
+  T: Send + 'static + Sync,
 {
   // pub fn bind(self, address: Address) -> App<T> {
   //   // App { innerroutes: self.routes, bound_address: Some(address) }
