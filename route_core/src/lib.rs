@@ -1,6 +1,7 @@
+pub mod endpoint;
+pub mod handler;
 pub mod request;
-// pub trait Handler: Clone + Send + Sized + 'static {
-//   // type Future: Future<Output = HttpResponse> + Send + 'static;
-//
-//   fn call(self, req: HttpRequest) -> Box<dyn Future<Output = HttpResponse> + Send + 'static>;
-// }
+mod types;
+pub use types::*;
+mod respondable;
+pub use respondable::*;

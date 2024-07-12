@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Debug};
 
-use route_http::{method::HttpMethod, variable::VariableValue};
+use route_http::{method::Method, variable::VariableValue};
 pub mod error;
 pub mod extractors;
 
@@ -8,7 +8,7 @@ pub mod extractors;
 struct ResolvableRoute<H> {
   /// This depends on the hashmap key.
   path_variable_name: Option<String>,
-  routes: HashMap<HttpMethod, Route<H>>,
+  routes: HashMap<Method, Route<H>>,
   children: HashMap<RoutePathType, ResolvableRoute<H>>,
 }
 
@@ -73,13 +73,13 @@ impl<H> Router<H>
   pub fn mount_root() -> Self {
     Router { mount: RouterMount::Root, routes: HashMap::new() }
   }
-  pub fn mount_at(mount_path: impl Into<String>) -> Self {
-    Router { mount: RouterMount::Path(mount_path.into()), routes: HashMap::new() }
-  }
+  // pub fn mount_at(mount_path: impl Into<String>) -> Self {
+  //   Router { mount: RouterMount::Path(mount_path.into()), routes: HashMap::new() }
+  // }
 
   pub fn match_route(
     &self,
-    method: HttpMethod,
+    method: Method,
     route: &str,
   ) -> Result<RouteFound<'_, H>, NoRouteFound> {
     let mount_str = self.mount.as_str();
@@ -210,7 +210,7 @@ impl<H> Router<H>
   //   }
   // }
 
-  pub fn route(&mut self, method: HttpMethod, path: String, route: Route<H>) {
+  pub fn route<T>(&mut self, method: Method, path: String, route: Route<T>) {
     let path = path.strip_prefix('/').expect("route-rs: route path must start with /");
 
     let path_vec: Vec<PathPartType> = path

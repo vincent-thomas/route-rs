@@ -5,7 +5,7 @@ use hyper::{
   body::{Bytes, Incoming as IncomingBody},
   Request, Response,
 };
-use route_http::{method::HttpMethod, request::HttpRequestBuilder};
+use route_http::response::HttpResponse;
 
 use crate::handler::Handler;
 
@@ -52,15 +52,16 @@ where
   fn call(&self, req: Request<IncomingBody>) -> Self::Future {
     // let body = req.body();
     //let path = req.uri().path();
+    //
 
-    let _req = HttpRequestBuilder {
-      headers: req.headers().clone(),
-      body: "",
-      path: "/",
-      variables: HashMap::new(),
-      method: HttpMethod::Get,
-    }
-    .build();
+    // let _req = HttpRequestBuilder {
+    //   headers: req.headers().clone(),
+    //   body: "",
+    //   path: "/",
+    //   variables: HashMap::new(),
+    //   method: HttpMethod::Get,
+    // }
+    // .build();
 
     let app = Arc::clone(&self.app);
 

@@ -1,16 +1,34 @@
-use route::{endpoint::EndpointRouter, App};
+use route::{endpoint::post, App, Respondable};
 use route_http::request::HttpRequest;
 
-async fn test(req: HttpRequest) -> String {
-  "test".to_string()
+struct Test {
+  name: String,
 }
 
-fn main() {
-  let mut app = App::default();
+async fn test(req: HttpRequest) -> impl Respondable {
+  let test = Test { name: "test".to_string() };
+  // test.from_request(req);
+  "".to_string()
+}
 
-  let endpoint = EndpointRouter::default().get(test);
+async fn test2(req: HttpRequest) -> String {
+  let test = Test { name: "test".to_string() };
+  // test.from_request(req);
+  3
+}
 
+#[tokio::main]
+async fn main() {
+  let mut app = App::new();
+
+  let endpoint = post(test);
+  // let endpoint2 = EndpointRouter::default().get(test2);
   app.service("/test", endpoint);
+  app.service("/test", get(test2));
+  // app.service("/test2", endpoint2);
+
+  // app.service("/test", endpoint);
+  // app.bind(route::address::Address(0, 0, 0, 0)).listen(8080).await;
 }
 
 // struct MyService;
