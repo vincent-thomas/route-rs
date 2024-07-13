@@ -1,7 +1,6 @@
 pub mod endpoint;
 pub mod handler;
-pub mod request;
-mod types;
-pub use types::*;
+mod request;
+pub use request::*;
 mod respondable;
 pub use respondable::*;

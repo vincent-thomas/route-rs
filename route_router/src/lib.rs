@@ -2,7 +2,6 @@ use std::{collections::HashMap, fmt::Debug};
 
 use route_http::{method::Method, variable::VariableValue};
 pub mod error;
-pub mod extractors;
 
 #[derive(Debug, Clone)]
 struct ResolvableRoute<H> {

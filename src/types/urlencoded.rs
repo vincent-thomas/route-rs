@@ -1,0 +1,70 @@
+use route_core::{FromRequest2, Respondable2};
+use route_http::{request::HttpRequest2, response::HttpResponse2};
+use serde::{de::DeserializeOwned, Serialize};
+use std::{future::Future, pin::Pin};
+
+use super::BodyParseError;
+
+#[derive(Clone)]
+pub struct UrlEncoded<T>(pub T);
+
+impl<T> FromRequest2 for UrlEncoded<T>
+where
+  T: DeserializeOwned + 'static, // 'static maybe brings problems
+{
+  type Error = BodyParseError;
+  type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
+  fn from_request(req: &HttpRequest2) -> Self::Future {
+    let content_type = req.headers().get("content-type");
+    let output = {
+      let body = req.body();
+      if content_type.is_none()
+        || content_type.is_some_and(|v| v != "application/x-www-form-urlencoded")
+      {
+        Err(BodyParseError::ContentTypeInvalid)
+      } else if body.is_empty() {
+        Err(BodyParseError::NoBody)
+      } else {
+        let json = serde_urlencoded::from_bytes(body).unwrap();
+        Ok(UrlEncoded(json))
+      }
+    };
+
+    Box::pin(async move { output })
+  }
+}
+
+// impl<S> Respondable for UrlEncoded<S>
+// where
+//   S: Serialize,
+// {
+//   fn respond(self, _req: &HttpRequest) -> HttpResponse {
+//     let body = serde_urlencoded::to_string(&self.0).unwrap();
+//     let mut res = HttpResponse::new(body);
+//     let headers = res.headers_mut();
+
+//     headers.insert(
+//       route_http::header::CONTENT_TYPE,
+//       route_http::mime::APPLICATION_WWW_FORM_URLENCODED.to_string().parse().unwrap(),
+//     );
+//     res
+//   }
+// }
+
+impl<S> Respondable2 for UrlEncoded<S>
+where
+  S: Serialize,
+{
+  fn respond(self) -> HttpResponse2 {
+    let body = serde_urlencoded::to_string(&self.0).unwrap();
+    dbg!(&body);
+    let mut res = HttpResponse2::new(body.as_bytes().into());
+    let headers = res.headers_mut();
+
+    headers.insert(
+      route_http::header::CONTENT_TYPE,
+      route_http::mime::APPLICATION_WWW_FORM_URLENCODED.to_string().parse().unwrap(),
+    );
+    res
+  }
+}

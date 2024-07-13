@@ -1,3 +1,41 @@
+// use std::collections::HashMap;
+
+// use route_http::{request::HttpRequest2, response::HttpResponse};
+
+// use crate::handler::{Handler2, Handler3};
+
+// trait Guard: Clone {
+//   fn intercept(self, req: &mut HttpRequest2) -> HttpResponse;
+// }
+
+// #[derive(Clone)]
+// pub struct MethodRouter<R> {
+//   get: Option<R>,
+//   post: Option<R>,
+//   put: Option<R>,
+//   patch: Option<R>,
+//   delete: Option<R>,
+// }
+
+// struct Endpoint<'a, T: ?Sized + Handler3>(&'a T);
+
+// pub struct EndpointRouter<'a, T>
+// where
+//   T: ?Sized + Handler3,
+// {
+//   method_router: HashMap<Method, Box<dyn Handler3>>,
+//   fallback: Option<&'a T>,
+//   // guards: Vec<Box<dyn Guard>>,
+// }
+
+// impl<R: Clone> Default for EndpointRouter {
+//   fn default() -> Self {
+//     let method_router =
+//       MethodRouter { get: None, post: None, put: None, patch: None, delete: None };
+//     EndpointRouter { method_router, fallback: None }
+//   }
+// }
+
 // use std::{collections::HashMap, future::Future, pin::Pin};
 
 // use route_http::{method::Method, request::HttpRequest, response::HttpResponse};
@@ -26,13 +64,6 @@
 
 // #[derive(Clone)]
 // struct Route<T>(T);
-
-// impl<R> Default for EndpointRouter<R> {
-//   fn default() -> Self {
-//     EndpointRouter { endpoints: HashMap::new() }
-//     // EndpointRouter { get: None, post: None, put: None, patch: None, delete: None }
-//   }
-// }
 
 // impl<R> EndpointRouter<R>
 // where

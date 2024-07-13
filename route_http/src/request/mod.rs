@@ -2,7 +2,7 @@ use http::request::Parts;
 pub use http::Request;
 
 pub type HttpRequest = Request<&'static str>;
-pub type HttpRequestV2 = Request<Box<[u8]>>;
+pub type HttpRequest2 = Request<Box<[u8]>>;
 
 pub type Head = Parts;
 
