@@ -1,5 +1,5 @@
-use route_core::{FromRequest2, Respondable2};
-use route_http::{request::HttpRequest2, response::HttpResponse2};
+use route_core::{FromRequest, Respondable};
+use route_http::{request::HttpRequest, response::HttpResponse};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{future::Future, pin::Pin};
 
@@ -8,13 +8,13 @@ use super::BodyParseError;
 #[derive(Clone)]
 pub struct UrlEncoded<T>(pub T);
 
-impl<T> FromRequest2 for UrlEncoded<T>
+impl<T> FromRequest for UrlEncoded<T>
 where
   T: DeserializeOwned + 'static, // 'static maybe brings problems
 {
   type Error = BodyParseError;
   type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
-  fn from_request(req: &HttpRequest2) -> Self::Future {
+  fn from_request(req: &HttpRequest) -> Self::Future {
     let content_type = req.headers().get("content-type");
     let output = {
       let body = req.body();
@@ -51,14 +51,14 @@ where
 //   }
 // }
 
-impl<S> Respondable2 for UrlEncoded<S>
+impl<S> Respondable for UrlEncoded<S>
 where
   S: Serialize,
 {
-  fn respond(self) -> HttpResponse2 {
+  fn respond(self) -> HttpResponse {
     let body = serde_urlencoded::to_string(&self.0).unwrap();
     dbg!(&body);
-    let mut res = HttpResponse2::new(body.as_bytes().into());
+    let mut res = HttpResponse::new(body.as_bytes().into());
     let headers = res.headers_mut();
 
     headers.insert(

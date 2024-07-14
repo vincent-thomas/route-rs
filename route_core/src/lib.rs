@@ -1,6 +1,6 @@
-pub mod endpoint;
-pub mod handler;
+mod endpoint;
+pub use endpoint::*;
 mod request;
 pub use request::*;
-mod respondable;
-pub use respondable::*;
+mod respond;
+pub use respond::*;

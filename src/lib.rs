@@ -3,7 +3,6 @@ pub mod address;
 
 use address::Address;
 use endpoint::EndpointRouter;
-use handler::Endpoint;
 use http_body_util::Full;
 use hyper::{body::Bytes, server::conn::http1, service::Service};
 use matchit::Router;
@@ -57,7 +56,6 @@ impl Route<'_> {
         self
       }
     }
-    //self.router.insert(self.path, handler);
   }
   pub fn get(&mut self, handler: impl Endpoint) -> &mut Self {
     self.method(route_http::method::Method::GET, handler)
@@ -83,16 +81,7 @@ impl App {
     let _ = thing.routes.insert(path, ep_router);
 
     Route { router: &mut thing.routes, path }
-
-    // thing.routes.
-    // self.inner.routes.insert(path, ep_router);
-    // &mut ep_router
   }
-  // pub fn service(self, path: &str) -> Self {
-  // self.inner_arc_mut(|inner| {
-  //   inner.routes.insert(path, route_service);
-  // })
-  // }
 }
 
 impl App {
@@ -139,12 +128,6 @@ impl Service<hyper::Request<hyper::body::Incoming>> for Nice {
   type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
 
   fn call(&self, req: hyper::Request<hyper::body::Incoming>) -> Self::Future {
-    // let test = uri.path().to_string();
-
-    // let (parts, body) = req.into_parts();
-
-    // let test: &[u8]  = body.;
-
     let app = Arc::clone(&self.app);
     Box::pin(async move {
       let endpoint_req = route_http::request::Request::new([].into());
@@ -153,9 +136,7 @@ impl Service<hyper::Request<hyper::body::Incoming>> for Nice {
       let route = match app.inner.routes.at(uri.path()) {
         Ok(route) => route,
         Err(_) => {
-          // return Box::pin(async {
           return Ok(hyper::Response::new(Full::new(Bytes::from("404"))));
-          // })
         }
       };
 
@@ -166,30 +147,11 @@ impl Service<hyper::Request<hyper::body::Incoming>> for Nice {
       let endpoint_response = fn_endpoint.call(endpoint_req).await;
       let bytes = endpoint_response.clone().into_body();
 
-      //     let res_body: &[u8] = response.body();
-
       let mut response = hyper::Response::new(Full::new(Bytes::from_iter(bytes.to_vec())));
 
       *response.headers_mut() = endpoint_response.headers().clone();
 
       Ok(response)
-
-      //let response = fn_endpoint.call(req);
-      // let res = Response::new(Full::new(Bytes::from(response.body)))
     })
-
-    // let request = HttpRequest::from(req);
-    // headers: req.headers().clone(),
-    // body: "".to_string(),
-    // method: HttpMethod::Get,
-    // path: test,
-    // variables: HashMap::new(),
-    //};
-
-    // Box::pin(async move {
-    //   let response = thing.call(request).await;
-    //   let res = hyper::Response::new(Full::new(Bytes::from(response.body().clone())));
-    //   Ok(res)
-    // })
   }
 }

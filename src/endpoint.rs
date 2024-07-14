@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use route_core::handler::{BoxedEndpoint, Endpoint};
+use route_core::{BoxedEndpoint, Endpoint};
 use route_http::method::Method;
 
 #[derive(Default)]

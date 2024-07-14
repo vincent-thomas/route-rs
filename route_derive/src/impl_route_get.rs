@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Ident, ItemFn, Lit, Stmt};
+use syn::{ItemFn, Lit, Stmt};
 
 fn statements_to_quote(statements: Vec<Stmt>) -> TokenStream {
   // Create a TokenStream to collect all the quote! {} blocks

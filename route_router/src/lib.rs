@@ -1,13 +1,13 @@
 use std::{collections::HashMap, fmt::Debug};
 
-use route_http::{method::Method, variable::VariableValue};
+use route_http::variable::VariableValue;
 pub mod error;
 
 #[derive(Debug, Clone)]
 struct ResolvableRoute<H> {
   /// This depends on the hashmap key.
   path_variable_name: Option<String>,
-  routes: HashMap<Method, Route<H>>,
+  route: Option<H>,
   children: HashMap<RoutePathType, ResolvableRoute<H>>,
 }
 
@@ -22,11 +22,11 @@ pub struct Route<H> {
   pub handler: H,
 }
 
-impl<H> Route<H> {
-  pub fn new(handler: H) -> Self {
-    Route { handler }
-  }
-}
+// impl<H> Route<H> {
+//   pub fn new(handler: H) -> Self {
+//     Route { handler }
+//   }
+// }
 
 #[derive(Debug, Clone)]
 enum RouterMount {
@@ -61,8 +61,8 @@ enum PathPartType {
 #[derive(Debug)]
 pub struct NoRouteFound;
 #[derive(Debug)]
-pub struct RouteFound<'a, H> {
-  pub route: &'a Route<H>,
+pub struct RouteFound<H> {
+  pub route: H,
   pub variables: HashMap<String, VariableValue>,
 }
 impl<H> Router<H>
@@ -76,11 +76,7 @@ impl<H> Router<H>
   //   Router { mount: RouterMount::Path(mount_path.into()), routes: HashMap::new() }
   // }
 
-  pub fn match_route(
-    &self,
-    method: Method,
-    route: &str,
-  ) -> Result<RouteFound<'_, H>, NoRouteFound> {
+  pub fn at(&self, route: &str) -> Result<RouteFound<&H>, NoRouteFound> {
     let mount_str = self.mount.as_str();
     let path_without_mount: &str = route.strip_prefix(mount_str).ok_or(NoRouteFound)?;
     let path_vec: Vec<&str> = path_without_mount.split('/').collect();
@@ -109,7 +105,7 @@ impl<H> Router<H>
 
     match current_route {
       Some(route) => {
-        if let Some(route_for_method) = route.routes.get(&method) {
+        if let Some(route_for_method) = &route.route {
           Ok(RouteFound { variables, route: route_for_method })
         } else {
           Err(NoRouteFound)
@@ -118,6 +114,7 @@ impl<H> Router<H>
       None => Err(NoRouteFound),
     }
   }
+
   // pub fn match_route(
   //   &self,
   //   method: HttpMethod,
@@ -208,8 +205,85 @@ impl<H> Router<H>
   //     None => Err(NoRouteFound),
   //   }
   // }
+  pub fn at_mut<'a>(&self, path: &str) -> Result<RouteFound<&'a mut H>, NoRouteFound> {
+    let path: String = path.into();
+    let path = path.strip_prefix('/').expect("route-rs: route path must start with /");
 
-  pub fn route<T>(&mut self, method: Method, path: String, route: Route<T>) {
+    let path_vec: Vec<PathPartType> = path
+      .split('/')
+      .map(|path| {
+        if path.starts_with('{') && path.ends_with('}') {
+          PathPartType::Variable(path[1..path.len() - 1].into())
+        } else {
+          PathPartType::Static(path.into())
+        }
+      })
+      .collect();
+    let mut base = &self.routes;
+
+    for (index, path) in path_vec.iter().enumerate() {
+      let mut existing = base.get(&match path {
+        PathPartType::Static(value) => RoutePathType::Static(value.clone()),
+        PathPartType::Variable(_) => RoutePathType::Variable,
+      });
+
+      match existing {
+        None => return Err(NoRouteFound),
+        Some(resolvable_route) => {
+          if index == path_vec.len() {
+            let route = &mut resolvable_route.route.unwrap();
+            let route_found = RouteFound { route, variables: HashMap::new() };
+            return Ok(route_found);
+          }
+          let base = &resolvable_route.children;
+        }
+      }
+    }
+    unimplemented!()
+    //   match path {
+    //     PathPartType::Static(path) => {
+    //base.get_mut()
+    //   }
+    //   PathPartType::Variable => {unimplemented!()}
+    // }
+    // match path {
+    //   PathPartType::Static(path) => {
+    // let result = base.entry(RoutePathType::Static(path.clone()));
+
+    // let test = result.or_insert(ResolvableRoute {
+    //   path_variable_name: None,
+    //   route: None,
+    //   children: HashMap::new(),
+    // });
+
+    //   if index == path_vec.len() - 1 {
+    //     test.route = Some(route);
+    //     break;
+    //   } else {
+    //     base = &mut test.children;
+    //   }
+    // }
+    // PathPartType::Variable(path) => {
+    //   let result = base.entry(RoutePathType::Variable);
+
+    //   let test = result.or_insert(ResolvableRoute {
+    //     path_variable_name: Some(path.clone()),
+    //     // routes: HashMap::new(),
+    //     route: None,
+    //     children: HashMap::new(),
+    //   });
+    //   if index == path_vec.len() - 1 {
+    //     test.route = Some(route);
+    //     // test.routes.insert(method, Route { handler: route });
+    //     break;
+    //   } else {
+    //     base = &mut test.children;
+    //   }
+    // }
+  }
+
+  pub fn route(&mut self, path: impl Into<String>, route: H) {
+    let path = path.into();
     let path = path.strip_prefix('/').expect("route-rs: route path must start with /");
 
     let path_vec: Vec<PathPartType> = path
@@ -231,12 +305,12 @@ impl<H> Router<H>
 
           let test = result.or_insert(ResolvableRoute {
             path_variable_name: None,
-            routes: HashMap::new(),
+            route: None,
             children: HashMap::new(),
           });
 
           if index == path_vec.len() - 1 {
-            test.routes.insert(method, route);
+            test.route = Some(route);
             break;
           } else {
             base = &mut test.children;
@@ -247,11 +321,13 @@ impl<H> Router<H>
 
           let test = result.or_insert(ResolvableRoute {
             path_variable_name: Some(path.clone()),
-            routes: HashMap::new(),
+            // routes: HashMap::new(),
+            route: None,
             children: HashMap::new(),
           });
           if index == path_vec.len() - 1 {
-            test.routes.insert(method, route);
+            test.route = Some(route);
+            // test.routes.insert(method, Route { handler: route });
             break;
           } else {
             base = &mut test.children;
@@ -260,4 +336,13 @@ impl<H> Router<H>
       }
     }
   }
+}
+#[test]
+fn test_this_shit() {
+  let mut router = Router::mount_root();
+
+  router.route("/test", "test");
+
+  let test = router.match_route("/test");
+  dbg!(test.unwrap());
 }

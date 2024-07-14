@@ -1,6 +1,5 @@
-use crate::{handler::Handler2, Respondable2};
-use route_http::{header, response::HttpResponse2, status::StatusCode};
-use std::{future::Future, pin::Pin};
+use route_core::{Endpoint, Respondable};
+use route_http::{header, response::HttpResponse, status::StatusCode};
 
 pub struct Redirect {
   to: &'static str,
@@ -11,8 +10,8 @@ impl Redirect {
   pub fn new(to: &'static str) -> Redirect {
     Redirect { to, status_code: StatusCode::TEMPORARY_REDIRECT }
   }
-  fn gen_response(self: Redirect) -> HttpResponse2 {
-    let mut res = HttpResponse2::new(Box::new([]));
+  fn gen_response(&self) -> HttpResponse {
+    let mut res = HttpResponse::new(Box::new([]));
     *res.status_mut() = self.status_code;
 
     let headers = res.headers_mut();
@@ -25,15 +24,17 @@ impl Redirect {
   }
 }
 
-impl Handler2 for Redirect {
-  type Future = Pin<Box<dyn Future<Output = HttpResponse2>>>;
-  fn call(self, _req: route_http::request::HttpRequest2) -> Self::Future {
-    Box::pin(async { self.gen_response() })
+use async_trait::async_trait;
+#[async_trait]
+
+impl Endpoint for Redirect {
+  async fn call(&self, _req: route_http::request::HttpRequest) -> HttpResponse {
+    self.gen_response()
   }
 }
 
-impl Respondable2 for Redirect {
-  fn respond(self) -> route_http::response::HttpResponse2 {
+impl Respondable for Redirect {
+  fn respond(self) -> route_http::response::HttpResponse {
     self.gen_response()
   }
 }

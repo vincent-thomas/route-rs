@@ -1,5 +1,5 @@
-use route_core::{FromRequest2, Respondable2};
-use route_http::{request::HttpRequest2, response::HttpResponse2};
+use route_core::{FromRequest, Respondable};
+use route_http::{request::HttpRequest, response::HttpResponse};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{future::Future, pin::Pin};
 
@@ -7,13 +7,13 @@ use crate::types::BodyParseError;
 
 pub struct Json<T>(pub T);
 
-impl<T> FromRequest2 for Json<T>
+impl<T> FromRequest for Json<T>
 where
   T: DeserializeOwned + 'static,
 {
   type Error = BodyParseError;
   type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
-  fn from_request(req: &HttpRequest2) -> Self::Future {
+  fn from_request(req: &HttpRequest) -> Self::Future {
     let content_type = req.headers().get("content-type");
     let output = {
       let body = req.body();
@@ -31,10 +31,10 @@ where
   }
 }
 
-impl<S: Serialize> Respondable2 for Json<S> {
-  fn respond(self) -> HttpResponse2 {
+impl<S: Serialize> Respondable for Json<S> {
+  fn respond(self) -> HttpResponse {
     let body = serde_json::to_string(&self.0).unwrap();
-    let mut res = HttpResponse2::new(body.as_bytes().into());
+    let mut res = HttpResponse::new(body.as_bytes().into());
     let headers = res.headers_mut();
 
     headers.insert(
