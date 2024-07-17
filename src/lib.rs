@@ -2,7 +2,7 @@ use std::{future::Future, pin::Pin, sync::Arc};
 pub mod address;
 
 use address::Address;
-use endpoint::EndpointRouter;
+use endpoint::Router;
 use http_body_util::Full;
 use hyper::{body::Bytes, server::conn::http1, service::Service};
 use matchit::Router;
@@ -11,9 +11,11 @@ use hyper_util::rt::{TokioIo, TokioTimer};
 mod service;
 pub use route_core::*;
 pub use route_derive::*;
-pub mod types;
+//pub mod types;
 use tokio::net::TcpListener;
+pub mod controller;
 pub mod endpoint;
+pub mod route;
 
 pub use route_http as http;
 
@@ -42,7 +44,12 @@ pub struct Route<'a> {
 }
 
 impl Route<'_> {
-  fn method(&mut self, method: route_http::method::Method, handler: impl Endpoint) -> &mut Self {
+  fn method<F, Args>(&mut self, method: route_http::method::Method, handler: F) -> &mut Self
+  where
+    F: Endpoint<Args>,
+    Args: FromRequest + 'static,
+    F::Output: Respondable + 'static,
+  {
     let thing = self.router.at_mut(self.path);
     match thing {
       Ok(path) => {
@@ -57,19 +64,45 @@ impl Route<'_> {
       }
     }
   }
-  pub fn get(&mut self, handler: impl Endpoint) -> &mut Self {
+
+  pub fn get<F, Args>(&mut self, handler: F) -> &mut Self
+  where
+    F: Endpoint<Args>,
+    Args: FromRequest + 'static,
+    F::Output: Respondable + 'static,
+  {
     self.method(route_http::method::Method::GET, handler)
   }
-  pub fn post(&mut self, handler: impl Endpoint) -> &mut Self {
+  pub fn post<F, Args>(&mut self, handler: F) -> &mut Self
+  where
+    F: Endpoint<Args>,
+    Args: FromRequest + 'static,
+    F::Output: Respondable + 'static,
+  {
     self.method(route_http::method::Method::POST, handler)
   }
-  pub fn put(&mut self, handler: impl Endpoint) -> &mut Self {
+  pub fn put<F, Args>(&mut self, handler: F) -> &mut Self
+  where
+    F: Endpoint<Args>,
+    Args: FromRequest + 'static,
+    F::Output: Respondable + 'static,
+  {
     self.method(route_http::method::Method::PUT, handler)
   }
-  pub fn patch(&mut self, handler: impl Endpoint) -> &mut Self {
+  pub fn patch<F, Args>(&mut self, handler: F) -> &mut Self
+  where
+    F: Endpoint<Args>,
+    Args: FromRequest + 'static,
+    F::Output: Respondable + 'static,
+  {
     self.method(route_http::method::Method::PATCH, handler)
   }
-  pub fn delete(&mut self, handler: impl Endpoint) -> &mut Self {
+  pub fn delete<F, Args>(&mut self, handler: F) -> &mut Self
+  where
+    F: Endpoint<Args>,
+    Args: FromRequest + 'static,
+    F::Output: Respondable + 'static,
+  {
     self.method(route_http::method::Method::DELETE, handler)
   }
 }
@@ -86,7 +119,6 @@ impl App {
 
 impl App {
   pub fn bind(mut self, address: Address) -> Self {
-    //self.inner.bound_address = Some(address);
     let test = Arc::get_mut(&mut self.inner).unwrap();
     test.bound_address = Some(address);
     self

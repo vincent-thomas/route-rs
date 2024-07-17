@@ -1,28 +1,9 @@
 [workspace]
 members = [
-  #"route_router", 
-  "route_derive", 
+  "route_router", 
+  #"route_derive", 
   "route_http", 
-  "route_core"
-]
+  "route_core",
+  "route_server",
+  "route"]
 resolver = "2"
-
-[package]
-name = "route"
-edition = "2021"
-
-[dependencies]
-#route_router = {path = "./route_router", version = "0.1.0"}
-route_derive = {path = "./route_derive", version = "0.1.0"}
-route_http = {path = "./route_http", version = "0.1.0"}
-route_core = {path = "./route_core", version = "0.1.0"}
-
-tokio = { version = "1.38.0", features = ["rt","rt-multi-thread", "macros", "net"] }
-hyper = { version = "1", features = ["server", "http1"] }
-hyper-util = { version = "0.1", features = ["tokio"] }
-http-body-util = "0.1"
-matchit = "0.8.3"
-serde = "1"
-serde_json = "1"
-serde_urlencoded = "0.7"
-async-trait = "0.1.81"

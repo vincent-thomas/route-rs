@@ -1,25 +1,26 @@
 use route_core::{FromRequest, Respondable};
 use route_http::response::HttpResponse;
 
-use std::convert::Infallible;
 use std::future::Future;
 use std::pin::Pin;
+
+use super::Infallible;
 
 pub struct Bytes<T>(pub T);
 
 impl FromRequest for Bytes<Box<[u8]>> {
   type Error = Infallible;
   type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
-  fn from_request(req: &'static route_http::request::HttpRequest) -> Self::Future {
-    let body = req.body();
-    Box::pin(async { Ok(Bytes(body.clone())) })
+  fn from_request(req: route_http::request::HttpRequest) -> Self::Future {
+    let body = req.body().clone();
+    Box::pin(async { Ok(Bytes(body)) })
   }
 }
 
 impl FromRequest for Bytes<Vec<u8>> {
   type Error = Infallible;
   type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
-  fn from_request(req: &'static route_http::request::HttpRequest) -> Self::Future {
+  fn from_request(req: route_http::request::HttpRequest) -> Self::Future {
     let body = req.body();
     let new_body = body.to_vec();
 

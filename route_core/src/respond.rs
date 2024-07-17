@@ -1,4 +1,4 @@
-use route_http::{response::HttpResponse, status::StatusCode};
+use route_http::{response::HttpResponse, StatusCode};
 
 pub trait Respondable {
   fn respond(self) -> HttpResponse;

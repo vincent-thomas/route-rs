@@ -1,5 +1,7 @@
-use route_core::{Endpoint, Respondable};
-use route_http::{header, response::HttpResponse, status::StatusCode};
+use route_core::Respondable;
+use route_http::{header, response::HttpResponse, StatusCode};
+
+use crate::service::HttpService;
 
 pub struct Redirect {
   to: &'static str,
@@ -24,12 +26,12 @@ impl Redirect {
   }
 }
 
-use async_trait::async_trait;
-#[async_trait]
-
-impl Endpoint for Redirect {
-  async fn call(&self, _req: route_http::request::HttpRequest) -> HttpResponse {
-    self.gen_response()
+impl HttpService for Redirect {
+  fn call_service(
+    &'static self,
+    _req: route_http::request::HttpRequest,
+  ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HttpResponse> + 'static>> {
+    Box::pin(async move { self.gen_response() })
   }
 }
 

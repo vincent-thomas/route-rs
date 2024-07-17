@@ -1,8 +1,10 @@
-mod macros;
-pub mod method;
+mod method;
+pub use method::*;
+
 pub mod request;
 pub mod response;
-pub mod status;
+mod status;
+pub use status::*;
 pub mod variable;
 
 pub use http::header;

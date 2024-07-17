@@ -10,13 +10,13 @@ pub struct UrlEncoded<T>(pub T);
 
 impl<T> FromRequest for UrlEncoded<T>
 where
-  T: DeserializeOwned + 'static, // 'static maybe brings problems
+  T: DeserializeOwned,
 {
   type Error = BodyParseError;
   type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
-  fn from_request(req: &HttpRequest) -> Self::Future {
-    let content_type = req.headers().get("content-type");
-    let output = {
+  fn from_request(req: HttpRequest) -> Self::Future {
+    Box::pin(async move {
+      let content_type = req.headers().get("content-type");
       let body = req.body();
       if content_type.is_none()
         || content_type.is_some_and(|v| v != "application/x-www-form-urlencoded")
@@ -28,9 +28,7 @@ where
         let json = serde_urlencoded::from_bytes(body).unwrap();
         Ok(UrlEncoded(json))
       }
-    };
-
-    Box::pin(async move { output })
+    })
   }
 }
 
@@ -57,7 +55,6 @@ where
 {
   fn respond(self) -> HttpResponse {
     let body = serde_urlencoded::to_string(&self.0).unwrap();
-    dbg!(&body);
     let mut res = HttpResponse::new(body.as_bytes().into());
     let headers = res.headers_mut();
 

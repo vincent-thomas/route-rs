@@ -1,25 +1,36 @@
-use async_trait::async_trait;
-use route_http::{request::HttpRequest, response::HttpResponse};
 use std::future::Future;
 
-use crate::Respondable;
-
-#[async_trait]
-pub trait Endpoint: Send + Sync + 'static {
-  async fn call(&self, req: HttpRequest) -> HttpResponse;
+pub trait Handler<Args>: Clone + 'static {
+  type Output;
+  type Future: Future<Output = Self::Output>;
+  fn call(&self, req: Args) -> Self::Future;
 }
 
-#[async_trait]
-impl<F, Fut, O> Endpoint for F
-where
-  F: Send + Sync + 'static + Fn(HttpRequest) -> Fut,
-  Fut: Future<Output = O> + Send + 'static,
-  O: Respondable + 'static,
-{
-  async fn call(&self, req: HttpRequest) -> HttpResponse {
-    let func = (self)(req).await;
-    func.respond()
-  }
-}
+macro_rules! factory_tuple ({ $($param:ident)* } => {
+    impl<Func, Fut, $($param,)*> Handler<($($param,)*)> for Func
+    where
+        Func: Fn($($param),*) -> Fut + Clone + 'static,
+        Fut: Future,
+    {
+        type Output = Fut::Output;
+        type Future = Fut;
 
-pub type BoxedEndpoint = Box<dyn Endpoint>;
+        #[inline]
+        #[allow(non_snake_case)]
+        fn call(&self, ($($param,)*): ($($param,)*)) -> Self::Future {
+            (self)($($param,)*)
+        }
+    }
+});
+
+factory_tuple! {}
+factory_tuple! { A }
+factory_tuple! { A B }
+factory_tuple! { A B C }
+factory_tuple! { A B C D }
+factory_tuple! { A B C D E }
+factory_tuple! { A B C D E F }
+factory_tuple! { A B C D E F I }
+factory_tuple! { A B C D E F I J }
+factory_tuple! { A B C D E F I J K }
+factory_tuple! { A B C D E F I J K L }
