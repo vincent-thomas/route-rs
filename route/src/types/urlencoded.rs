@@ -1,7 +1,6 @@
 use route_core::{FromRequest, Respondable};
 use route_http::{request::HttpRequest, response::HttpResponse};
 use serde::{de::DeserializeOwned, Serialize};
-use std::{future::Future, pin::Pin};
 
 use super::BodyParseError;
 
@@ -13,22 +12,19 @@ where
   T: DeserializeOwned,
 {
   type Error = BodyParseError;
-  type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
-  fn from_request(req: HttpRequest) -> Self::Future {
-    Box::pin(async move {
-      let content_type = req.headers().get("content-type");
-      let body = req.body();
-      if content_type.is_none()
-        || content_type.is_some_and(|v| v != "application/x-www-form-urlencoded")
-      {
-        Err(BodyParseError::ContentTypeInvalid)
-      } else if body.is_empty() {
-        Err(BodyParseError::NoBody)
-      } else {
-        let json = serde_urlencoded::from_bytes(body).unwrap();
-        Ok(UrlEncoded(json))
-      }
-    })
+  fn from_request(req: HttpRequest) -> Result<Self, Self::Error> {
+    let content_type = req.headers().get("content-type");
+    let body = req.body();
+    if content_type.is_none()
+      || content_type.is_some_and(|v| v != "application/x-www-form-urlencoded")
+    {
+      Err(BodyParseError::ContentTypeInvalid)
+    } else if body.is_empty() {
+      Err(BodyParseError::NoBody)
+    } else {
+      let json = serde_urlencoded::from_bytes(body).unwrap();
+      Ok(UrlEncoded(json))
+    }
   }
 }
 

@@ -18,7 +18,7 @@ impl ServerBuilder {
 impl ServerBuilder {
   pub fn app<A>(self, app: A) -> Server
   where
-    A: FindableRoute<'static> + 'static,
+    A: FindableRoute + Send + Sync + 'static,
   {
     Server::new(self.socket, Box::new(app))
   }

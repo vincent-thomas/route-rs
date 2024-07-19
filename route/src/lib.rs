@@ -9,4 +9,3 @@ pub mod web;
 
 pub use route_core as core;
 pub use route_http as http;
-pub use route_server as server;

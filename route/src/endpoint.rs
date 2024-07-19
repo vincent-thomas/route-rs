@@ -1,7 +1,7 @@
 use std::{future::Future, pin::Pin};
 
-use crate::{resource::Guard, service::HttpService};
-use route_core::{error::Error, FromRequest, Handler, Respondable};
+use crate::resource::Guard;
+use route_core::{error::Error, service::HttpService, FromRequest, Handler, Respondable};
 
 struct Service<H, Args>
 where
@@ -11,6 +11,13 @@ where
   inner: H,
   phantom: std::marker::PhantomData<Args>,
 }
+
+// unsafe impl<H, Args> Send for Service<H, Args>
+// where
+//   H: Handler<Args>,
+//   Args: FromRequest,
+// {
+// }
 
 impl<H, Args> Service<H, Args>
 where
@@ -25,16 +32,17 @@ where
 
 impl<Args, H> HttpService for Service<H, Args>
 where
-  Args: FromRequest,
-  H: Handler<Args>,
+  Args: FromRequest + Send,
+  H: Handler<Args> + Send + Sync,
   H::Output: Respondable,
+  H::Future: Send,
 {
   fn call_service(
     &'static self,
     req: route_http::request::HttpRequest,
-  ) -> Pin<Box<dyn Future<Output = route_http::response::HttpResponse>>> {
+  ) -> Pin<Box<dyn Future<Output = route_http::response::HttpResponse> + 'static>> {
     Box::pin(async move {
-      let from_request = match Args::from_request(req).await {
+      let from_request = match Args::from_request(req) {
         Ok(args) => args,
         Err(e) => {
           let error: Error = e.into();
@@ -47,8 +55,6 @@ where
 
       output.respond()
     })
-    // .and_then(|args| self.inner.handle(args));
-    // Box::pin(fut)
   }
 }
 
@@ -64,9 +70,10 @@ pub struct Endpoint {
 impl Endpoint {
   pub fn new<H, Args>(handler: H) -> Self
   where
-    Args: FromRequest + 'static,
-    H: Handler<Args>,
+    Args: FromRequest + 'static + Send,
+    H: Handler<Args> + Send + Sync,
     H::Output: Respondable,
+    H::Future: Send,
   {
     let service = Service::new(handler);
     Self { handler: Box::new(service), guards: Vec::new() }

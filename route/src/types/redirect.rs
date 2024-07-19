@@ -1,8 +1,6 @@
 use route_core::Respondable;
 use route_http::{header, response::HttpResponse, StatusCode};
 
-use crate::service::HttpService;
-
 pub struct Redirect {
   to: &'static str,
   status_code: StatusCode,
@@ -26,14 +24,14 @@ impl Redirect {
   }
 }
 
-impl HttpService for Redirect {
-  fn call_service(
-    &'static self,
-    _req: route_http::request::HttpRequest,
-  ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HttpResponse> + 'static>> {
-    Box::pin(async move { self.gen_response() })
-  }
-}
+// impl HttpService for Redirect {
+//   fn call_service(
+//     &self,
+//     _req: route_http::request::HttpRequest,
+//   ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HttpResponse> + Send + 'static>> {
+//     Box::pin(async move { self.gen_response() })
+//   }
+// }
 
 impl Respondable for Redirect {
   fn respond(self) -> route_http::response::HttpResponse {

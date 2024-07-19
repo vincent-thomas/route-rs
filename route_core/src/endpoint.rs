@@ -1,6 +1,6 @@
 use std::future::Future;
 
-pub trait Handler<Args>: Clone + 'static {
+pub trait Handler<Args>: Clone + Send + 'static {
   type Output;
   type Future: Future<Output = Self::Output>;
   fn call(&self, req: Args) -> Self::Future;
@@ -9,7 +9,7 @@ pub trait Handler<Args>: Clone + 'static {
 macro_rules! factory_tuple ({ $($param:ident)* } => {
     impl<Func, Fut, $($param,)*> Handler<($($param,)*)> for Func
     where
-        Func: Fn($($param),*) -> Fut + Clone + 'static,
+        Func: Fn($($param),*) -> Fut + Clone + Send + 'static,
         Fut: Future,
     {
         type Output = Fut::Output;

@@ -1,84 +1,121 @@
-use std::{net::SocketAddr, sync::Arc};
-
-use http_body_util::Full;
-use hyper::{
-  body::{Bytes, Incoming},
-  header::HeaderValue,
-  server::conn::http1,
-  service::Service,
-  Response,
+use std::{
+  io::{BufRead, BufReader, Read, Write},
+  net::{SocketAddr, TcpStream},
+  str::FromStr,
+  sync::Arc,
 };
-use hyper_util::rt::TokioIo;
-use tokio::net::TcpListener;
 
-use crate::findable::FindableRoute;
+use route::App;
+use tokio::task;
+// use http_body_util::Full;
+// use hyper::{
+//   body::{Bytes, Incoming},
+//   header::HeaderValue,
+//   service::Service,
+//   Response,
+// };
+use std::net::TcpListener;
+
+use route_http::{
+  header::{HeaderMap, HeaderValue, CONTENT_LENGTH},
+  request::{HttpRequest, Request},
+};
+
+use crate::{findable::FindableRoute, threadpool::ThreadPool};
 
 pub struct Server {
   socket: SocketAddr,
   #[allow(dead_code)]
-  app: Arc<Box<dyn FindableRoute<'static>>>,
-  inner: InnerServer,
+  app: Arc<App>,
 }
 
 impl Server {
-  pub(crate) fn new(socket: SocketAddr, app: Box<dyn FindableRoute<'static>>) -> Self {
-    Server { socket, app: Arc::new(app), inner: InnerServer }
+  pub(crate) fn new(socket: SocketAddr, app: App) -> Self {
+    Server { socket, app: Arc::new(app) }
   }
 
-  pub async fn run(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let listener = TcpListener::bind(self.socket).await?;
+  pub fn run(self) -> Result<(), Box<dyn std::error::Error>> {
+    let listener = TcpListener::bind(self.socket)?;
+    //let pool = ThreadPool::new(4);
 
     loop {
-      let (stream, _) = listener.accept().await?;
+      let (stream, _) = listener.accept()?;
 
-      let io = TokioIo::new(stream);
+      let stream = Arc::new(stream);
+      let stream = Arc::clone(&stream);
+      let app = self.app.clone();
 
-      let inner_server = self.inner.clone();
-
-      tokio::task::spawn(async move {
-        if let Err(err) = http1::Builder::new().serve_connection(io, inner_server).await {
-          eprintln!("Error serving connection: {:?}", err);
-        }
+      task::spawn(async move {
+        handle_connection(Arc::try_unwrap(stream).unwrap(), app).await;
       });
+
+      // pool.execute(Box::new(move || {
+      //   Box::pin(async {
+      //     handle_connection(Arc::try_unwrap(stream).unwrap(), app).await;
+      //   })
+      // }));
     }
   }
 }
-#[allow(dead_code)]
-fn into_hyper_response(resp: route_http::response::HttpResponse) -> hyper::Response<Bytes> {
-  let mut res = hyper::Response::new(hyper::body::Bytes::new());
-  *res.status_mut() = resp.status();
-  for (key, value) in resp.headers() {
-    res.headers_mut().append(key, value.clone());
+
+async fn handle_connection(mut stream: TcpStream, app: Arc<App>) {
+  let mut buf_reader = BufReader::new(&mut stream);
+  let mut request_lines = Vec::new();
+
+  // Read headers into `request_lines`
+  loop {
+    let mut line = String::new();
+    if let Ok(0) = buf_reader.read_line(&mut line) {
+      break; // Reached EOF
+    }
+    if line.trim().is_empty() {
+      break; // Empty line indicates end of headers
+    }
+    request_lines.push(line.trim().to_string());
   }
-  *res.body_mut() = Bytes::from(resp.body().to_vec());
-  res
-}
 
-#[allow(dead_code)]
-fn into_hyper_request(req: hyper::Request<Incoming>) -> route_http::request::HttpRequest {
-  let mut http_req = route_http::request::HttpRequest::new([].into());
-  *http_req.headers_mut() = req.headers().clone();
-  http_req
-}
+  let http_meta = request_lines.swap_remove(0);
 
-#[derive(Clone)]
-struct InnerServer;
+  let parts: Vec<&str> = http_meta.split_whitespace().collect();
 
-impl Service<hyper::Request<Incoming>> for InnerServer {
-  type Response = hyper::Response<Full<Bytes>>;
-  type Error = hyper::Error;
-  type Future = std::pin::Pin<
-    Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + Send>,
-  >;
+  let method = route_http::Method::from_str(parts[0]).unwrap();
+  let uri = route_http::uri::Uri::from_str(parts[1]).unwrap();
 
-  #[allow(unused_variables)]
-  fn call(&self, req: hyper::Request<Incoming>) -> Self::Future {
-    Box::pin(async move {
-      let mut response = Response::new(Full::new(Bytes::from_static("hello".as_bytes())));
-      if cfg!(debug_assertions) {
-        response.headers_mut().append("Server", HeaderValue::from_static("Route-RS"));
-      }
-      Ok(response)
-    })
-  }
+  let iter = request_lines.iter().map(|line| {
+    let mut parts: Vec<&str> = line.split(": ").collect();
+    let key = parts.remove(0);
+    (key.parse().unwrap(), parts[0].to_string().parse().unwrap())
+  });
+
+  let headers: HeaderMap<HeaderValue> = HeaderMap::from_iter(iter);
+
+  let body_length = headers.get(CONTENT_LENGTH);
+
+  let body_bytes = if let Some(length) = body_length {
+    let length = length.to_str().unwrap().parse().unwrap();
+    let mut body = vec![0u8; length];
+    buf_reader.read_exact(&mut body).unwrap();
+    body
+  } else {
+    Vec::new()
+  };
+
+  let mut req_builder = Request::builder().uri(uri).method(method);
+
+  req_builder.headers_mut().unwrap().extend(headers.into_iter());
+
+  let req: HttpRequest = req_builder.body(body_bytes.into()).unwrap();
+
+  println!("Input: {:#?}", req);
+
+  let service = app.find_route(req.uri().path());
+
+  stream.write_all("HTTP/1.1 200 OK\r\n\r\n".as_bytes()).unwrap();
+
+  //let mut output = service.call_service(req).await;
+
+  // if cfg!(debug_assertions) {
+  //   output.headers_mut().insert("Server", HeaderValue::from_static("Route-RS"));
+  // }
+  // println!("Output: {:#?}", output);
 }

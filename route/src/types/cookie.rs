@@ -10,15 +10,14 @@ pub struct Cookie(pub HashMap<String, String>);
 
 impl FromRequest for Cookie {
   type Error = BodyParseError;
-  type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
-  fn from_request(req: HttpRequest) -> Self::Future {
+  fn from_request(req: HttpRequest) -> Result<Self, Self::Error> {
     let cookie_builder = HashMap::new();
 
     let test = req.headers().get("cookie");
 
     dbg!(test);
 
-    Box::pin(async move { Ok(Cookie(cookie_builder)) })
+    Ok(Cookie(cookie_builder))
 
     //unimplemented!()
   }

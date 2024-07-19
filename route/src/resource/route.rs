@@ -84,15 +84,15 @@ impl Route {
   }
 }
 
-pub struct HttpServiceFactory<'a>(pub &'a Route);
+// pub struct HttpServiceFactory<'a>(pub &'a Route);
 
-impl route_core::service::HttpService for HttpServiceFactory<'_> {
-  fn call_service(
-    &'static self,
-    req: route_http::request::HttpRequest,
-  ) -> std::pin::Pin<
-    Box<dyn std::future::Future<Output = route_http::response::HttpResponse> + 'static>,
-  > {
-    Box::pin(self.0.run(req))
-  }
-}
+// impl<'a> route_core::service::HttpService for HttpServiceFactory<'a> {
+//   fn call_service(
+//     &'a self,
+//     req: route_http::request::HttpRequest,
+//   ) -> std::pin::Pin<
+//     Box<dyn std::future::Future<Output = route_http::response::HttpResponse> + Send + 'static>,
+//   > {
+//     Box::pin(self.0.run(req))
+//   }
+// }

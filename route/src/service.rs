@@ -2,17 +2,17 @@ use std::{future::Future, pin::Pin};
 
 use route_http::{request::HttpRequest, response::HttpResponse};
 
-/// # HttpService
-/// Called with a request and return a response.
-/// Anything that implements this trait can be used as a handler for a route.
-///
+// / # HttpService
+// / Called with a request and return a response.
+// / Anything that implements this trait can be used as a handler for a route.
+// /
 // #[async_trait::async_trait]
-pub trait HttpService {
-  fn call_service(
-    &'static self,
-    req: HttpRequest,
-  ) -> Pin<Box<dyn Future<Output = HttpResponse> + 'static>>;
-}
+// pub trait HttpService {
+//   fn call_service(
+//     &'static self,
+//     req: HttpRequest,
+//   ) -> Pin<Box<dyn Future<Output = HttpResponse> + 'static>>;
+// }
 
 // impl<Args, H> HttpService for H
 // where

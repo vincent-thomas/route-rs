@@ -10,21 +10,19 @@ pub struct Bytes<T>(pub T);
 
 impl FromRequest for Bytes<Box<[u8]>> {
   type Error = Infallible;
-  type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
-  fn from_request(req: route_http::request::HttpRequest) -> Self::Future {
+  fn from_request(req: route_http::request::HttpRequest) -> Result<Self, Self::Error> {
     let body = req.body().clone();
-    Box::pin(async { Ok(Bytes(body)) })
+    Ok(Bytes(body))
   }
 }
 
 impl FromRequest for Bytes<Vec<u8>> {
   type Error = Infallible;
-  type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
-  fn from_request(req: route_http::request::HttpRequest) -> Self::Future {
+  fn from_request(req: route_http::request::HttpRequest) -> Result<Self, Self::Error> {
     let body = req.body();
     let new_body = body.to_vec();
 
-    Box::pin(async { Ok(Bytes(new_body)) })
+    Ok(Bytes(new_body))
   }
 }
 

@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use route::{
   resource::{Guard, GuardOutcome},
   web, App,
@@ -35,5 +37,5 @@ async fn main() {
 
   let server = ServerBuilder::bind("127.0.0.1", 3000).app(app);
 
-  let _ = server.run().await;
+  server.run();
 }
