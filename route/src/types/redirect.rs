@@ -1,5 +1,8 @@
-use route_core::Respondable;
-use route_http::{header, response::HttpResponse, StatusCode};
+use async_trait::async_trait;
+use route_core::{service::HttpService, Respondable};
+use route_http::{
+  header, request::HttpRequest, response::HttpResponse, StatusCode,
+};
 
 pub struct Redirect {
   to: &'static str,
@@ -8,7 +11,7 @@ pub struct Redirect {
 
 impl Redirect {
   pub fn new(to: &'static str) -> Redirect {
-    Redirect { to, status_code: StatusCode::TEMPORARY_REDIRECT }
+    Redirect { to, status_code: StatusCode::PERMANENT_REDIRECT }
   }
   fn gen_response(&self) -> HttpResponse {
     let mut res = HttpResponse::new(Box::new([]));
@@ -21,6 +24,15 @@ impl Redirect {
     }
 
     res
+  }
+}
+#[async_trait]
+impl HttpService for Redirect {
+  async fn call_service(&self, _req: HttpRequest) -> HttpResponse {
+    let test = self.gen_response();
+    dbg!(&test);
+    test
+    //let res = Response::builder().header("Location", );
   }
 }
 

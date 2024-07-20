@@ -1,6 +1,8 @@
+use route_core::Respondable;
 use route_http::request::HttpRequest;
 use route_http::response::HttpResponse;
 
+use super::utils::check_guards;
 use super::Guard;
 
 use super::Route;
@@ -33,7 +35,11 @@ impl Resource {
     &self.route
   }
 
-  pub async fn run(&'static self, request: HttpRequest) -> HttpResponse {
-    self.route.run(request).await
+  pub async fn run(&self, request: HttpRequest) -> HttpResponse {
+    let (parts, _) = request.clone().into_parts();
+    match check_guards(&self.guards, &parts) {
+      Some(reason) => reason.respond(),
+      None => self.route.run(request).await.respond(),
+    }
   }
 }

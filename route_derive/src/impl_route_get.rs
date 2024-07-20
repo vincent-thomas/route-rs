@@ -37,8 +37,6 @@ pub(crate) fn impl_route_get(
 
   let fn_name = quote::format_ident!("{}_fn", ast.sig.ident);
 
-  dbg!(ast.sig.inputs);
-
   // Get the function so that inputs can be extracted with the FromRequest trait
   let fn_block = &ast.block;
   let fn_statements = &fn_block.stmts;

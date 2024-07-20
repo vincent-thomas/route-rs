@@ -1,7 +1,8 @@
-use std::{future::Future, pin::Pin};
-
 use crate::resource::Guard;
-use route_core::{error::Error, service::HttpService, FromRequest, Handler, Respondable};
+use route_core::{
+  error::Error, service::HttpService, FromRequest, Handler, Respondable,
+};
+use route_http::{request::HttpRequest, response::HttpResponse};
 
 struct Service<H, Args>
 where
@@ -12,49 +13,38 @@ where
   phantom: std::marker::PhantomData<Args>,
 }
 
-// unsafe impl<H, Args> Send for Service<H, Args>
-// where
-//   H: Handler<Args>,
-//   Args: FromRequest,
-// {
-// }
-
 impl<H, Args> Service<H, Args>
 where
   Args: FromRequest,
   H: Handler<Args>,
 {
-  // New
   pub fn new(handler: H) -> Self {
     Self { inner: handler, phantom: std::marker::PhantomData }
   }
 }
 
+#[async_trait::async_trait]
 impl<Args, H> HttpService for Service<H, Args>
 where
-  Args: FromRequest + Send,
+  Args: FromRequest + Send + Sync,
   H: Handler<Args> + Send + Sync,
   H::Output: Respondable,
   H::Future: Send,
 {
-  fn call_service(
-    &'static self,
-    req: route_http::request::HttpRequest,
-  ) -> Pin<Box<dyn Future<Output = route_http::response::HttpResponse> + 'static>> {
-    Box::pin(async move {
-      let from_request = match Args::from_request(req) {
-        Ok(args) => args,
-        Err(e) => {
-          let error: Error = e.into();
-          let mut res = route_http::response::HttpResponse::new(error.message.clone());
-          *res.status_mut() = *error.checked_method();
-          return res;
-        }
-      };
-      let output = self.inner.call(from_request).await;
+  async fn call_service(&self, req: HttpRequest) -> HttpResponse {
+    let from_request = match Args::from_request(req) {
+      Ok(args) => args,
+      Err(e) => {
+        let error: Error = e.into();
+        let mut res =
+          route_http::response::HttpResponse::new(error.message.clone());
+        *res.status_mut() = *error.checked_method();
+        return res;
+      }
+    };
+    let output = self.inner.call(from_request).await;
 
-      output.respond()
-    })
+    output.respond()
   }
 }
 
@@ -70,7 +60,7 @@ pub struct Endpoint {
 impl Endpoint {
   pub fn new<H, Args>(handler: H) -> Self
   where
-    Args: FromRequest + 'static + Send,
+    Args: FromRequest + Send + Sync + 'static,
     H: Handler<Args> + Send + Sync,
     H::Output: Respondable,
     H::Future: Send,

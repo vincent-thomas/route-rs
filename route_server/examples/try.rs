@@ -85,8 +85,6 @@ fn main() {
   radix_tree.insert("/test/{user_id}/settings", "User Settings");
   radix_tree.insert("/products/{product_id}", "Product Details");
 
-  dbg!(radix_tree.search("/test"));
-
   if let Some((value, params)) = radix_tree.search("/test/123") {
     println!("Value: {}, Params: {:?}", value, params); // Output: Value: User Profile, Params: {"user_id": "123"}
   }

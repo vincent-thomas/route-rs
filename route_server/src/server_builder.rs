@@ -1,6 +1,8 @@
 use std::{net::SocketAddr, str::FromStr};
 
-use crate::{findable::FindableRoute, server::Server};
+use route::App;
+
+use crate::server::Server;
 
 pub struct ServerBuilder {
   socket: SocketAddr,
@@ -16,10 +18,7 @@ impl ServerBuilder {
 }
 
 impl ServerBuilder {
-  pub fn app<A>(self, app: A) -> Server
-  where
-    A: FindableRoute + Send + Sync + 'static,
-  {
-    Server::new(self.socket, Box::new(app))
+  pub fn app(self, app: App) -> Server {
+    Server::new(self.socket, app)
   }
 }

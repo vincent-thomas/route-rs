@@ -1,14 +1,11 @@
 [package]
 name = "route_http"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+license.workspace = true
+edition.workspace = true
 
 [dependencies]
-#bytes = "1"
 http = "1.1.0"
 mime = "0.3.17"
-nom = { version = "7.1", optional = true }
-
-[features]
-default = []
-parser = ["nom"]

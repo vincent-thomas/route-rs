@@ -30,6 +30,6 @@ pub enum GuardOutcome {
   Reason(GuardReason),
 }
 
-pub trait Guard {
+pub trait Guard: Sync + Send {
   fn check(&self, head: &Head) -> GuardOutcome;
 }

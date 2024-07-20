@@ -1,9 +1,19 @@
 [workspace]
 members = [
   "route_router", 
-  #"route_derive", 
   "route_http", 
   "route_core",
   "route_server",
   "route"]
 resolver = "2"
+
+[workspace.dependencies]
+async-trait = "0.1.81"
+route_http = {path = "./route_http"}
+
+[workspace.package]
+authors = ["Vincent Thomas"]
+categories = ["web"]
+license = "MIT"
+edition = "2021"
+version = "0.1.0"

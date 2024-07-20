@@ -1,7 +1,6 @@
 use route_core::{FromRequest, Respondable};
 use route_http::{request::HttpRequest, response::HttpResponse};
 use serde::{de::DeserializeOwned, Serialize};
-use std::{future::Future, pin::Pin};
 
 use crate::types::BodyParseError;
 

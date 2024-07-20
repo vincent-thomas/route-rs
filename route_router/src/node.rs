@@ -1,12 +1,12 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::{cell::UnsafeCell, collections::HashMap, fmt::Debug};
 
 use crate::RoutePart;
 
 #[derive(Debug)]
 pub struct Node<T> {
-  pub children: HashMap<NodeMeta, Node<T>>,
-  pub handler: Option<T>,
-  pub dynamic_child: Option<(String, Box<Node<T>>)>,
+  children: HashMap<NodeMeta, Node<T>>,
+  handler: Option<UnsafeCell<T>>,
+  dynamic_child: Option<(String, Box<Node<T>>)>,
 }
 
 #[derive(Debug, Default, Eq, PartialEq, Hash)]
@@ -17,14 +17,31 @@ pub enum NodeMeta {
 }
 
 impl<T> Node<T> {
+  pub(crate) fn set_handler(&mut self, handler: T) {
+    self.handler = Some(UnsafeCell::new(handler));
+  }
+
+  pub(crate) fn children_mut(&mut self) -> &mut HashMap<NodeMeta, Node<T>> {
+    &mut self.children
+  }
+
+  pub(crate) fn dynamic_child_ref(&self) -> &Option<(String, Box<Node<T>>)> {
+    &self.dynamic_child
+  }
+
+  pub(crate) fn dynamic_child_mut(
+    &mut self,
+  ) -> &mut Option<(String, Box<Node<T>>)> {
+    &mut self.dynamic_child
+  }
+}
+
+impl<T> Node<T> {
   pub fn new() -> Self {
     Node { children: HashMap::new(), handler: None, dynamic_child: None }
   }
 
-  pub fn at(&self, path: &str) -> Option<&T>
-  where
-    T: Debug,
-  {
+  pub fn internal_at(&self, path: &str) -> Option<*mut T> {
     let guidance = self.str_registrable(path);
 
     let mut node = self;
@@ -34,7 +51,7 @@ impl<T> Node<T> {
 
     loop {
       if index == guidance.len() {
-        return node.handler.as_ref();
+        return node.handler.as_ref().map(|v| v.get());
       }
 
       match &guidance[index] {
@@ -44,8 +61,6 @@ impl<T> Node<T> {
             let end_index;
 
             loop {
-              // dbg!(&guidance[index], index);
-
               if guidance.len() - 1 == index
                 || guidance[index] == RoutePart::Static(NodeMeta::Slash)
               {
@@ -64,14 +79,13 @@ impl<T> Node<T> {
             let mut this_node = node;
             node = boxed_node;
             while this_index < value.len() {
-              if let Some(nice_thing) = node
-                .children
-                .get(&NodeMeta::StaticSegmentPart(value.chars().nth(this_index).unwrap()))
+              if let Some(nice_thing) =
+                node.children.get(&NodeMeta::StaticSegmentPart(
+                  value.chars().nth(this_index).unwrap(),
+                ))
               {
                 this_node = nice_thing;
-                dbg!(this_node);
               } else {
-                dbg!("breaking", this_index, &value);
                 break;
               }
               this_index += 1;
@@ -79,7 +93,7 @@ impl<T> Node<T> {
 
             values.insert(label.clone(), value);
             if this_node.handler.is_some() {
-              return this_node.handler.as_ref();
+              return this_node.handler.as_ref().map(|v| v.get());
             }
           }
 
@@ -87,10 +101,22 @@ impl<T> Node<T> {
             node = nice_thing;
           }
         }
-        RoutePart::Dynamic(_) => unimplemented!("Dynamic segments doesn't happen on lookup"),
+        RoutePart::Dynamic(_) => {
+          unimplemented!("Dynamic segments doesn't happen on lookup")
+        }
       }
       index += 1;
     }
+  }
+
+  pub fn at_mut(&self, path: &str) -> Option<&mut T> {
+    let result = self.internal_at(path);
+    result.map(|ptr| unsafe { ptr.as_mut() }.unwrap())
+  }
+
+  pub fn at(&self, path: &str) -> Option<&T> {
+    let result = self.internal_at(path);
+    result.map(|v| unsafe { v.as_ref().unwrap() })
   }
 
   fn str_registrable(&self, path: &str) -> Vec<RoutePart> {
@@ -114,7 +140,9 @@ impl<T> Node<T> {
         }
         nodes.push(RoutePart::Dynamic(name[1..].to_string()));
       } else {
-        nodes.push(RoutePart::Static(NodeMeta::StaticSegmentPart(path_vec[index])));
+        nodes.push(RoutePart::Static(NodeMeta::StaticSegmentPart(
+          path_vec[index],
+        )));
       }
       index += 1;
     }

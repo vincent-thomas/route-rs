@@ -1,23 +1,25 @@
 use std::sync::Arc;
 
 use matchit::Router;
+use route_core::service::HttpService;
+use route_http::{request::HttpRequest, response::HttpResponse};
 
 use crate::{panic_err, resource::Resource};
 
 #[derive(Default)]
 pub struct App {
   inner: Arc<AppInner>,
-  // router: Router<Resource>,
-  // default: Resource,
 }
 
-// unsafe impl Send for App {}
-// unsafe impl Sync for App {}
-
-#[derive(Default)]
 struct AppInner {
-  pub router: Router<Resource>,
-  pub default: Resource,
+  pub router: Router<Box<dyn HttpService>>,
+  pub default: Box<dyn HttpService>,
+}
+
+impl Default for AppInner {
+  fn default() -> Self {
+    AppInner { router: Router::new(), default: Box::new(Resource::new()) }
+  }
 }
 
 impl App {
@@ -35,21 +37,44 @@ impl App {
     self
   }
 
-  pub fn at(&mut self, path: &str, service: Resource) -> &mut Self {
+  pub fn at<T>(&mut self, path: &str, service: T) -> &mut Self
+  where
+    T: HttpService + 'static,
+  {
     self.tap_inner(|inner| {
-      let insertion = inner.router.insert(path, service);
+      let insertion = inner.router.insert(path, Box::new(service));
       panic_err!(insertion, "Failed to insert route into router: {:#?}");
     })
   }
 }
 
-// impl FindableRoute for App {
-//   fn find_route(&self, path: &str) -> Box<dyn HttpService + '_> {
-//     let matched = match self.inner.router.at(path) {
-//       Ok(thing) => thing.value,
-//       Err(_) => &self.inner.default,
-//     };
+// struct HttpServiceFactory<'a>(pub &'a Resource);
 
-//     Box::new(HttpServiceFactory(matched.route_ref()))
+// #[async_trait::async_trait]
+// impl HttpService for HttpServiceFactory<'_> {
+//   async fn call_service(&self, req: HttpRequest) -> HttpResponse {
+//     let fut = self.0.run(req);
+//     fut.await
 //   }
 // }
+
+#[async_trait::async_trait]
+impl HttpService for Resource {
+  async fn call_service(&self, req: HttpRequest) -> HttpResponse {
+    let fut = self.run(req);
+    fut.await
+  }
+}
+
+impl App {
+  pub fn route<'a>(&'a self, path: &str) -> &Box<dyn HttpService + 'a> {
+    let matched = match self.inner.router.at(path) {
+      Ok(thing) => thing.value,
+      Err(_) => &self.inner.default,
+    };
+
+    matched
+
+    // Box::new(HttpServiceFactory(matched))
+  }
+}

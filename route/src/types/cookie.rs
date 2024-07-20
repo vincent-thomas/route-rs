@@ -1,4 +1,4 @@
-use std::{collections::HashMap, future::Future, pin::Pin};
+use std::collections::HashMap;
 
 use route_core::FromRequest;
 // use route_core::FromRequestParts;
@@ -10,14 +10,13 @@ pub struct Cookie(pub HashMap<String, String>);
 
 impl FromRequest for Cookie {
   type Error = BodyParseError;
-  fn from_request(req: HttpRequest) -> Result<Self, Self::Error> {
-    let cookie_builder = HashMap::new();
+  fn from_request(_req: HttpRequest) -> Result<Self, Self::Error> {
+    //let cookie_builder = HashMap::new();
 
-    let test = req.headers().get("cookie");
+    // let test = req.headers().get("cookie");
 
-    dbg!(test);
-
-    Ok(Cookie(cookie_builder))
+    //Ok(Cookie(cookie_builder));
+    todo!();
 
     //unimplemented!()
   }

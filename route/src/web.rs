@@ -1,9 +1,17 @@
 use crate::resource::{Resource, Route};
 
+#[cfg(feature = "types")]
+pub use crate::types::*;
+
 pub fn resource() -> Resource {
-  Resource::new()
+  Resource::default()
 }
 
 pub fn route() -> Route {
-  Route::new()
+  Route::default()
+}
+
+#[cfg(feature = "types")]
+pub fn redirect(path: &'static str) -> Redirect {
+  Redirect::new(path)
 }

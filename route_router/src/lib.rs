@@ -3,6 +3,24 @@ pub use router::*;
 
 mod node;
 
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  struct TestHandler;
+
+  #[test]
+  fn tests() {
+    let mut router = Router::new();
+
+    router.route("/testnice", TestHandler);
+    router.route("/testnicu", TestHandler);
+    let result = router.at_mut("/testnice");
+
+    result.expect("It should be there");
+  }
+}
+
 // use std::{collections::HashMap, fmt::Debug};
 
 // use route_http::variable::VariableValue;
@@ -349,5 +367,4 @@ mod node;
 //   router.route("/test", "test");
 
 //   let test = router.match_route("/test");
-//   dbg!(test.unwrap());
 //}
