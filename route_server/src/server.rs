@@ -6,8 +6,7 @@ use std::{
 
 use crate::utils::{date_header_format, read_request};
 use route::App;
-use std::net::TcpListener;
-use tokio::task;
+use tokio::{net::TcpListener, task};
 
 use route_http::{
   header::{HeaderValue, CONTENT_LENGTH},
@@ -26,8 +25,8 @@ impl Server {
     Server { socket, app: Arc::new(app) }
   }
 
-  pub fn run(self) -> Result<(), Box<dyn std::error::Error>> {
-    let listener = TcpListener::bind(self.socket)?;
+  pub async fn run(self) -> Result<(), Box<dyn std::error::Error>> {
+    let listener = TcpListener::bind(self.socket).await?.into_std()?;
     loop {
       let (stream, _) = listener.accept()?;
       let moved_app = self.app.clone();

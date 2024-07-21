@@ -7,19 +7,19 @@ pub struct Router<T> {
   tree: Node<T>,
 }
 
-impl<T> Default for Router<T> {
+impl<T: Debug> Default for Router<T> {
   fn default() -> Self {
     Self::new()
   }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum RoutePart {
   Static(NodeMeta),
   Dynamic(String),
 }
 
-impl<T> Router<T> {
+impl<T: Debug> Router<T> {
   pub fn new() -> Router<T> {
     Router { tree: Node::new() }
   }
@@ -95,7 +95,7 @@ mod tests {
     // router.route("/helflo", "Hello, world!");
     // router.route("/hello/est", "Hello, world!");
 
-    //assert_eq!(router.at("/hello/test2"), Some(&"Hello, world!"));
+    assert_eq!(router.at("/hello/test2"), Some(&"Hello, world!"));
     assert_eq!(router.at("/hello/test"), Some(&"Hello, world!2"));
   }
 }

@@ -44,5 +44,5 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
   app.at("/redirect", web::redirect("https://google.com"));
 
-  ServerBuilder::bind("127.0.0.1", 3000).app(app).run()
+  ServerBuilder::bind("127.0.0.1", 3000).app(app).run().await
 }
