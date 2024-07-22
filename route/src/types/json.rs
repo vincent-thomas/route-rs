@@ -4,6 +4,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::types::BodyParseError;
 
+#[derive(Clone)]
 pub struct Json<T>(pub T);
 
 impl<T> FromRequest for Json<T>
@@ -14,7 +15,9 @@ where
   fn from_request(req: HttpRequest) -> Result<Self, Self::Error> {
     let content_type = req.headers().get("content-type");
     let body = req.body();
-    if content_type.is_none() || content_type.is_some_and(|v| v != "application/json") {
+    if content_type.is_none()
+      || content_type.is_some_and(|v| v != "application/json")
+    {
       Err(BodyParseError::ContentTypeInvalid)
     } else if body.is_empty() {
       Err(BodyParseError::NoBody)
@@ -22,6 +25,15 @@ where
       let json = serde_json::from_slice(body).unwrap();
       Ok(Json(json))
     }
+  }
+}
+
+impl<W: Serialize> Serialize for Json<W> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: serde::Serializer,
+  {
+    self.0.serialize(serializer)
   }
 }
 

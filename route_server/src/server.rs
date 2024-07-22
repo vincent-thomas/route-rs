@@ -1,17 +1,17 @@
 use std::{
-  io::{BufReader, Read, Write},
-  net::{SocketAddr, TcpStream},
+  error::Error,
+  io::{BufReader, Read},
+  net::{SocketAddr, TcpListener, TcpStream},
   sync::Arc,
 };
 
-use crate::utils::{date_header_format, read_request};
+use crate::utils::read_request;
 use route::App;
-use tokio::{net::TcpListener, task};
+use tokio::{sync::Mutex, task};
 
 use route_http::{
   header::{HeaderValue, CONTENT_LENGTH},
   request::HttpRequestExt,
-  response::HttpResponseExt,
 };
 
 pub struct Server {
@@ -25,19 +25,25 @@ impl Server {
     Server { socket, app: Arc::new(app) }
   }
 
-  pub async fn run(self) -> Result<(), Box<dyn std::error::Error>> {
-    let listener = TcpListener::bind(self.socket).await?.into_std()?;
+  pub async fn run(self) -> Result<(), Box<dyn Error>> {
+    let listener = TcpListener::bind(self.socket)?;
     loop {
       let (stream, _) = listener.accept()?;
       let moved_app = self.app.clone();
       task::spawn(async move {
-        handle_connection(stream, moved_app).await;
+        /* if let Err(err) =  */
+        handle_connection(stream, moved_app).await; /*  {
+                                                      eprintln!("Error: {:?}", err);
+                                                    } */
       });
     }
   }
 }
 
-async fn handle_connection(mut stream: TcpStream, app: Arc<App>) {
+async fn handle_connection(
+  mut stream: TcpStream,
+  app: Arc<App>,
+) -> Result<(), Box<dyn Error>> {
   let mut buf_reader = BufReader::new(&mut stream);
   let http_req = read_request(&mut buf_reader);
 
@@ -62,22 +68,28 @@ async fn handle_connection(mut stream: TcpStream, app: Arc<App>) {
 
   *req.body_mut() = body_bytes.into();
 
+  dbg!("test");
+
+  //let mut app_mut = app.lock().await;
+  //dbg!("test");
+
   let service = app.route(req.uri().path());
 
-  let mut service_output = service.call_service(req).await;
+  service.call_rawservice(req, &mut stream).await
 
-  let service_headers = service_output.headers_mut();
-
-  service_headers.insert("Content-Length", content_length_header_value);
-
-  service_headers
-    .insert("Date", HeaderValue::from_str(&date_header_format()).unwrap());
-  service_headers.insert("Connection", HeaderValue::from_static("close"));
-
-  if cfg!(debug_assertions) {
-    service_headers.insert("Server", HeaderValue::from_static("Route-RS"));
-  }
-
-  let response: String = HttpResponseExt(service_output).into();
-  stream.write_all(response.as_bytes()).unwrap();
+  //
+  // let service_headers = service_output.headers_mut();
+  //
+  // service_headers.insert("Content-Length", content_length_header_value);
+  //
+  // service_headers
+  //   .insert("Date", HeaderValue::from_str(&date_header_format()).unwrap());
+  // service_headers.insert("Connection", HeaderValue::from_static("close"));
+  //
+  // if cfg!(debug_assertions) {
+  //   service_headers.insert("Server", HeaderValue::from_static("Route-RS"));
+  // }
+  //
+  // let response: String = HttpResponseExt(service_output).into();
+  // stream.write_all(response.as_bytes()).unwrap();
 }

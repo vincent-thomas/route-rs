@@ -6,4 +6,5 @@ mod respond;
 pub use respond::*;
 pub mod error;
 
+mod body;
 pub mod service;

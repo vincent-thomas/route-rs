@@ -29,7 +29,8 @@ optional = true
 [dependencies]
 route_http = { workspace = true }
 route_core = {path = "../route_core"}
-route_router = { path = "../route_router" }
+# route_router = { path = "../route_router" }
 
 matchit = "0.8.3"
 async-trait = { workspace = true }
+tokio = {version = "1.38.1", features = ["sync"]}

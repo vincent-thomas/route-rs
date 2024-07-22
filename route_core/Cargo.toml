@@ -9,3 +9,4 @@ edition.workspace = true
 [dependencies]
 route_http = { workspace = true }
 async-trait = { workspace = true }
+futures = "0.3.30"

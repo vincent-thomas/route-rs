@@ -1,10 +1,34 @@
-use http::response::Parts;
+use http::{response::Parts, HeaderMap, HeaderValue, StatusCode, Version};
 
 pub use http::response::Response;
 
 pub type HttpResponse = Response<Box<[u8]>>;
 
-pub type Head = Parts;
+pub struct Head {
+  /// The response's status
+  pub status: StatusCode,
+
+  /// The response's headers
+  pub headers: HeaderMap<HeaderValue>,
+}
+
+impl From<Head> for String {
+  fn from(head: Head) -> Self {
+    let mut res = format!(
+      "HTTP/1.1 {status} {method}\r\n",
+      status = head.status.as_u16(),
+      method = head.status.as_str()
+    );
+    for (name, value) in head.headers {
+      let header_line =
+        format!("{}: {}\r\n", name.unwrap().as_str(), value.to_str().unwrap());
+      res.push_str(&header_line);
+    }
+    res
+  }
+}
+
+//pub type Head = Parts;
 
 pub struct HttpResponseExt(pub HttpResponse);
 

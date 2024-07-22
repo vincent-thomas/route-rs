@@ -15,7 +15,9 @@ host_use! {
   json,
   redirect,
   urlencoded,
-  cookie
+  cookie,
+  sse,
+  long_polling
 }
 
 pub struct Infallible;
@@ -29,12 +31,14 @@ pub enum BodyParseError {
 impl Into<Error> for BodyParseError {
   fn into(self) -> Error {
     match self {
-      BodyParseError::ContentTypeInvalid => {
-        Error::new(StatusCode::BAD_REQUEST, b"Bad Request".to_vec().into_boxed_slice())
-      }
-      BodyParseError::NoBody => {
-        Error::new(StatusCode::BAD_REQUEST, b"Request body is empty".to_vec().into_boxed_slice())
-      }
+      BodyParseError::ContentTypeInvalid => Error::new(
+        StatusCode::BAD_REQUEST,
+        b"Bad Request".to_vec().into_boxed_slice(),
+      ),
+      BodyParseError::NoBody => Error::new(
+        StatusCode::BAD_REQUEST,
+        b"Request body is empty".to_vec().into_boxed_slice(),
+      ),
     }
   }
 }
