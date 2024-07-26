@@ -9,3 +9,8 @@ edition.workspace = true
 [dependencies]
 http = "1.1.0"
 mime = "0.3.17"
+route_utils = {workspace = true}
+bytes = "1"
+
+futures-core = "0.3"
+pin-project-lite = "0.2.14"

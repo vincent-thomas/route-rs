@@ -1,26 +1,31 @@
-use route_core::{FromRequest, Respondable};
-use route_http::{request::HttpRequest, response::HttpResponse};
+use route_http::{request::Request, response::Response};
 use serde::{de::DeserializeOwned, Serialize};
 
-use super::BodyParseError;
+use crate::{FromRequest, respond::Respondable};
 
 #[derive(Clone)]
 pub struct UrlEncoded<T>(pub T);
+
+enum UrlEncodedParseError {
+    NoBody,
+    ContentTypeInvalid,
+    ParseError(serde_json::Error)
+}
 
 impl<T> FromRequest for UrlEncoded<T>
 where
   T: DeserializeOwned,
 {
-  type Error = BodyParseError;
-  fn from_request(req: HttpRequest) -> Result<Self, Self::Error> {
+  type Error = UrlEncodedParseError;
+  fn from_request(req: Request) -> Result<Self, Self::Error> {
     let content_type = req.headers().get("content-type");
     let body = req.body();
     if content_type.is_none()
       || content_type.is_some_and(|v| v != "application/x-www-form-urlencoded")
     {
-      Err(BodyParseError::ContentTypeInvalid)
+      Err(UrlEncodedParseError::ContentTypeInvalid)
     } else if body.is_empty() {
-      Err(BodyParseError::NoBody)
+      Err(UrlEncodedParseError::NoBody)
     } else {
       let json = serde_urlencoded::from_bytes(body).unwrap();
       Ok(UrlEncoded(json))
@@ -58,9 +63,9 @@ impl<S> Respondable for UrlEncoded<S>
 where
   S: Serialize,
 {
-  fn respond(self) -> HttpResponse {
+  fn respond(self) -> Response<String> {
     let body = serde_urlencoded::to_string(&self.0).unwrap();
-    let mut res = HttpResponse::new(body.as_bytes().into());
+    let mut res = Response::new(body);
     let headers = res.headers_mut();
 
     headers.insert(

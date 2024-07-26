@@ -1,10 +1,9 @@
 use std::str::FromStr;
 
-use http::{Error, HeaderMap, HeaderValue, Method, Request, Uri};
+use super::Request;
+use http::{Error, HeaderMap, HeaderValue, Method, Uri};
 
-use super::HttpRequest;
-
-pub struct HttpRequestExt(pub HttpRequest);
+pub struct HttpRequestExt(pub Request);
 
 impl From<String> for HttpRequestExt {
   fn from(value: String) -> Self {
@@ -24,7 +23,7 @@ fn format_headers(
   HeaderMap::from_iter(formated)
 }
 
-fn from_string(str_request: String) -> Result<HttpRequest, Error> {
+fn from_string(str_request: String) -> Result<Request, Error> {
   let mut http_req: Vec<String> =
     str_request.split('\n').map(|v| v.to_string()).collect();
 
@@ -38,7 +37,7 @@ fn from_string(str_request: String) -> Result<HttpRequest, Error> {
 
   let headers = format_headers(http_req.into_iter());
 
-  let mut req_builder = Request::builder().uri(uri).method(method);
+  let mut req_builder = http::Request::builder().uri(uri).method(method);
 
   *req_builder.headers_mut().unwrap() = headers;
 

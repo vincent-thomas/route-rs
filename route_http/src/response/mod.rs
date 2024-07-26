@@ -1,8 +1,7 @@
-use http::{response::Parts, HeaderMap, HeaderValue, StatusCode, Version};
+use http::{HeaderMap, HeaderValue, StatusCode};
 
-pub use http::response::Response;
+pub use http::Response;
 
-pub type HttpResponse = Response<Box<[u8]>>;
 
 pub struct Head {
   /// The response's status
@@ -30,7 +29,7 @@ impl From<Head> for String {
 
 //pub type Head = Parts;
 
-pub struct HttpResponseExt(pub HttpResponse);
+pub struct HttpResponseExt(pub Response<Box<[u8]>>);
 
 impl From<HttpResponseExt> for String {
   fn from(res: HttpResponseExt) -> Self {

@@ -1,28 +1,33 @@
-use route_core::{FromRequest, Respondable};
-use route_http::{request::HttpRequest, response::HttpResponse};
+use route_http::{request::Request, response::Response};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::types::BodyParseError;
+use crate::{FromRequest, respond::Respondable};
 
 #[derive(Clone)]
 pub struct Json<T>(pub T);
+
+enum JsonParseError {
+    NoBody,
+    ContentTypeInvalid,
+    ParseError(serde_json::Error)
+}
 
 impl<T> FromRequest for Json<T>
 where
   T: DeserializeOwned,
 {
-  type Error = BodyParseError;
-  fn from_request(req: HttpRequest) -> Result<Self, Self::Error> {
+  type Error = JsonParseError;
+  fn from_request(req: Request) -> Result<Self, Self::Error> {
     let content_type = req.headers().get("content-type");
     let body = req.body();
     if content_type.is_none()
       || content_type.is_some_and(|v| v != "application/json")
     {
-      Err(BodyParseError::ContentTypeInvalid)
+      Err(JsonParseError::ContentTypeInvalid)
     } else if body.is_empty() {
-      Err(BodyParseError::NoBody)
+      Err(JsonParseError::NoBody)
     } else {
-      let json = serde_json::from_slice(body).unwrap();
+      let json = serde_json::from_slice(body).map_err(|inner| JsonParseError::ParseError(inner))?;
       Ok(Json(json))
     }
   }
@@ -38,9 +43,9 @@ impl<W: Serialize> Serialize for Json<W> {
 }
 
 impl<S: Serialize> Respondable for Json<S> {
-  fn respond(self) -> HttpResponse {
+  fn respond(self) -> Response<String> {
     let body = serde_json::to_string(&self.0).unwrap();
-    let mut res = HttpResponse::new(body.as_bytes().into());
+    let mut res = Response::new(body);
     let headers = res.headers_mut();
 
     headers.insert(

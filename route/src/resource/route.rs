@@ -1,8 +1,8 @@
-use crate::{endpoint::Endpoint, register_method};
-use route_core::Respondable;
-use route_http::{
-  request::HttpRequest, response::HttpResponse, Method, StatusCode,
-};
+use crate::FromRequest;
+use crate::respond::Respondable;
+use crate::{endpoint::Endpoint, register_method, body::BoxBody};
+use route_http::request::Request;
+use route_http::{response::Response, Method, StatusCode};
 use std::collections::HashMap;
 
 use super::{utils::check_guards, Guard};
@@ -16,7 +16,8 @@ pub struct Route {
 impl Default for Route {
   fn default() -> Self {
     let default_endpoint = Endpoint::new(|| async {
-      let mut res = HttpResponse::new("404 Not found".as_bytes().into());
+      let box_body = BoxBody::new("404 Not found");
+      let mut res = Response::new(box_body);
       *res.status_mut() = StatusCode::NOT_FOUND;
       res
     });
@@ -57,7 +58,7 @@ impl Route {
     self.router.get(method)
   }
 
-  pub async fn run(&self, req: HttpRequest) -> HttpResponse {
+  pub async fn run(&self, req: Request) -> Response {
     let (parts, _) = req.clone().into_parts();
 
     let endpoint = match self.at(&parts.method) {

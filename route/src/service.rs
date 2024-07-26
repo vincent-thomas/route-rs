@@ -1,10 +1,11 @@
-use std::{error::Error, io::Write};
-
 use route_http::{
-  body::BoxBody,
   request::Request,
-  response::{HttpResponse, Response},
+  response::Response,
 };
+
+use async_trait::async_trait;
+
+use crate::body::BoxBody;
 
 //#[async_trait::async_trait]
 // pub trait RawHttpService: Sync + Send {
@@ -15,12 +16,12 @@ use route_http::{
 //   ) -> Result<(), Box<dyn Error>>;
 // }
 
-#[async_trait::async_trait]
+#[async_trait]
 pub trait HttpService: Sync + Send {
-  async fn call_service(&self, req: Request) -> HttpResponse<Box<[u8]>>;
+  async fn call_service(&self, req: Request) -> Response<Box<[u8]>>;
 }
 
-#[async_trait::async_trait]
+#[async_trait]
 pub trait Service: Sync + Send {
   async fn call_service(&self, req: Request) -> Response<BoxBody>;
 }

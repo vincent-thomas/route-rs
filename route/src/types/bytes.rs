@@ -1,5 +1,7 @@
-use route_core::{FromRequest, Respondable};
-use route_http::response::HttpResponse;
+
+use route_http::{request::Request, response::Response};
+
+use crate::{FromRequest, respond::Respondable};
 
 use super::Infallible;
 
@@ -9,7 +11,7 @@ pub struct Bytes(pub Vec<u8>);
 impl FromRequest for Bytes {
   type Error = Infallible;
   fn from_request(
-    req: route_http::request::HttpRequest,
+    req: Request,
   ) -> Result<Self, Self::Error> {
     let body = req.body();
     let new_body = body.to_vec();
@@ -18,8 +20,8 @@ impl FromRequest for Bytes {
   }
 }
 impl Respondable for Bytes {
-  fn respond(self) -> HttpResponse {
+  fn respond(self) -> Response<Bytes> {
     let inner = self.0;
-    HttpResponse::new(inner.into())
+    Response::new(inner.into())
   }
 }

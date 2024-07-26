@@ -1,12 +1,3 @@
-use std::error::Error;
-
-use super::{Json, UrlEncoded};
-use async_trait::async_trait;
-use route_core::service::{RawHttpService, SendWrite};
-use route_http::{
-  header::HeaderMap, request::HttpRequest, response::Head, StatusCode,
-};
-use serde::Serialize;
 use tokio::sync::broadcast::Sender;
 pub struct LongPollingResource<T> {
   retry_after: i32,
@@ -43,7 +34,7 @@ macro_rules! impl_serialize_type {
     {
       async fn call_rawservice(
         &self,
-        _req: HttpRequest,
+        _req: Request,
         stream: &mut dyn SendWrite,
       ) -> Result<(), Box<dyn Error>> {
         let mut headers = HeaderMap::new();
@@ -77,9 +68,9 @@ macro_rules! impl_serialize_type {
     }
   };
 }
-impl_serialize_type!(serde_json, Json, "application/json");
-impl_serialize_type!(
-  serde_urlencoded,
-  UrlEncoded,
-  "application/xxx-url-encoded"
-);
+// impl_serialize_type!(serde_json, Json, "application/json");
+// impl_serialize_type!(
+//   serde_urlencoded,
+//   UrlEncoded,
+//   "application/xxx-url-encoded"
+// );

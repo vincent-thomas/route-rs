@@ -34,3 +34,7 @@ route_core = {path = "../route_core"}
 matchit = "0.8.3"
 async-trait = { workspace = true }
 tokio = {version = "1.38.1", features = ["sync"]}
+futures-core = "0.3.30"
+route_utils.workspace = true
+pin-project-lite = "0.2.14"
+bytes = "1.6.1"

@@ -3,6 +3,8 @@ use route_http::{
   StatusCode,
 };
 
+use crate::body::MessageBody;
+
 pub trait Respondable {
   fn respond(self) -> Response<Box<[u8]>>;
 }
@@ -13,7 +15,15 @@ pub trait RespondableV2 {
   fn respond(self) -> Response<Self::Body>;
 }
 
-impl<B> RespondableV2 for Response<B> where B: MessageBody + 'static {}
+impl<B> RespondableV2 for Response<B> where B: MessageBody + 'static {
+    type Body = B;
+
+    #[inline]
+    fn respond(self) -> Response<Self::Body> {
+        self
+    }
+
+}
 
 // impl RespondableV2 for BoxBody {
 //   type Body = BoxBody;
@@ -72,7 +82,7 @@ where
   T: Respondable,
   E: Respondable,
 {
-  fn respond(self) -> HttpResponse<Box<[u8]>> {
+  fn respond(self) -> Response<Box<[u8]>> {
     match self {
       Ok(t) => t.respond(),
       Err(e) => e.respond(),
@@ -80,15 +90,15 @@ where
   }
 }
 
-impl Respondable for HttpResponse<Box<[u8]>> {
-  fn respond(self) -> HttpResponse<Box<[u8]>> {
+impl Respondable for Response<Box<[u8]>> {
+  fn respond(self) -> Response<Box<[u8]>> {
     self
   }
 }
 
 impl Respondable for () {
-  fn respond(self) -> HttpResponse<Box<[u8]>> {
-    HttpResponse::new(vec![].into())
+  fn respond(self) -> Response<Box<[u8]>> {
+    Response::new(vec![].into())
   }
 }
 
@@ -96,7 +106,7 @@ impl<T> Respondable for (StatusCode, T)
 where
   T: Respondable,
 {
-  fn respond(self) -> HttpResponse<Box<[u8]>> {
+  fn respond(self) -> Response<Box<[u8]>> {
     let (status, body) = self;
     let mut res = body.respond();
 
@@ -109,8 +119,8 @@ macro_rules! impl_respondable_for_int {
     ($($t:ty)*) => {
         $(
           impl Respondable for $t {
-            fn respond(self) -> HttpResponse<Box<[u8]>> {
-              let mut res = HttpResponse::new(self.to_string().as_bytes().into());
+            fn respond(self) -> Response<Box<[u8]>> {
+              let mut res = Response::new(self.to_string().as_bytes().into());
               let headers = res.headers_mut();
               headers.insert("content-type", "text/plain".parse().unwrap());
               res

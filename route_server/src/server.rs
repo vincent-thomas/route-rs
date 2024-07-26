@@ -2,6 +2,7 @@ use std::{
   error::Error,
   io::{BufReader, Read},
   net::{SocketAddr, TcpListener, TcpStream},
+  pin::pin,
   sync::Arc,
 };
 
@@ -10,6 +11,7 @@ use route::App;
 use tokio::{sync::Mutex, task};
 
 use route_http::{
+  body::MessageBody,
   header::{HeaderValue, CONTENT_LENGTH},
   request::HttpRequestExt,
 };
@@ -75,7 +77,12 @@ async fn handle_connection(
 
   let service = app.route(req.uri().path());
 
-  service.call_rawservice(req, &mut stream).await
+  let output = service.call_service(req).await;
+
+  let (parts, body) = output.into_parts();
+  let pinned = pin!(body);
+
+  let output = pinned.await;
 
   //
   // let service_headers = service_output.headers_mut();

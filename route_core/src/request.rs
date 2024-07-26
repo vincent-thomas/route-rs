@@ -1,11 +1,9 @@
-use route_http::request::HttpRequest;
-
-use crate::error::Error;
+use route_http::request::Request;
 
 pub trait FromRequest: Sized {
   type Error: Into<Error>;
-  fn from_request(req: HttpRequest) -> Result<Self, Self::Error>;
-  fn extract(req: HttpRequest) -> Result<Self, Self::Error> {
+  fn from_request(req: Request) -> Result<Self, Self::Error>;
+  fn extract(req: Request) -> Result<Self, Self::Error> {
     Self::from_request(req)
   }
 }
@@ -41,9 +39,9 @@ pub trait FromRequest: Sized {
 macro_rules! impl_fromrequest_tuple {
   ($($name:ident),*) => {
     impl<$($name: FromRequest),*> FromRequest for ($($name,)*) {
-      type Error = $crate::error::Error;
+      type Error = $crate::error::FromRequestError;
       #[allow(unused_variables)]
-      fn from_request(req: HttpRequest) -> Result<Self, Self::Error> {
+      fn from_request(req: Request) -> Result<Self, Self::Error> {
         // Box::pin(async move {
           // let fut = async move {
             let args = ($(match $name::from_request(req.clone()) {Ok(v) => v, Err(_) => unimplemented!(),},)*);

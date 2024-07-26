@@ -1,6 +1,8 @@
-use route_core::Respondable;
-use route_http::request::HttpRequest;
-use route_http::response::HttpResponse;
+use route_http::request::Request;
+use route_http::response::Response;
+
+use crate::respond::Respondable;
+use crate::respond::RespondableV2;
 
 use super::utils::check_guards;
 use super::Guard;
@@ -35,11 +37,22 @@ impl Resource {
     &self.route
   }
 
-  pub async fn run(&self, request: HttpRequest) -> HttpResponse {
+  pub async fn run(
+    &self,
+    request: Request,
+  ) -> Response<Box<[u8]>> {
     let (parts, _) = request.clone().into_parts();
     match check_guards(&self.guards, &parts) {
-      Some(reason) => reason.respond(),
+      Some(reason) => Respondable::respond(reason),
       None => self.route.run(request).await.respond(),
     }
   }
+
+  // pub async fn run2(&self, request: Request) -> Response {
+  //   let (parts, _) = request.clone().into_parts();
+  //   match check_guards(&self.guards, &parts) {
+  //     Some(reason) => RespondableV2::respond(reason),
+  //     None => self.route.run(request).await.respond(),
+  //   }
+  // }
 }
