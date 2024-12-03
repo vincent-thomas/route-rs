@@ -1,7 +1,7 @@
 use async_trait::async_trait;
-use route_http::{StatusCode, response::Response, header, request::Request};
+use route_http::{header, request::Request, response::Response, StatusCode};
 
-use crate::{Service, respond::Respondable};
+use crate::{respond::Respondable, Service};
 
 pub struct Redirect {
   to: &'static str,
@@ -12,7 +12,7 @@ impl Redirect {
   pub fn new(to: &'static str) -> Redirect {
     Redirect { to, status_code: StatusCode::PERMANENT_REDIRECT }
   }
-fn gen_response(&self) -> Response<Box<[u8]>> {
+  fn gen_response(&self) -> Response<Box<[u8]>> {
     let mut res = Response::new(Box::new([]));
     *res.status_mut() = self.status_code;
 
@@ -30,7 +30,6 @@ fn gen_response(&self) -> Response<Box<[u8]>> {
 impl Service for Redirect {
   async fn call_service(&self, _req: Request) -> Response<Box<[u8]>> {
     let test = self.gen_response();
-    dbg!(&test);
     test
     //let res = Response::builder().header("Location", );
   }

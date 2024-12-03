@@ -1,19 +1,20 @@
 use std::{
   error::Error,
-  io::{BufReader, Read},
+  io::{BufReader, Read, Write as _},
   net::{SocketAddr, TcpListener, TcpStream},
-  pin::pin,
   sync::Arc,
 };
 
+use route_core::service::Service;
+
 use crate::utils::read_request;
 use route::App;
-use tokio::{sync::Mutex, task};
+use tokio::task;
 
 use route_http::{
-  body::MessageBody,
   header::{HeaderValue, CONTENT_LENGTH},
   request::HttpRequestExt,
+  response::HttpResponseExt,
 };
 
 pub struct Server {
@@ -52,8 +53,6 @@ async fn handle_connection(
   let str_request = http_req.join("\n");
   let mut req = HttpRequestExt::from(str_request).0;
 
-  dbg!(&req);
-
   let body_length = req.headers().get(CONTENT_LENGTH);
 
   let body_bytes = if let Some(length) = body_length {
@@ -70,20 +69,23 @@ async fn handle_connection(
 
   *req.body_mut() = body_bytes.into();
 
-  dbg!("test");
-
   //let mut app_mut = app.lock().await;
-  //dbg!("test");
+  let response = app.call_service(req).await;
 
-  let service = app.route(req.uri().path());
+  let response_ext: String = HttpResponseExt(response).into();
 
-  let output = service.call_service(req).await;
+  stream.write_all(response_ext.as_bytes()).unwrap();
+  Ok(())
 
-  let (parts, body) = output.into_parts();
-  let pinned = pin!(body);
+  //let service = app.route(req.uri().path());
 
-  let output = pinned.await;
-
+  //let output = service.call_service(req).await;
+  //
+  //let (parts, body) = output.into_parts();
+  //let pinned = pin!(body);
+  //
+  //let output = pinned.await;
+  //
   //
   // let service_headers = service_output.headers_mut();
   //

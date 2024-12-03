@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
 use matchit::Router;
-use route_http::{response::Response, request::Request};
+use route_http::response::Response;
+
+use crate::endpoint::Endpoint;
 //use route_core::service::{HttpService, Service};
 //use route_http::response::HttpResponse;
 
-use crate::{panic_err, resource::Resource, Service};
+//use crate::{endpoint::Endpoint, panic_err, resource::Resource, Service};
 
 #[derive(Default, Clone)]
 pub struct App {
@@ -13,13 +15,13 @@ pub struct App {
 }
 
 struct AppInner {
-  pub router: Router<Box<dyn Service>>,
-  pub default: Box<dyn Service>,
+  pub router: Router<Endpoint>,
+  //pub default: Box<dyn Service>,
 }
 
 impl Default for AppInner {
   fn default() -> Self {
-    AppInner { router: Router::new(), default: Box::new(Resource::new()) }
+    AppInner { router: Router::new() }
   }
 }
 
@@ -36,41 +38,45 @@ impl App {
     f(inner)
   }
 
-  pub fn at<T>(&mut self, path: &str, service: T) -> &mut Self
-  where
-    T: Service + 'static,
-  {
-    self.tap_inner(|inner| {
-      let insertion = inner.router.insert(path, Box::new(service));
-      panic_err!(insertion, "Failed to insert route into router: {:#?}");
-    });
+  pub fn at(&mut self, path: &str, endpoint: Endpoint) -> &mut Self {
+    self.tap_inner(|inner| inner.router.insert(path, endpoint).unwrap());
     self
   }
 }
 
-#[async_trait::async_trait]
-impl Service for Resource {
-  async fn call_service(
-    &self,
-    req: Request,
-  ) -> Response<Box<[u8]>> {
-    let fut = self.run(req);
-    fut.await
+impl App {
+  pub fn route(&self, path: &str) -> &Endpoint {
+    match self.inner.router.at(path) {
+      Ok(thing) => thing.value,
+      Err(_) => panic!("panic"),
+    }
+  }
+  pub fn route_mut<'a>(&'a mut self, path: &str) -> &'a mut Endpoint {
+    self.tap_inner(move |inner| match inner.router.at_mut(path) {
+      Ok(thing) => thing.value,
+      Err(_) => panic!("oh no"),
+    })
   }
 }
 
-impl App {
-  pub fn route<'a>(&'a self, path: &str) -> &Box<dyn Service + 'a> {
-    match self.inner.router.at(path) {
-      Ok(thing) => thing.value,
-      Err(_) => &self.inner.default,
-    }
-  }
+#[async_trait::async_trait]
+impl route_core::service::Service for App {
+  async fn call_service(
+    &self,
+    req: route_http::request::Request,
+  ) -> route_http::response::Response<Box<[u8]>> {
+    let req_path = req.uri().path();
+    let method = req.method();
+    let matchit::Match { value: endpoint, params: _ } =
+      self.inner.router.at(req_path).unwrap();
 
-  pub fn route_mut<'a>(&'a mut self, path: &str) -> &'a mut dyn Service {
-    self.tap_inner(move |inner| match inner.router.at_mut(path) {
-      Ok(thing) => thing.value.as_mut(),
-      Err(_) => inner.default.as_mut(),
-    })
+    if let Some(result) = endpoint.handler.get(method) {
+      let response = Response::new(result.as_bytes().into());
+
+      response
+    } else {
+      let response = Response::new("No Body :(".as_bytes().into());
+      response
+    }
   }
 }

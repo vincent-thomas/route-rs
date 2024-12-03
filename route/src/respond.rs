@@ -1,29 +1,24 @@
-use route_http::{
-  response::Response,
-  StatusCode,
-};
-
-use crate::body::MessageBody;
+use route_http::{response::Response, StatusCode};
 
 pub trait Respondable {
   fn respond(self) -> Response<Box<[u8]>>;
 }
 
-pub trait RespondableV2 {
-  type Body: MessageBody + 'static;
+//pub trait RespondableV2 {
+//  type Body: MessageBody + 'static;
+//
+//  fn respond(self) -> Response<Self::Body>;
+//}
 
-  fn respond(self) -> Response<Self::Body>;
-}
-
-impl<B> RespondableV2 for Response<B> where B: MessageBody + 'static {
-    type Body = B;
-
-    #[inline]
-    fn respond(self) -> Response<Self::Body> {
-        self
-    }
-
-}
+//impl<B> RespondableV2 for Response<B> where B: MessageBody + 'static {
+//    type Body = B;
+//
+//    #[inline]
+//    fn respond(self) -> Response<Self::Body> {
+//        self
+//    }
+//
+//}
 
 // impl RespondableV2 for BoxBody {
 //   type Body = BoxBody;

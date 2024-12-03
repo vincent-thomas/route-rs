@@ -6,4 +6,4 @@ pub use endpoint::*;
 // pub use respond::*;
 //pub mod error;
 
-//pub mod service;
+pub mod service;

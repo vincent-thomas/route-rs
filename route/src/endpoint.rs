@@ -1,5 +1,40 @@
-use crate::{resource::Guard, Service, respond::RespondableV2, FromRequest};
-use route_core::Handler;
+use std::collections::HashMap;
+
+use crate::respond::Respondable;
+use route_http::{request::Head, response::Response, StatusCode};
+
+pub enum GuardReason {
+  Unauthorized,
+  Forbidden,
+  BadRequest,
+  NotFound,
+  InternalServerError,
+  Custom(String),
+}
+
+impl Respondable for GuardReason {
+  fn respond(self) -> Response<Box<[u8]>> {
+    let status = match self {
+      GuardReason::Unauthorized => StatusCode::UNAUTHORIZED,
+      GuardReason::Forbidden => StatusCode::FORBIDDEN,
+      GuardReason::BadRequest => StatusCode::BAD_REQUEST,
+      GuardReason::NotFound => StatusCode::NOT_FOUND,
+      GuardReason::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+      GuardReason::Custom(_) => StatusCode::BAD_REQUEST,
+    };
+
+    Response::builder().status(status).body([].into()).unwrap()
+  }
+}
+
+pub enum GuardOutcome {
+  WeJustPassinBy,
+  Reason(GuardReason),
+}
+
+pub trait Guard: Sync + Send {
+  fn check(&self, head: &Head) -> GuardOutcome;
+}
 
 // struct Service<H, Args>
 // where
@@ -50,28 +85,24 @@ use route_core::Handler;
 /// Guards can be attached to a Route, which are functions that must return true for the route to be matched.
 /// Guards are checked in the order they are added.
 pub struct Endpoint {
-  pub handler: Box<dyn Service>,
+  pub handler: HashMap<route_http::Method, Box<String>>,
   guards: Vec<Box<dyn Guard>>,
 }
 
 impl Endpoint {
-  pub fn new<H, Args>(handler: H) -> Self
-  where
-    Args: FromRequest + Send + Sync + 'static,
-    H: Handler<Args> + Send + Sync,
-    H::Output: RespondableV2,
-    H::Future: Send,
-  {
-    let service = Service::new(handler);
-    Self { handler: Box::new(service), guards: Vec::new() }
-  }
-
-  pub fn guard(mut self, guard: Box<dyn Guard>) -> Self {
-    self.guards.push(guard);
-    self
-  }
-
-  pub fn guards(&self) -> &Vec<Box<dyn Guard>> {
-    &self.guards
+  pub fn testing(handler: String) -> Self {
+    let mut map = HashMap::new();
+    map.insert(route_http::Method::GET, Box::new(handler));
+    Self { handler: map, guards: Vec::new() }
   }
 }
+//
+//  pub fn guard(mut self, guard: Box<dyn Guard>) -> Self {
+//    self.guards.push(guard);
+//    self
+//  }
+//
+//  pub fn guards(&self) -> &Vec<Box<dyn Guard>> {
+//    &self.guards
+//  }
+//}

@@ -30,8 +30,6 @@ fn from_string(str_request: String) -> Result<Request, Error> {
   let http_meta = http_req.swap_remove(0);
   let parts: Vec<&str> = http_meta.split_whitespace().collect();
 
-  dbg!(&parts);
-
   let method = Method::from_str(parts[0]).unwrap();
   let uri = Uri::from_str(parts[1]).unwrap();
 

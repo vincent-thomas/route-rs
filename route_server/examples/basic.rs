@@ -22,8 +22,6 @@ impl Guard for ThisGuard {
 }
 
 async fn handler(body: web::Bytes) -> impl Respondable {
-  dbg!(&body);
-
   (StatusCode::NO_CONTENT, body)
 }
 

@@ -59,10 +59,7 @@ macro_rules! impl_serialize_type {
             stream.write_all(msg_str.as_bytes())?;
             Ok(())
           }
-          Err(e) => {
-            dbg!(&e);
-            Err(Box::new(e))
-          }
+          Err(e) => Err(Box::new(e)),
         }
       }
     }

@@ -1,6 +1,6 @@
-use crate::FromRequest;
 use crate::respond::Respondable;
-use crate::{endpoint::Endpoint, register_method, body::BoxBody};
+use crate::FromRequest;
+use crate::{body::BoxBody, endpoint::Endpoint, register_method};
 use route_http::request::Request;
 use route_http::{response::Response, Method, StatusCode};
 use std::collections::HashMap;
@@ -58,7 +58,7 @@ impl Route {
     self.router.get(method)
   }
 
-  pub async fn run(&self, req: Request) -> Response {
+  pub async fn run(&self, req: Request) -> Response<Box<[u8]>> {
     let (parts, _) = req.clone().into_parts();
 
     let endpoint = match self.at(&parts.method) {

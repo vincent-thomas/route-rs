@@ -2,7 +2,6 @@ use route_http::request::Request;
 use route_http::response::Response;
 
 use crate::respond::Respondable;
-use crate::respond::RespondableV2;
 
 use super::utils::check_guards;
 use super::Guard;
@@ -37,10 +36,7 @@ impl Resource {
     &self.route
   }
 
-  pub async fn run(
-    &self,
-    request: Request,
-  ) -> Response<Box<[u8]>> {
+  pub async fn run(&self, request: Request) -> Response<Box<[u8]>> {
     let (parts, _) = request.clone().into_parts();
     match check_guards(&self.guards, &parts) {
       Some(reason) => Respondable::respond(reason),
