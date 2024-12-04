@@ -1,0 +1,12 @@
+[package]
+name = "route_core"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+route_http = { workspace = true }
+async-trait = { workspace = true }
+futures = "0.3.30"

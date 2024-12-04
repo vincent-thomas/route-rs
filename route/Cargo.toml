@@ -1,0 +1,40 @@
+[package]
+name = "route"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+license.workspace = true
+edition.workspace = true
+
+
+
+[features]
+default = ["types"]
+types = ["serde", "serde_json", "serde_urlencoded"]
+
+[dependencies.serde]
+version = "1"
+features = ["derive"]
+optional = true
+
+[dependencies.serde_json]
+version = "1"
+optional = true
+
+[dependencies.serde_urlencoded]
+version = "0.7"
+optional = true
+
+
+[dependencies]
+route_http = { workspace = true }
+route_core = {path = "../route_core"}
+# route_router = { path = "../route_router" }
+
+matchit = "0.8.3"
+async-trait = { workspace = true }
+tokio = {version = "1.38.1", features = ["sync"]}
+futures-core = "0.3.30"
+route_utils.workspace = true
+pin-project-lite = "0.2.14"
+bytes = "1.6.1"

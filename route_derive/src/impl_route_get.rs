@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Ident, ItemFn, Lit, Stmt};
+use syn::{ItemFn, Lit, Stmt};
 
 fn statements_to_quote(statements: Vec<Stmt>) -> TokenStream {
   // Create a TokenStream to collect all the quote! {} blocks
@@ -31,36 +31,44 @@ pub(crate) fn impl_route_get(
     _ => unimplemented!(),
   };
 
+  let ident = &ast.sig.ident;
+
+  let struct_name = quote::format_ident!("{}_struct", ast.sig.ident);
+
   let fn_name = quote::format_ident!("{}_fn", ast.sig.ident);
 
-  let mut testt = "".to_string();
+  // Get the function so that inputs can be extracted with the FromRequest trait
+  let fn_block = &ast.block;
+  let fn_statements = &fn_block.stmts;
 
-  for _ in 0..ast.sig.inputs.len() {
-    testt.push_str("request,");
-  }
-  testt.pop();
-  let testt = quote! { #testt };
+  let fn_statements_quote = statements_to_quote(fn_statements.clone());
 
-  let block = statements_to_quote(ast.block.stmts);
+  // Generate the function that will be called by the route
+  let gen_fn = quote! {
+    fn #fn_name(req: route_http::HttpRequest) -> String {
+      #fn_statements_quote
+    }
+  };
 
-  let struct_def = quote! {
-    pub struct #fn_name;
+  let gen_struct = quote! {
+    struct #struct_name;
+  };
 
-    impl route::Service for #fn_name {
-      fn method(&self) -> route_router::RouteMethod {
-        route_router::RouteMethod::Get
+  let gen_struct_impl = quote! {
+    impl route::Service for #ident {
+      fn method(&self) -> route_http::method::HttpMethod {
+        route_http::method::HttpMethod::Get
       }
 
       fn path(&self) -> String {
         #path.to_string()
       }
-
-      fn handler(&self) -> fn() -> Box<dyn route_router::HttpResponse> {
-        |#testt| #block
-      }
     }
   };
+
   quote! {
-    #struct_def
+    #gen_struct
+    #gen_struct_impl
+    #gen_fn
   }
 }

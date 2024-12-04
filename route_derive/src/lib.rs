@@ -9,5 +9,5 @@ use syn::ItemFn;
 pub fn get(args: TokenStream, input: TokenStream) -> TokenStream {
   let ast: ItemFn = syn::parse2(input.into()).unwrap();
 
-  impl_route_get(ast, args.into()).into()
+  impl_route_get(ast, args).into()
 }
