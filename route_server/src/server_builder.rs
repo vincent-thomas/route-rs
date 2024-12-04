@@ -16,9 +16,3 @@ impl ServerBuilder {
     Self { socket: SocketAddr::from_str(&addr).unwrap() }
   }
 }
-
-impl ServerBuilder {
-  pub fn app(self, app: App) -> Server {
-    Server::new(self.socket, app)
-  }
-}

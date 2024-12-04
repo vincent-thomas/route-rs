@@ -15,4 +15,4 @@ pub use mime;
 pub use http::uri;
 pub use http::version;
 
-//pub mod body;
+pub mod body;

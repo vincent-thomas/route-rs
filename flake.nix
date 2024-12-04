@@ -24,6 +24,7 @@
           buildInputs = with pkgs; [
             bacon
             rustc
+            cargo-expand
           ];
 
         };

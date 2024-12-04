@@ -1,19 +1,17 @@
 use route_http::{response::Response, StatusCode};
 use std::fmt;
 
-use crate::body::BoxBody;
+//pub struct Error {
+//cause: Box<dyn ResponseError>,
+//}
 
-pub struct Error {
-  cause: Box<dyn ResponseError>,
-}
-
-pub trait ResponseError {
-  fn status_code(&self) -> StatusCode {
-    StatusCode::INTERNAL_SERVER_ERROR
-  }
-
-  fn error_response(&self) -> Response<BoxBody>;
-}
+//pub trait ResponseError {
+//  fn status_code(&self) -> StatusCode {
+//    StatusCode::INTERNAL_SERVER_ERROR
+//  }
+//
+//  fn error_response(&self) -> Response<BoxBody>;
+//}
 
 //impl fmt::Display for Error {
 //    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -1,15 +1,12 @@
 mod app;
-//mod types;
 mod from_request;
+pub mod guard;
+pub mod route;
 pub use app::*;
 pub use from_request::*;
 pub mod endpoint;
-mod macros;
-//pub mod resource;
 pub mod error;
-pub mod respond;
-
-pub mod body;
+mod macros;
 
 pub use route_core::*;
 pub use route_http as http;

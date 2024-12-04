@@ -2,6 +2,7 @@ use http::{HeaderMap, HeaderValue, StatusCode};
 
 pub use http::Response;
 
+use crate::body::Body;
 
 pub struct Head {
   /// The response's status
@@ -29,7 +30,7 @@ impl From<Head> for String {
 
 //pub type Head = Parts;
 
-pub struct HttpResponseExt(pub Response<Box<[u8]>>);
+pub struct HttpResponseExt(pub Response<Body>);
 
 impl From<HttpResponseExt> for String {
   fn from(res: HttpResponseExt) -> Self {
@@ -47,7 +48,9 @@ impl From<HttpResponseExt> for String {
       res.push_str(&header_line);
     }
 
-    let body_str = unsafe { String::from_utf8_unchecked(body.to_vec()) };
+    //let body_str = unsafe { String::from_utf8_unchecked(body.to_vec()) };
+    let body_str = String::new();
+    dbg!("help");
     res.push_str(&format!("\r\n{body_str}"));
     res
   }
