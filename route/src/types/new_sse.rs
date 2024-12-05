@@ -65,8 +65,6 @@ impl Event {
 
 use std::task::Poll;
 
-use crate::body::{MessageBody, BodySize};
-
 impl<S, E> MessageBody for NewSse<S>
 where
   S: Stream<Item = Result<Event, E>>,

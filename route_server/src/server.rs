@@ -1,24 +1,20 @@
 use std::{
   error::Error,
-  future::Future,
-  io::{BufReader, Read, Write as _},
+  io::{BufReader, Write as _},
   net::{SocketAddr, TcpListener, TcpStream},
-  pin::{self, Pin},
   str::FromStr,
-  sync::Arc,
 };
 
-use route::Respondable;
-use route_core::service::Service;
-
-use crate::utils::read_request;
-use tokio::task;
+use route_core::Respondable;
 
 use route_http::{
-  header::{HeaderValue, CONTENT_LENGTH},
-  request::HttpRequestExt,
+  header::{HeaderName, HeaderValue, CONTENT_LENGTH},
+  request::{HttpRequestExt, Request},
   response::HttpResponseExt,
 };
+use tower::Service;
+
+use crate::utils::{self, date_header_format};
 
 pub struct Server {
   socket: SocketAddr,
@@ -30,53 +26,58 @@ impl Server {
     Server { socket: SocketAddr::from_str(&addr).unwrap() }
   }
 
-  pub async fn run<S>(self, s: Arc<S>) -> Result<(), Box<dyn Error>>
+  pub async fn run<S>(self, mut service: S) -> Result<(), Box<dyn Error>>
   where
-    S: Service + Send + Sync + 'static,
+    S: tower::Service<Request> + Send + 'static,
     S::Response: Respondable,
-    S::Future: Send,
+    S::Error: Respondable,
   {
     let listener = TcpListener::bind(self.socket)?;
     loop {
       let (stream, _) = listener.accept()?;
-      let thing = s.clone();
-      task::spawn(Self::handle_connection(stream, thing));
+      Self::handle_connection(stream, &mut service).await;
     }
   }
 
-  async fn handle_connection<S>(mut stream: TcpStream, app: Arc<S>)
+  async fn handle_connection<S>(mut stream: TcpStream, service: &mut S)
   where
-    S: Service + Send + 'static,
+    S: tower::Service<Request>,
     S::Response: Respondable,
-    S::Future: Send,
+    S::Error: Respondable,
   {
     let mut buf_reader = BufReader::new(&mut stream);
-    let http_req = read_request(&mut buf_reader);
+    let http_headers = utils::read_request(&mut buf_reader).join("\n");
 
-    let str_request = http_req.join("\n");
-    let mut req = HttpRequestExt::from(str_request).0;
+    let req_empty_body = HttpRequestExt::from(http_headers).0;
 
-    let body_length = req.headers().get(CONTENT_LENGTH);
+    let body_length = req_empty_body
+      .headers()
+      .get(CONTENT_LENGTH)
+      .unwrap_or(&HeaderValue::from(0))
+      .to_str()
+      .unwrap()
+      .parse()
+      .unwrap();
 
-    let body_bytes = if let Some(length) = body_length {
-      let length = length.to_str().unwrap().parse().unwrap();
-      let mut body = vec![0u8; length];
-      buf_reader.read_exact(&mut body).unwrap();
-      body
-    } else {
-      Vec::new()
+    let req = utils::fill_req_body(req_empty_body, body_length, buf_reader);
+
+    let mut response = match Service::call(service, req).await {
+      Ok(value) => value.respond(),
+      Err(err) => err.respond(),
     };
 
-    let content_length_header_value =
-      body_length.cloned().unwrap_or(HeaderValue::from_static("0"));
-
-    *req.body_mut() = body_bytes.into();
-
-    let result = app.call_service(req).await;
-    let response = result.respond();
+    response.headers_mut().extend([
+      (
+        HeaderName::from_static("date"),
+        HeaderValue::from_str(&date_header_format()).unwrap(),
+      ),
+      (
+        HeaderName::from_static("server"),
+        HeaderValue::from_str("route-rs").unwrap(),
+      ),
+    ]);
 
     let response_ext: String = HttpResponseExt(response).into();
-
     stream.write_all(response_ext.as_bytes()).unwrap();
   }
 }

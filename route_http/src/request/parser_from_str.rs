@@ -14,10 +14,14 @@ impl From<String> for HttpRequestExt {
 fn format_headers(
   iter: impl Iterator<Item = String>,
 ) -> HeaderMap<HeaderValue> {
-  let formated = iter.map(|line| {
+  let formated = iter.filter_map(|line| {
     let mut parts: Vec<&str> = line.split(": ").collect();
     let key = parts.remove(0);
-    (key.parse().unwrap(), parts[0].to_string().parse().unwrap())
+
+    match key.parse() {
+      Ok(key) => Some((key, parts[0].to_string().parse().unwrap())),
+      Err(_err) => None,
+    }
   });
 
   HeaderMap::from_iter(formated)

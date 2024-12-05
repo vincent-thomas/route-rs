@@ -1,4 +1,10 @@
-use route_http::{body::Body, response::Response, StatusCode};
+use std::convert::Infallible;
+
+use route_http::{
+  body::Body,
+  response::{Response, ResponseBuilder},
+  StatusCode,
+};
 
 pub trait Respondable {
   fn respond(self) -> Response<Body>;
@@ -23,9 +29,15 @@ impl Respondable for Response<Body> {
   }
 }
 
+impl Respondable for Infallible {
+  fn respond(self) -> Response<Body> {
+    panic!("Not fallible :(")
+  }
+}
+
 impl Respondable for () {
   fn respond(self) -> Response<Body> {
-    Response::new(Body)
+    ResponseBuilder::new().status(200).body(Body::from(())).unwrap()
   }
 }
 
@@ -47,9 +59,15 @@ macro_rules! impl_respondable_for_int {
         $(
           impl Respondable for $t {
             fn respond(self) -> Response<Body> {
-              let mut res = Response::new(Body);
+              let body = Body::from(self);
+              let content_len = body.len();
+
+              let mut res = Response::new(body);
               let headers = res.headers_mut();
+
+              headers.insert("content-length", content_len.to_string().parse().unwrap());
               headers.insert("content-type", "text/plain".parse().unwrap());
+
               res
             }
           }

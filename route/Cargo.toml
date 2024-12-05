@@ -29,7 +29,7 @@ optional = true
 [dependencies]
 route_http = { workspace = true }
 route_core = {path = "../route_core"}
-# route_router = { path = "../route_router" }
+route_server = { path = "../route_server" }
 
 matchit = "0.8.3"
 async-trait = { workspace = true }
@@ -38,3 +38,5 @@ futures-core = "0.3.30"
 route_utils.workspace = true
 pin-project-lite = "0.2.14"
 bytes = "1.6.1"
+tower = "0.5.1"
+concat-idents = "1.1.5"

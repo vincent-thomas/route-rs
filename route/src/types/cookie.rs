@@ -1,21 +1,35 @@
 use std::collections::HashMap;
 
-use route_http::request::Request;
+use route_core::FromRequestParts;
+use route_http::{header::HeaderValue, request::Parts};
 
-use crate::FromRequest;
+pub struct Cookies(pub HashMap<String, String>);
 
-pub struct Cookie(pub HashMap<String, String>);
+impl FromRequestParts for Cookies {
+  type Error = ();
+  fn from_request_parts(parts: &mut Parts) -> Result<Self, Self::Error> {
+    let default = HeaderValue::from_static("");
+    let cookie_iter = parts
+      .headers
+      .get("cookie")
+      .unwrap_or(&default)
+      .to_str()
+      .unwrap()
+      .split(";");
 
-impl FromRequest for Cookie {
-  type Error = BodyParseError;
-  fn from_request(_req: Request) -> Result<Self, Self::Error> {
-    //let cookie_builder = HashMap::new();
+    let mut vec = Vec::new();
 
-    // let test = req.headers().get("cookie");
+    for item in cookie_iter {
+      let item: Vec<&str> = item.trim().split("=").collect();
 
-    //Ok(Cookie(cookie_builder));
-    todo!();
+      let key = item[0];
+      let value = item[1];
 
-    //unimplemented!()
+      vec.push((key.to_string(), value.to_string()))
+    }
+
+    let hash = HashMap::from_iter(vec);
+
+    Ok(Self(hash))
   }
 }

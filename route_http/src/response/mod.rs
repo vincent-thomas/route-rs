@@ -1,8 +1,9 @@
 use http::{HeaderMap, HeaderValue, StatusCode};
 
-pub use http::Response;
+pub type Response<B = Body> = http::Response<B>;
 
 use crate::body::Body;
+pub type ResponseBuilder = http::response::Builder;
 
 pub struct Head {
   /// The response's status
@@ -48,9 +49,7 @@ impl From<HttpResponseExt> for String {
       res.push_str(&header_line);
     }
 
-    //let body_str = unsafe { String::from_utf8_unchecked(body.to_vec()) };
-    let body_str = String::new();
-    dbg!("help");
+    let body_str: String = body.into();
     res.push_str(&format!("\r\n{body_str}"));
     res
   }

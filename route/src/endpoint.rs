@@ -1,15 +1,21 @@
+use std::task::Poll;
 use std::{collections::HashMap, future::Future, pin::Pin};
 
-use route_core::{service::Service, Handler};
+use route_core::Handler;
 use route_core::{FromRequest, Respondable};
+use route_http::request::Request;
+use route_http::StatusCode;
 use route_http::{body::Body, response::Response, Method};
+use route_utils::BoxedFuture;
 
 use crate::{guard::Guard, route::Route};
 
-type BoxedService<Res> = Box<
-  dyn Service<
+pub(crate) type BoxedService<Res> = Box<
+  dyn tower::Service<
+    Request,
     Response = Res,
-    Future = Pin<Box<dyn Future<Output = Res> + Send>>,
+    Error = Res,
+    Future = Pin<Box<dyn Future<Output = Result<Res, Res>> + Send>>,
   >,
 >;
 
@@ -19,12 +25,12 @@ type BoxedService<Res> = Box<
 /// Guards are checked in the order they are added.
 #[derive(Default)]
 pub struct Endpoint {
-  pub methods: HashMap<Method, BoxedService<Response<Body>>>,
-  guards: Vec<Box<dyn Guard>>,
+  pub(crate) methods: HashMap<Method, BoxedService<Response>>,
+  pub(crate) guards: Vec<Box<dyn Guard>>,
 }
 
 impl Endpoint {
-  pub fn at(&self, method: &Method) -> Option<&BoxedService<Response<Body>>> {
+  pub fn at(&self, method: &Method) -> Option<&BoxedService<Response>> {
     self.methods.get(method)
   }
   pub fn at_mut(
@@ -35,16 +41,67 @@ impl Endpoint {
   }
 }
 
+impl tower::Service<Request> for Endpoint {
+  type Future = BoxedFuture<Result<Self::Response, Self::Error>>;
+  type Response = Response;
+  type Error = Response;
+
+  fn poll_ready(
+    &mut self,
+    _cx: &mut std::task::Context<'_>,
+  ) -> Poll<Result<(), Self::Error>> {
+    Poll::Ready(Ok(()))
+  }
+  fn call(&mut self, req: Request) -> Self::Future {
+    let (parts, _body) = req.clone().into_parts();
+
+    let Some(route) = self.at_mut(&parts.method) else {
+      let mut response = Response::new(Body::from(()));
+
+      *response.status_mut() = StatusCode::METHOD_NOT_ALLOWED;
+      return Box::pin(EndpointFuture { fut: async move { Err(response) } });
+    };
+    Box::pin(EndpointFuture { fut: route.call(req) })
+  }
+}
+
+use pin_project_lite::pin_project;
+
+pin_project! {
+    struct EndpointFuture<Fut>
+    where
+      Fut: Future,
+    {
+      #[pin]
+      fut: Fut,
+    }
+}
+
+impl<Fut> Future for EndpointFuture<Fut>
+where
+  Fut: Future,
+{
+  type Output = Fut::Output;
+  fn poll(
+    self: Pin<&mut Self>,
+    cx: &mut std::task::Context<'_>,
+  ) -> Poll<Self::Output> {
+    let this = self.project();
+    this.fut.poll(cx)
+  }
+}
+
 macro_rules! impl_methodrouter {
   ($( $method_name:ident $method:ident ),*) => {
         impl Endpoint {
             $(
                 pub fn $method_name<H, Args>(mut self, route: H) -> Self
-    where
-      H: Handler<Args> + Sync + Clone,
-      H::Future: Future<Output = H::Output> + Send,
-      H::Output: Respondable,
-      Args: FromRequest + Send + Sync + 'static
+                where
+                  H: Handler<Args> + Sync + Clone,
+                  H::Future: Future<Output = H::Output> + Send,
+                  H::Output: Respondable,
+                  Args: FromRequest + Send + Sync + 'static,
+                  Args::Error: Send
                 {
                     let route = Route::new(route);
                     self.methods.insert(route_http::Method::$method, Box::new(route));
@@ -55,27 +112,4 @@ macro_rules! impl_methodrouter {
     };
 }
 
-macro_rules! impl_method {
-  ($( $method_name:ident $method:ident ),*) => {
-            $(
-    pub fn $method_name<H, Args>(handler: H) -> Endpoint
-    where
-      H: Handler<Args> + Sync + Clone,
-      H::Future: Future<Output = H::Output> + Send,
-      H::Output: Respondable,
-      Args: FromRequest + Send + Sync + 'static
-
-    {
-      let mut methods = HashMap::default();
-      let route = Route::new(handler);
-      let boxed: BoxedService<Response<Body>> = Box::new(route);
-
-      methods.insert(route_http::Method::$method, boxed);
-      Endpoint { methods, guards: Vec::new() }
-    }
-            )*
-  };
-}
-
-impl_method!/*  */(get GET, post POST, put PUT, delete DELETE, patch PATCH);
 impl_methodrouter!(get GET, post POST, put PUT, delete DELETE, patch PATCH);

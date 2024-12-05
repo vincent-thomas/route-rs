@@ -1,18 +1,13 @@
+use route_http::{body::Body, request::Request, response::Response};
 
-use route_http::{request::Request, response::Response};
-
-use crate::{FromRequest, respond::Respondable};
-
-use super::Infallible;
+use crate::{FromRequest, Respondable};
 
 #[derive(Debug)]
 pub struct Bytes(pub Vec<u8>);
 
 impl FromRequest for Bytes {
-  type Error = Infallible;
-  fn from_request(
-    req: Request,
-  ) -> Result<Self, Self::Error> {
+  type Error = ();
+  fn from_request(req: Request) -> Result<Self, Self::Error> {
     let body = req.body();
     let new_body = body.to_vec();
 
@@ -20,8 +15,8 @@ impl FromRequest for Bytes {
   }
 }
 impl Respondable for Bytes {
-  fn respond(self) -> Response<Bytes> {
+  fn respond(self) -> Response {
     let inner = self.0;
-    Response::new(inner.into())
+    Response::new(Body::from(inner))
   }
 }

@@ -8,5 +8,7 @@ edition.workspace = true
 
 [dependencies]
 route_http = { workspace = true }
+route_utils = { workspace = true }
 async-trait = { workspace = true }
 futures = "0.3.30"
+tower = "0.5.1"

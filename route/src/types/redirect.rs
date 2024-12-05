@@ -1,7 +1,11 @@
-use async_trait::async_trait;
-use route_http::{header, request::Request, response::Response, StatusCode};
+use std::task::Poll;
 
-use crate::{respond::Respondable, Service};
+use route_core::Respondable;
+use route_http::{
+  body::Body, header, request::Request, response::Response, StatusCode,
+};
+use route_utils::BoxedFuture;
+use tower::Service;
 
 pub struct Redirect {
   to: &'static str,
@@ -12,8 +16,9 @@ impl Redirect {
   pub fn new(to: &'static str) -> Redirect {
     Redirect { to, status_code: StatusCode::PERMANENT_REDIRECT }
   }
-  fn gen_response(&self) -> Response<Box<[u8]>> {
-    let mut res = Response::new(Box::new([]));
+
+  fn gen_response(&self) -> Response {
+    let mut res = Response::new(Body::from(()));
     *res.status_mut() = self.status_code;
 
     let headers = res.headers_mut();
@@ -26,12 +31,21 @@ impl Redirect {
   }
 }
 
-#[async_trait]
-impl Service for Redirect {
-  async fn call_service(&self, _req: Request) -> Response<Box<[u8]>> {
+impl Service<Request> for Redirect {
+  type Response = Response;
+  type Error = Response;
+  type Future = BoxedFuture<Result<Self::Response, Self::Error>>;
+
+  fn poll_ready(
+    &mut self,
+    cx: &mut std::task::Context<'_>,
+  ) -> Poll<Result<(), Self::Error>> {
+    Poll::Ready(Ok(()))
+  }
+
+  fn call(&mut self, _req: Request) -> Self::Future {
     let test = self.gen_response();
-    test
-    //let res = Response::builder().header("Location", );
+    Box::pin(async move { Ok(test) })
   }
 }
 
@@ -45,7 +59,7 @@ impl Service for Redirect {
 // }
 
 impl Respondable for Redirect {
-  fn respond(self) -> Response<Box<[u8]>> {
+  fn respond(self) -> Response {
     self.gen_response()
   }
 }

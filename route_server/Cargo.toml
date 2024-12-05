@@ -8,7 +8,7 @@ edition.workspace = true
 
 [dependencies]
 tokio = { version = "1.38", features = ["rt","rt-multi-thread", "macros", "net", "time"] }
-route = { version = "0.1.0", path = "../route" }
 route_core = { path = "../route_core", version = "0.1.0" }
 route_http = { workspace = true }
 chrono = "0.4.38"
+tower = "0.5.1"

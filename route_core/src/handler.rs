@@ -1,9 +1,5 @@
 use std::future::Future;
 
-use route_http::request::Request;
-
-use crate::{FromRequest, Respondable};
-
 pub trait Handler<Args>: Send + 'static {
   type Output;
   type Future: Future<Output = Self::Output>;

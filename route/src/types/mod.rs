@@ -1,5 +1,10 @@
-mod new_sse;
+//mod new_sse;
 //use route_http::StatusCode;
+
+pub mod authorization;
+
+use route_core::Respondable;
+use route_http::{body::Body, header::HeaderName, response::Response};
 
 macro_rules! host_use {
   ($($name:ident),*) => {
@@ -20,7 +25,31 @@ host_use! {
   long_polling
 }
 
-pub struct Infallible;
+pub enum BodyParsingError {
+  NoBody,
+  ContentTypeInvalid,
+  InvalidBody,
+  ParsingError(String),
+}
+
+impl Respondable for BodyParsingError {
+  fn respond(self) -> route_http::response::Response<route_http::body::Body> {
+    let body = match self {
+      Self::NoBody => "Body is empty".into(),
+      Self::InvalidBody => "Invalid Body".into(),
+      Self::ContentTypeInvalid => "Invalid body type".into(),
+      Self::ParsingError(err) => format!("Parsing error: {}", err),
+    };
+
+    Response::builder()
+      .status(400)
+      .header(HeaderName::from_static("content-type"), "text/plain")
+      .header(HeaderName::from_static("content-length"), body.len().to_string())
+      .body(Body::from(body))
+      .unwrap()
+  }
+}
+
 //
 // #[derive(Debug)]
 // pub enum BodyParseError {
