@@ -1,27 +1,19 @@
-use std::{future::Future, pin::Pin};
-
+use crate::prelude::*;
 use matchit::Router;
+use route_core::Service;
 use route_http::{
   body::Body,
   request::Request,
   response::{Response, ResponseBuilder},
 };
 use route_utils::BoxedFuture;
-use tower::Service;
+use serde_json::Value;
+use std::{collections::HashMap, future::Future, pin::Pin};
 
 #[derive(Default)]
 pub struct App {
   pub router: Router<BoxedService<Response>>,
 }
-
-pub(crate) type BoxedService<Res> = Box<
-  dyn tower::Service<
-    Request,
-    Response = Res,
-    Error = Res,
-    Future = Pin<Box<dyn Future<Output = Result<Res, Res>>>>,
-  >,
->;
 
 unsafe impl Send for App {}
 
@@ -32,7 +24,7 @@ impl App {
         Request,
         Response = Response,
         Error = Response,
-        Future = Pin<Box<dyn Future<Output = Result<Response, Response>>>>,
+        Future = BoxedFuture<Result<Response, Response>>,
       > + 'static,
   {
     self.router.insert(path, Box::new(endpoint)).unwrap();
@@ -50,7 +42,7 @@ impl App {
   pub fn route_mut<'a>(
     &'a mut self,
     path: &str,
-  ) -> &'a mut dyn tower::Service<
+  ) -> &'a mut dyn Service<
     Request,
     Response = Response,
     Error = Response,
@@ -63,11 +55,10 @@ impl App {
   }
 }
 
-impl tower::Service<Request> for App {
+impl Service<Request> for App {
   type Response = Response<Body>;
   type Error = Response<Body>;
-  type Future =
-    Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+  type Future = BoxedFuture<Result<Self::Response, Self::Error>>;
 
   fn poll_ready(
     &mut self,
@@ -76,15 +67,27 @@ impl tower::Service<Request> for App {
     std::task::Poll::Ready(Ok(()))
   }
 
-  fn call(&mut self, req: Request) -> Self::Future {
+  fn call(&mut self, mut req: Request) -> Self::Future {
     let uri = req.uri().clone();
-    let Ok(endpoint) = self.router.at_mut(uri.path()) else {
-      let response =
-        ResponseBuilder::new().status(404).body(Body::from(())).unwrap();
-      return Box::pin(AppFuture { fut: async move { Ok(response) } });
-    };
+    match self.router.at_mut(uri.path()) {
+      Ok(endpoint) => {
+        let params: HashMap<String, Value> =
+          HashMap::from_iter(endpoint.params.iter().map(|(key, value)| {
+            (key.to_string(), Value::from(value.to_string()))
+          }));
+        let mut extensions = route_http::Extensions::new();
+        extensions.insert(params);
 
-    Box::pin(AppFuture { fut: endpoint.value.call(req) })
+        *req.extensions_mut() = extensions;
+
+        Box::pin(AppFuture { fut: endpoint.value.call(req) })
+      }
+      Err(_) => {
+        let response =
+          ResponseBuilder::new().status(404).body(Body::from(())).unwrap();
+        Box::pin(AppFuture { fut: async move { Ok(response) } })
+      }
+    }
   }
 }
 

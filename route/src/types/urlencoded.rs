@@ -1,15 +1,21 @@
 use route_core::Respondable;
-use route_http::{
-  body::Body, header::HeaderName, request::Request, response::Response,
-};
+use route_http::{body::Body, request::Request, response::Response};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::FromRequest;
-
 use super::BodyParsingError;
+use crate::FromRequest;
 
 #[derive(Clone)]
 pub struct UrlEncoded<T>(pub T);
+
+impl<W: Serialize> Serialize for UrlEncoded<W> {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: serde::Serializer,
+  {
+    self.0.serialize(serializer)
+  }
+}
 
 impl<T> FromRequest for UrlEncoded<T>
 where
@@ -29,15 +35,6 @@ where
       let json = serde_urlencoded::from_bytes(body).unwrap();
       Ok(UrlEncoded(json))
     }
-  }
-}
-
-impl<W: Serialize> Serialize for UrlEncoded<W> {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-    S: serde::Serializer,
-  {
-    self.0.serialize(serializer)
   }
 }
 

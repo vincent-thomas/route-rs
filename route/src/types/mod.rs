@@ -1,8 +1,3 @@
-//mod new_sse;
-//use route_http::StatusCode;
-
-pub mod authorization;
-
 use route_core::Respondable;
 use route_http::{body::Body, header::HeaderName, response::Response};
 
@@ -21,9 +16,11 @@ host_use! {
   redirect,
   urlencoded,
   cookie,
-  sse,
-  long_polling
+  query,
+  params
 }
+
+pub mod authorization;
 
 pub enum BodyParsingError {
   NoBody,
@@ -37,8 +34,8 @@ impl Respondable for BodyParsingError {
     let body = match self {
       Self::NoBody => "Body is empty".into(),
       Self::InvalidBody => "Invalid Body".into(),
-      Self::ContentTypeInvalid => "Invalid body type".into(),
-      Self::ParsingError(err) => format!("Parsing error: {}", err),
+      Self::ContentTypeInvalid => "Invalid content-type".into(),
+      Self::ParsingError(err) => format!("Body Parsing Error: {}", err),
     };
 
     Response::builder()
@@ -49,34 +46,3 @@ impl Respondable for BodyParsingError {
       .unwrap()
   }
 }
-
-//
-// #[derive(Debug)]
-// pub enum BodyParseError {
-//   ContentTypeInvalid,
-//   NoBody,
-// }
-//
-// impl Into<Error> for BodyParseError {
-//   fn into(self) -> Error {
-//     match self {
-//       BodyParseError::ContentTypeInvalid => Error::new(
-//         StatusCode::BAD_REQUEST,
-//         b"Bad Request".to_vec().into_boxed_slice(),
-//       ),
-//       BodyParseError::NoBody => Error::new(
-//         StatusCode::BAD_REQUEST,
-//         b"Request body is empty".to_vec().into_boxed_slice(),
-//       ),
-//     }
-//   }
-// }
-//
-// impl Into<Error> for Infallible {
-//   fn into(self) -> Error {
-//     Error::new(
-//       StatusCode::INTERNAL_SERVER_ERROR,
-//       b"Internal Server Error".to_vec().into_boxed_slice(),
-//     )
-//   }
-// }

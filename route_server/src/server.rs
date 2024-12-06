@@ -5,17 +5,17 @@ use std::{
   str::FromStr,
 };
 
-use route_core::Respondable;
+use route_core::{Respondable, Service};
 
 use route_http::{
   header::{HeaderName, HeaderValue, CONTENT_LENGTH},
   request::{HttpRequestExt, Request},
   response::HttpResponseExt,
 };
-use tower::Service;
 
 use crate::utils::{self, date_header_format};
 
+/// Route
 pub struct Server {
   socket: SocketAddr,
 }
@@ -28,7 +28,7 @@ impl Server {
 
   pub async fn run<S>(self, mut service: S) -> Result<(), Box<dyn Error>>
   where
-    S: tower::Service<Request> + Send + 'static,
+    S: route_core::Service<Request> + Send + 'static,
     S::Response: Respondable,
     S::Error: Respondable,
   {
@@ -41,7 +41,7 @@ impl Server {
 
   async fn handle_connection<S>(mut stream: TcpStream, service: &mut S)
   where
-    S: tower::Service<Request>,
+    S: Service<Request>,
     S::Response: Respondable,
     S::Error: Respondable,
   {

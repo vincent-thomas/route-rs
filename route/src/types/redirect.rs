@@ -1,11 +1,11 @@
 use std::task::Poll;
 
 use route_core::Respondable;
+use route_core::Service;
 use route_http::{
   body::Body, header, request::Request, response::Response, StatusCode,
 };
 use route_utils::BoxedFuture;
-use tower::Service;
 
 pub struct Redirect {
   to: &'static str,
@@ -38,7 +38,7 @@ impl Service<Request> for Redirect {
 
   fn poll_ready(
     &mut self,
-    cx: &mut std::task::Context<'_>,
+    _cx: &mut std::task::Context<'_>,
   ) -> Poll<Result<(), Self::Error>> {
     Poll::Ready(Ok(()))
   }

@@ -1,19 +1,31 @@
+use crate::Respondable;
+use route_http::{
+  request::{Parts, Request},
+  response::Response,
+};
 use std::convert::Infallible;
 
-use route_http::request::{Parts, Request};
-
-use crate::Respondable;
-
-use route_http::response::Response;
-
+/// Types that can be created from requests.
+///
+/// Extractors that implement `FromRequest` can consume the request body and can thus only be run
+/// once for handlers.
+///
+/// If your extractor doesn't need to consume the request body then you should implement
+/// [`FromRequestParts`] and not [`FromRequest`].
+///
+///
 pub trait FromRequest: Sized {
   type Error: Respondable;
   fn from_request(req: Request) -> Result<Self, Self::Error>;
-  fn extract(req: Request) -> Result<Self, Self::Error> {
-    Self::from_request(req)
-  }
 }
 
+/// Types that can be created from request parts.
+///
+/// Extractors that implement `FromRequestParts` cannot consume the request body and can thus be
+/// run in any order for handlers.
+///
+/// If your extractor needs to consume the request body then you should implement [`FromRequest`]
+/// and not [`FromRequestParts`].
 pub trait FromRequestParts: Sized {
   type Error: Respondable;
   fn from_request_parts(req: &mut Parts) -> Result<Self, Self::Error>;
@@ -27,23 +39,19 @@ impl FromRequest for String {
   }
 }
 
+impl FromRequest for () {
+  type Error = Infallible;
+  fn from_request(_: Request) -> Result<Self, Self::Error> {
+    Ok(())
+  }
+}
+
 impl FromRequestParts for () {
   type Error = Infallible;
   fn from_request_parts(_: &mut Parts) -> Result<Self, Self::Error> {
     Ok(())
   }
 }
-
-//impl<T> FromRequest for T
-//where
-//  T: FromRequestParts,
-//{
-//  type Error = T::Error;
-//  fn from_request(req: Request) -> Result<Self, Self::Error> {
-//    let (mut parts, _) = req.into_parts();
-//    Self::from_request_parts(&mut parts)
-//  }
-//}
 
 macro_rules! impl_from_request {
     (
@@ -87,7 +95,6 @@ macro_rules! impl_from_request {
                 )*
 
                 let req = Request::from_parts(parts, body);
-
                 let $last = $last::from_request(req).map_err(|err| err.respond())?;
 
                 Ok(($($ty,)* $last,))
@@ -97,30 +104,3 @@ macro_rules! impl_from_request {
 }
 
 all_the_tuples!(impl_from_request);
-
-//macro_rules! impl_fromrequest_tuple {
-//  ($($name:ident),*) => {
-//    impl<$($name: FromRequest),*> FromRequest for ($($name,)*) {
-//      type Error = Response;
-//      #[allow(unused_variables)]
-//      fn from_request(req: Request) -> Result<Self, Self::Error> {
-//            let args = ($(match $name::from_request(req.clone()) {Ok(v) => v, Err(err) => return Err(err.respond())},)*);
-//            Ok(args)
-//      }
-//    }
-//  };
-//}
-
-//impl_fromrequest_tuple!();
-//impl_fromrequest_tuple!(A);
-//impl_fromrequest_tuple!(A, B);
-//impl_fromrequest_tuple!(A, B, C);
-//impl_fromrequest_tuple!(A, B, C, D);
-//impl_fromrequest_tuple!(A, B, C, D, E);
-//impl_fromrequest_tuple!(A, B, C, D, E, F);
-//impl_fromrequest_tuple!(A, B, C, D, E, F, G);
-//impl_fromrequest_tuple!(A, B, C, D, E, F, G, H);
-//impl_fromrequest_tuple!(A, B, C, D, E, F, G, H, I);
-//impl_fromrequest_tuple!(A, B, C, D, E, F, G, H, I, J);
-//impl_fromrequest_tuple!(A, B, C, D, E, F, G, H, I, J, K);
-//impl_fromrequest_tuple!(A, B, C, D, E, F, G, H, I, J, K, L);

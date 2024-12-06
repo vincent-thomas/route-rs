@@ -1,14 +1,15 @@
-use route_http::{
-  body::Body, header::HeaderName, request::Request, response::Response,
-};
+use std::collections::HashMap;
+
+use route_http::{body::Body, request::Request, response::Response};
 use serde::{de::DeserializeOwned, Serialize};
+use serde_json::Value;
 
 use crate::{FromRequest, Respondable};
 
 use super::BodyParsingError;
 
 #[derive(Clone)]
-pub struct Json<T>(pub T);
+pub struct Json<T = HashMap<String, Value>>(pub T);
 
 impl<T> FromRequest for Json<T>
 where

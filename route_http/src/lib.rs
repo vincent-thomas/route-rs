@@ -14,5 +14,6 @@ pub use mime;
 
 pub use http::uri;
 pub use http::version;
+pub use http::Extensions;
 
 pub mod body;

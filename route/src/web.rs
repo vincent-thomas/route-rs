@@ -1,7 +1,6 @@
-use route_core::Respondable;
+use route_core::{Respondable, Service};
 use route_http::{request::Request, response::Response};
 use route_utils::BoxedFuture;
-use tower::Service;
 
 use crate::guard::Guard;
 
@@ -19,10 +18,10 @@ macro_rules! impl_method {
     {
       let mut methods = std::collections::HashMap::default();
       let route = $crate::route::Route::new(handler);
-      let boxed: $crate::endpoint::BoxedService<route_http::response::Response<route_http::body::Body>> = Box::new(route);
+      let boxed: $crate::prelude::BoxedSendService<route_http::response::Response<route_http::body::Body>> = Box::new(route);
 
       methods.insert(route_http::Method::$method, boxed);
-      $crate::endpoint::Endpoint { methods, guards: Vec::new() }
+      $crate::endpoint::Endpoint { methods }
     }
             )*
   };
@@ -74,4 +73,5 @@ where
   }
 }
 
+#[cfg(feature = "types")]
 pub use crate::types::*;

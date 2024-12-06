@@ -25,6 +25,8 @@
             bacon
             rustc
             cargo-expand
+            cargo-watch
+            clippy
           ];
 
         };

@@ -1,50 +1,38 @@
-use std::task::Poll;
-use std::{collections::HashMap, future::Future, pin::Pin};
+use std::{collections::HashMap, future::Future, pin::Pin, task::Poll};
 
-use route_core::Handler;
-use route_core::{FromRequest, Respondable};
-use route_http::request::Request;
-use route_http::StatusCode;
-use route_http::{body::Body, response::Response, Method};
+use crate::prelude::*;
+use pin_project_lite::pin_project;
+use route_core::{FromRequest, Handler, Respondable, Service};
+use route_http::{
+  body::Body, request::Request, response::Response, Method, StatusCode,
+};
 use route_utils::BoxedFuture;
 
-use crate::{guard::Guard, route::Route};
-
-pub(crate) type BoxedService<Res> = Box<
-  dyn tower::Service<
-    Request,
-    Response = Res,
-    Error = Res,
-    Future = Pin<Box<dyn Future<Output = Result<Res, Res>> + Send>>,
-  >,
->;
-
 /// Represents a web path with a specific HTTP method.
-/// Request: A handler that takes a request and returns a response.
+///
 /// Guards can be attached to a Route, which are functions that must return true for the route to be matched.
 /// Guards are checked in the order they are added.
 #[derive(Default)]
 pub struct Endpoint {
-  pub(crate) methods: HashMap<Method, BoxedService<Response>>,
-  pub(crate) guards: Vec<Box<dyn Guard>>,
+  pub(crate) methods: HashMap<Method, BoxedSendService<Response>>,
 }
 
 impl Endpoint {
-  pub fn at(&self, method: &Method) -> Option<&BoxedService<Response>> {
+  pub fn at(&self, method: &Method) -> Option<&BoxedSendService<Response>> {
     self.methods.get(method)
   }
   pub fn at_mut(
     &mut self,
     method: &Method,
-  ) -> Option<&mut BoxedService<Response<Body>>> {
+  ) -> Option<&mut BoxedSendService<Response<Body>>> {
     self.methods.get_mut(method)
   }
 }
 
-impl tower::Service<Request> for Endpoint {
-  type Future = BoxedFuture<Result<Self::Response, Self::Error>>;
+impl Service<Request> for Endpoint {
   type Response = Response;
   type Error = Response;
+  type Future = BoxedFuture<Result<Self::Response, Self::Error>>;
 
   fn poll_ready(
     &mut self,
@@ -53,7 +41,7 @@ impl tower::Service<Request> for Endpoint {
     Poll::Ready(Ok(()))
   }
   fn call(&mut self, req: Request) -> Self::Future {
-    let (parts, _body) = req.clone().into_parts();
+    let (parts, body) = req.into_parts();
 
     let Some(route) = self.at_mut(&parts.method) else {
       let mut response = Response::new(Body::from(()));
@@ -61,11 +49,10 @@ impl tower::Service<Request> for Endpoint {
       *response.status_mut() = StatusCode::METHOD_NOT_ALLOWED;
       return Box::pin(EndpointFuture { fut: async move { Err(response) } });
     };
+    let req = Request::from_parts(parts, body);
     Box::pin(EndpointFuture { fut: route.call(req) })
   }
 }
-
-use pin_project_lite::pin_project;
 
 pin_project! {
     struct EndpointFuture<Fut>
@@ -103,7 +90,7 @@ macro_rules! impl_methodrouter {
                   Args: FromRequest + Send + Sync + 'static,
                   Args::Error: Send
                 {
-                    let route = Route::new(route);
+                    let route = $crate::route::Route::new(route);
                     self.methods.insert(route_http::Method::$method, Box::new(route));
                     self
                 }

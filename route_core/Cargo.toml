@@ -7,8 +7,5 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
-route_http = { workspace = true }
-route_utils = { workspace = true }
-async-trait = { workspace = true }
-futures = "0.3.30"
+route_http = { path = "../route_http" }
 tower = "0.5.1"

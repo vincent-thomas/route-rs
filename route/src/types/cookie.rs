@@ -20,10 +20,18 @@ impl FromRequestParts for Cookies {
     let mut vec = Vec::new();
 
     for item in cookie_iter {
-      let item: Vec<&str> = item.trim().split("=").collect();
+      let item: Vec<&str> =
+        item.trim().split("=").filter(|v| !v.is_empty()).collect();
 
-      let key = item[0];
-      let value = item[1];
+      let key = match item.first() {
+        Some(v) => v,
+        None => continue,
+      };
+
+      let value = match item.get(1) {
+        Some(v) => v,
+        None => continue,
+      };
 
       vec.push((key.to_string(), value.to_string()))
     }

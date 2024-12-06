@@ -8,4 +8,4 @@ pub use respond::*;
 mod request;
 pub use request::*;
 
-pub mod service;
+pub use tower::Service;

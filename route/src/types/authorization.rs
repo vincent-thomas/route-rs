@@ -67,11 +67,10 @@ pub enum AuthorizationType {
   Basic,
 }
 
-#[macro_export]
 macro_rules! diff_auth_types {
   ($($_type:ident)*) => {
     $(
-        concat_idents::concat_idents!(name = $_type, Authorization {
+        concat_idents::concat_idents!(name = $_type {
             pub struct name(pub String);
 
             impl FromRequestParts for name {

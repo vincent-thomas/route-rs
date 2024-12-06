@@ -1,16 +1,12 @@
 [workspace]
-members = [
-  # "route_router", 
-  "route_http", 
-  "route_core",
-  "route_server",
-  "route", "route_utils"]
 resolver = "2"
-
-[workspace.dependencies]
-async-trait = "0.1.81"
-route_http = {path = "./route_http"}
-route_utils = {path = "./route_utils"}
+members = [
+  "route",
+  "route_core",
+  "route_http", 
+  "route_utils",
+  "route_server"
+]
 
 [workspace.package]
 authors = ["Vincent Thomas"]
