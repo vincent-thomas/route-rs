@@ -68,32 +68,30 @@ pub enum AuthorizationType {
 }
 
 macro_rules! diff_auth_types {
-  ($($_type:ident)*) => {
+  ($($type:ident)*) => {
     $(
-        concat_idents::concat_idents!(name = $_type {
-            pub struct name(pub String);
+        pub struct $type(pub String);
 
-            impl FromRequestParts for name {
-              type Error = AuthorizationError;
-              fn from_request_parts(req: &mut Parts) -> Result<Self, Self::Error> {
-                let test = Authorization::from_request_parts(req);
+        impl FromRequestParts for $type {
+          type Error = AuthorizationError;
+          fn from_request_parts(req: &mut Parts) -> Result<Self, Self::Error> {
+            let test = Authorization::from_request_parts(req);
 
-                let Ok(result) = test else {
-                  let err = test.unwrap_err();
+            let Ok(result) = test else {
+              let err = test.unwrap_err();
 
-                  return Err(err);
-                };
+              return Err(err);
+            };
 
-                if AuthorizationType::$_type != result._type {
-                  return Err(AuthorizationError::Invalid);
-                };
+            if AuthorizationType::$type != result._type {
+              return Err(AuthorizationError::Invalid);
+            };
 
-                Ok(name(result.value))
-              }
-            }
-        });
+            Ok($type(result.value))
+          }
+        }
     )*
   };
 }
 
-diff_auth_types!(Basic Bearer);
+diff_auth_types! { Basic Bearer }

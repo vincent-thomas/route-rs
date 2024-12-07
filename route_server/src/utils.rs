@@ -1,18 +1,17 @@
-use std::{
-  io::{BufRead, BufReader, Read},
+use chrono::Utc;
+use route_http::request::Request;
+use tokio::{
+  io::{AsyncBufReadExt as _, AsyncReadExt as _, BufReader},
   net::TcpStream,
 };
 
-use chrono::Utc;
-use route_http::request::Request;
-
-pub(crate) fn read_request(
+pub(crate) async fn read_request(
   reader: &mut BufReader<&mut TcpStream>,
 ) -> Vec<String> {
   let mut request_lines = Vec::new();
   loop {
     let mut line = String::new();
-    if let Ok(0) = reader.read_line(&mut line) {
+    if let Ok(0) = reader.read_line(&mut line).await {
       // End of buffer if 0 bytes left.
       break;
     }
@@ -28,7 +27,7 @@ pub(crate) fn date_header_format() -> String {
   Utc::now().format("%a, %d %b %Y %H:%M:%S GMT").to_string()
 }
 
-pub(crate) fn fill_req_body(
+pub(crate) async fn fill_req_body(
   mut req: Request,
   body_length: usize,
   mut reader: BufReader<&mut TcpStream>,
@@ -37,7 +36,7 @@ pub(crate) fn fill_req_body(
     return req;
   };
   let mut body = vec![0u8; body_length];
-  reader.read_exact(&mut body).unwrap();
+  reader.read_exact(&mut body).await.unwrap();
   *req.body_mut() = body.into();
   req
 }

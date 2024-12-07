@@ -1,9 +1,4 @@
-use std::{
-  error::Error,
-  io::{BufReader, Write as _},
-  net::{SocketAddr, TcpListener, TcpStream},
-  str::FromStr,
-};
+use std::{error::Error, net::SocketAddr, str::FromStr};
 
 use route_core::{Respondable, Service};
 
@@ -11,6 +6,10 @@ use route_http::{
   header::{HeaderName, HeaderValue, CONTENT_LENGTH},
   request::{HttpRequestExt, Request},
   response::HttpResponseExt,
+};
+use tokio::{
+  io::{AsyncWriteExt as _, BufReader},
+  net::{TcpListener, TcpStream},
 };
 
 use crate::utils::{self, date_header_format};
@@ -28,13 +27,13 @@ impl Server {
 
   pub async fn run<S>(self, mut service: S) -> Result<(), Box<dyn Error>>
   where
-    S: route_core::Service<Request> + Send + 'static,
+    S: route_core::Service<Request> + 'static,
     S::Response: Respondable,
     S::Error: Respondable,
   {
-    let listener = TcpListener::bind(self.socket)?;
+    let listener = TcpListener::bind(self.socket).await?;
     loop {
-      let (stream, _) = listener.accept()?;
+      let (stream, _) = listener.accept().await?;
       Self::handle_connection(stream, &mut service).await;
     }
   }
@@ -46,10 +45,9 @@ impl Server {
     S::Error: Respondable,
   {
     let mut buf_reader = BufReader::new(&mut stream);
-    let http_headers = utils::read_request(&mut buf_reader).join("\n");
+    let http_headers = utils::read_request(&mut buf_reader).await.join("\n");
 
     let req_empty_body = HttpRequestExt::from(http_headers).0;
-
     let body_length = req_empty_body
       .headers()
       .get(CONTENT_LENGTH)
@@ -59,7 +57,8 @@ impl Server {
       .parse()
       .unwrap();
 
-    let req = utils::fill_req_body(req_empty_body, body_length, buf_reader);
+    let req =
+      utils::fill_req_body(req_empty_body, body_length, buf_reader).await;
 
     let mut response = match Service::call(service, req).await {
       Ok(value) => value.respond(),
@@ -78,6 +77,6 @@ impl Server {
     ]);
 
     let response_ext: String = HttpResponseExt(response).into();
-    stream.write_all(response_ext.as_bytes()).unwrap();
+    stream.write_all(response_ext.as_bytes()).await.unwrap();
   }
 }

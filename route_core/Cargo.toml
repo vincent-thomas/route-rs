@@ -8,4 +8,4 @@ edition.workspace = true
 
 [dependencies]
 route_http = { path = "../route_http" }
-tower = "0.5.1"
+tower = {version = "0.5.1", features = ["make", "buffer"]}

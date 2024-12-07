@@ -6,8 +6,6 @@ categories.workspace = true
 license.workspace = true
 edition.workspace = true
 
-
-
 [features]
 default = ["types"]
 types = ["serde", "serde_json", "serde_urlencoded"]
@@ -26,12 +24,13 @@ version = "0.7"
 optional = true
 
 [dependencies]
-route_http = { path = "../route_http" }
 route_core = { path = "../route_core" }
+route_http = { path = "../route_http" }
+route_router = { path = "../route_router" }
 route_server = { path = "../route_server" }
-
-matchit = "0.8.3"
-tokio = { version = "1.38.1", features = ["sync"] }
 route_utils = { path = "../route_utils" }
+
 pin-project-lite = "0.2.14"
-concat-idents = "1.1.5"
+
+[dev-dependencies]
+tokio = { version = "1.38.1", features = ["macros", "rt-multi-thread", "time"] }

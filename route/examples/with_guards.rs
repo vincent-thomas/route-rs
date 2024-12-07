@@ -28,6 +28,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
   app.at("/", web::get(index));
   app.at("/admin", web::with_guard(AuthGuard, web::get(protected)));
+  app.at("/redirect", web::Redirect::new(true, "/admin"));
 
   Server::bind("127.0.0.1", 3000).run(app).await
 }

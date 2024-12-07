@@ -1,8 +1,10 @@
+use crate::guard::Guard;
 use route_core::{Respondable, Service};
 use route_http::{request::Request, response::Response};
-use route_utils::BoxedFuture;
+use route_utils::{BoxedFuture, BoxedSendFuture};
 
-use crate::guard::Guard;
+#[cfg(feature = "types")]
+pub use crate::types::*;
 
 macro_rules! impl_method {
   ($( $method_name:ident $method:ident ),*) => {
@@ -45,11 +47,11 @@ pub struct GuardLayerService<S> {
 impl<S> Service<Request> for GuardLayerService<S>
 where
   S: Service<Request, Response = Response, Error = Response>,
-  S::Future: 'static,
+  S::Future: 'static + Send,
 {
   type Response = Response;
   type Error = Response;
-  type Future = BoxedFuture<Result<Self::Response, Self::Error>>;
+  type Future = BoxedSendFuture<Result<Self::Response, Self::Error>>;
   fn poll_ready(
     &mut self,
     cx: &mut std::task::Context<'_>,
@@ -72,6 +74,3 @@ where
     }
   }
 }
-
-#[cfg(feature = "types")]
-pub use crate::types::*;

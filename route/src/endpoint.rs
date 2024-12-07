@@ -6,7 +6,7 @@ use route_core::{FromRequest, Handler, Respondable, Service};
 use route_http::{
   body::Body, request::Request, response::Response, Method, StatusCode,
 };
-use route_utils::BoxedFuture;
+use route_utils::{BoxedFuture, BoxedSendFuture};
 
 /// Represents a web path with a specific HTTP method.
 ///
@@ -32,7 +32,7 @@ impl Endpoint {
 impl Service<Request> for Endpoint {
   type Response = Response;
   type Error = Response;
-  type Future = BoxedFuture<Result<Self::Response, Self::Error>>;
+  type Future = BoxedSendFuture<Result<Self::Response, Self::Error>>;
 
   fn poll_ready(
     &mut self,

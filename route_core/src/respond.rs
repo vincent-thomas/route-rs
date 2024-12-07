@@ -1,4 +1,4 @@
-use std::convert::Infallible;
+use std::{convert::Infallible, error::Error};
 
 use route_http::{
   body::Body,

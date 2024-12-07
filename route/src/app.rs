@@ -1,21 +1,19 @@
 use crate::prelude::*;
-use matchit::Router;
 use route_core::Service;
 use route_http::{
   body::Body,
   request::Request,
   response::{Response, ResponseBuilder},
 };
-use route_utils::BoxedFuture;
+use route_router::Router;
+use route_utils::BoxedSendFuture;
 use serde_json::Value;
 use std::{collections::HashMap, future::Future, pin::Pin};
 
 #[derive(Default)]
 pub struct App {
-  pub router: Router<BoxedService<Response>>,
+  router: Router<BoxedSendService<Response>>,
 }
-
-unsafe impl Send for App {}
 
 impl App {
   pub fn at<S>(&mut self, path: &str, endpoint: S) -> &mut Self
@@ -24,41 +22,18 @@ impl App {
         Request,
         Response = Response,
         Error = Response,
-        Future = BoxedFuture<Result<Response, Response>>,
+        Future = BoxedSendFuture<Result<Response, Response>>,
       > + 'static,
   {
-    self.router.insert(path, Box::new(endpoint)).unwrap();
+    self.router.at(path, Box::new(endpoint));
     self
-  }
-}
-
-impl App {
-  pub fn route(&self, path: &str) -> &BoxedService<Response> {
-    match self.router.at(path) {
-      Ok(thing) => thing.value,
-      Err(_) => panic!("panic"),
-    }
-  }
-  pub fn route_mut<'a>(
-    &'a mut self,
-    path: &str,
-  ) -> &'a mut dyn Service<
-    Request,
-    Response = Response,
-    Error = Response,
-    Future = BoxedFuture<Result<Response, Response>>,
-  > {
-    match self.router.at_mut(path) {
-      Ok(thing) => thing.value,
-      Err(_) => panic!("oh no"),
-    }
   }
 }
 
 impl Service<Request> for App {
   type Response = Response<Body>;
   type Error = Response<Body>;
-  type Future = BoxedFuture<Result<Self::Response, Self::Error>>;
+  type Future = BoxedSendFuture<Result<Self::Response, Self::Error>>;
 
   fn poll_ready(
     &mut self,
@@ -70,7 +45,7 @@ impl Service<Request> for App {
   fn call(&mut self, mut req: Request) -> Self::Future {
     let uri = req.uri().clone();
     match self.router.at_mut(uri.path()) {
-      Ok(endpoint) => {
+      Some(endpoint) => {
         let params: HashMap<String, Value> =
           HashMap::from_iter(endpoint.params.iter().map(|(key, value)| {
             (key.to_string(), Value::from(value.to_string()))
@@ -82,7 +57,7 @@ impl Service<Request> for App {
 
         Box::pin(AppFuture { fut: endpoint.value.call(req) })
       }
-      Err(_) => {
+      None => {
         let response =
           ResponseBuilder::new().status(404).body(Body::from(())).unwrap();
         Box::pin(AppFuture { fut: async move { Ok(response) } })
