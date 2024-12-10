@@ -1,11 +1,11 @@
 use route::{
-  server::Server,
   web::{self, authorization, Cookies, Json, Query},
   App, Respondable,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::error::Error;
+use std::io;
+use tokio::net::TcpListener;
 
 #[derive(Deserialize, Debug, Serialize)]
 struct Thing {
@@ -34,9 +34,9 @@ async fn index(
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-  let mut app = App::default();
-  app.at("/", web::post(index));
+async fn main() -> io::Result<()> {
+  let app = App::default().at("/", web::post(index));
 
-  Server::bind("127.0.0.1", 3000).run(app).await
+  let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+  route::serve(listener, app).await
 }

@@ -10,4 +10,5 @@ edition.workspace = true
 route_core = { path = "../route_core", version = "0.1.0" }
 route_http = { path = "../route_http" }
 chrono = "0.4.38"
-tokio = { version = "1.42.0", features = ["net", "io-util"] }
+tokio = { version = "1.42.0", features = ["net", "io-util", "rt"] }
+futures-util = "0.3.31"

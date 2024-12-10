@@ -5,9 +5,9 @@ use route_core::Service;
 use route_http::{
   body::Body, header, request::Request, response::Response, StatusCode,
 };
-use route_utils::BoxedFuture;
 use route_utils::BoxedSendFuture;
 
+#[derive(Clone)]
 pub struct Redirect {
   to: &'static str,
   permanent: bool,

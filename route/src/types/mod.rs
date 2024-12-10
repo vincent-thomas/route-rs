@@ -17,7 +17,8 @@ host_use! {
   urlencoded,
   cookie,
   query,
-  params
+  params,
+  sse
 }
 
 pub mod authorization;

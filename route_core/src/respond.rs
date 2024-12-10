@@ -1,5 +1,6 @@
-use std::{convert::Infallible, error::Error};
+use std::convert::Infallible;
 
+use futures_core::Stream;
 use route_http::{
   body::Body,
   response::{Response, ResponseBuilder},
@@ -60,12 +61,10 @@ macro_rules! impl_respondable_for_int {
           impl Respondable for $t {
             fn respond(self) -> Response<Body> {
               let body = Body::from(self);
-              let content_len = body.len();
 
               let mut res = Response::new(body);
               let headers = res.headers_mut();
 
-              headers.insert("content-length", content_len.to_string().parse().unwrap());
               headers.insert("content-type", "text/plain".parse().unwrap());
 
               res

@@ -1,20 +1,24 @@
-#[derive(Debug)]
+use std::pin::Pin;
+
+use futures_core::Stream;
+
 pub enum Body {
   Full(Box<[u8]>),
+  Stream(Pin<Box<dyn Stream<Item = Vec<u8>> + Send>>),
 }
 
 impl Body {
-  pub fn len(&self) -> usize {
-    match self {
-      Self::Full(value) => value.len(),
-    }
-  }
+  //pub fn len(&self) -> usize {
+  //  match self {
+  //    Self::Full(value) => value.len(),
+  //  }
+  //}
 
-  pub fn is_empty(&self) -> bool {
-    match self {
-      Self::Full(value) => value.is_empty(),
-    }
-  }
+  //pub fn is_empty(&self) -> bool {
+  //  match self {
+  //    Self::Full(value) => value.is_empty(),
+  //  }
+  //}
 }
 
 impl From<String> for Body {
@@ -58,15 +62,15 @@ impl From<Vec<u8>> for Body {
 //  }
 //}
 
-impl From<Body> for String {
-  fn from(value: Body) -> Self {
-    match value {
-      Body::Full(bytes) => unsafe {
-        String::from_utf8_unchecked(bytes.to_vec())
-      },
-    }
-  }
-}
+//impl From<Body> for String {
+//  fn from(value: Body) -> Self {
+//    match value {
+//      Body::Full(bytes) => unsafe {
+//        String::from_utf8_unchecked(bytes.to_vec())
+//      },
+//    }
+//  }
+//}
 
 macro_rules! impl_tostring {
   ($( $type:ident )*) => {
@@ -79,4 +83,4 @@ macro_rules! impl_tostring {
   };
 }
 
-impl_tostring!(usize i8 i16 i32 i64 i128 isize u8 u16 u32 u64 u128);
+impl_tostring! { usize i8 i16 i32 i64 i128 isize u8 u16 u32 u64 u128 }

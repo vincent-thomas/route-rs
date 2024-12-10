@@ -1,7 +1,8 @@
 use crate::guard::Guard;
+use crate::prelude::BoxCloneService;
 use route_core::{Respondable, Service};
 use route_http::{request::Request, response::Response};
-use route_utils::{BoxedFuture, BoxedSendFuture};
+use route_utils::BoxedSendFuture;
 
 #[cfg(feature = "types")]
 pub use crate::types::*;
@@ -20,13 +21,33 @@ macro_rules! impl_method {
     {
       let mut methods = std::collections::HashMap::default();
       let route = $crate::route::Route::new(handler);
-      let boxed: $crate::prelude::BoxedSendService<route_http::response::Response<route_http::body::Body>> = Box::new(route);
+      //let boxed: $crate::prelude::BoxedSendService<route_http::response::Response<route_http::body::Body>> = Box::new(route);
 
-      methods.insert(route_http::Method::$method, boxed);
+      methods.insert(route_http::Method::$method, BoxCloneService::new(route));
       $crate::endpoint::Endpoint { methods }
     }
             )*
   };
+}
+
+pub fn any<H, Args>(handler: H) -> crate::endpoint::Endpoint
+where
+  H: route_core::Handler<Args> + Sync + Clone,
+  H::Future: std::future::Future<Output = H::Output> + Send,
+  H::Output: route_core::Respondable,
+  Args: route_core::FromRequest + Send + Sync + 'static,
+  Args::Error: Send,
+{
+  let mut methods = std::collections::HashMap::default();
+  let route = crate::route::Route::new(handler);
+
+  methods.insert(route_http::Method::GET, BoxCloneService::new(route.clone()));
+  methods.insert(route_http::Method::POST, BoxCloneService::new(route.clone()));
+  methods.insert(route_http::Method::PUT, BoxCloneService::new(route.clone()));
+  methods
+    .insert(route_http::Method::DELETE, BoxCloneService::new(route.clone()));
+  methods.insert(route_http::Method::PATCH, BoxCloneService::new(route));
+  crate::endpoint::Endpoint { methods }
 }
 
 impl_method!(get GET, post POST, put PUT, delete DELETE, patch PATCH);

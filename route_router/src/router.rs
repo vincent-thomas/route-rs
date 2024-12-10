@@ -1,19 +1,25 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 
-use crate::{
-  routekey::{Params, Segments},
-  utils,
-};
+use crate::routekey::{Params, Segments};
 
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub(crate) struct RouteId(usize);
-pub struct Router<V> {
-  routes: VecDeque<(Segments, V)>,
-  cache: HashMap<Segments, RouteId>,
+
+#[derive(Clone)]
+pub struct Router<V>
+where
+  V: Clone,
+{
+  routes: Vec<(Segments, V)>,
+  lookup_cache: HashMap<Segments, RouteId>,
 }
 
-impl<V> Default for Router<V> {
+impl<V> Default for Router<V>
+where
+  V: Clone,
+{
   fn default() -> Self {
-    Self { routes: VecDeque::default(), cache: HashMap::default() }
+    Self { routes: Vec::default(), lookup_cache: HashMap::default() }
   }
 }
 
@@ -22,25 +28,28 @@ pub struct Match<V> {
   pub params: HashMap<String, String>,
 }
 
-impl<V> Router<V> {
+impl<V> Router<V>
+where
+  V: Clone,
+{
   pub fn at(&mut self, route: &str, handler: V) {
     let segments: Segments = route.to_string().into();
 
-    let priority = segments.num_params();
+    let index = self.routes.len(); // (self.routes.len() - 1) + 1
 
-    let index = self
-      .routes
-      .iter()
-      .position(|x| x.0.num_params() <= priority)
-      .unwrap_or(0);
+    let route_id = RouteId(index);
 
-    utils::insert_at(&mut self.routes, index, (segments.clone(), handler));
+    self.routes.push((segments.clone(), handler));
+
+    if segments.num_params() == 0 {
+      self.lookup_cache.insert(segments, route_id);
+    }
   }
 
   pub fn find(&mut self, route: &str) -> Option<Match<&V>> {
     let segments = Segments::from(route.to_string());
 
-    if let Some(RouteId(route_index)) = self.cache.get(&segments) {
+    if let Some(RouteId(route_index)) = self.lookup_cache.get(&segments) {
       let (_, value) = &self.routes[*route_index];
       return Some(Match { value, params: HashMap::default() });
     };
@@ -48,8 +57,24 @@ impl<V> Router<V> {
     for (index, (key, value)) in self.routes.iter().enumerate() {
       if let Some(Params(params)) = key.find(&segments.0) {
         if params.is_empty() {
-          self.cache.insert(segments, RouteId(index));
+          self.lookup_cache.insert(segments, RouteId(index));
         }
+        return Some(Match { value, params });
+      };
+    }
+    None
+  }
+
+  pub fn lookup(&self, route: &str) -> Option<Match<&V>> {
+    let segments = Segments::from(route.to_string());
+
+    if let Some(RouteId(route_index)) = self.lookup_cache.get(&segments) {
+      let (_, value) = &self.routes[*route_index];
+      return Some(Match { value, params: HashMap::default() });
+    };
+
+    for (key, value) in &self.routes {
+      if let Some(Params(params)) = key.find(&segments.0) {
         return Some(Match { value, params });
       };
     }
@@ -58,7 +83,7 @@ impl<V> Router<V> {
   pub fn at_mut(&mut self, route: &str) -> Option<Match<&mut V>> {
     let segments = Segments::from(route.to_string());
 
-    if let Some(RouteId(route_index)) = self.cache.get_mut(&segments) {
+    if let Some(RouteId(route_index)) = self.lookup_cache.get_mut(&segments) {
       let (_, value) = &mut self.routes[*route_index];
       return Some(Match { value, params: HashMap::default() });
     };
@@ -66,7 +91,7 @@ impl<V> Router<V> {
     for (index, (key, value)) in self.routes.iter_mut().enumerate() {
       if let Some(Params(params)) = key.find(&segments.0) {
         if params.is_empty() {
-          self.cache.insert(segments, RouteId(index));
+          self.lookup_cache.insert(segments, RouteId(index));
         }
         return Some(Match { value, params });
       };

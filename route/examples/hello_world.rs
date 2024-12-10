@@ -1,15 +1,15 @@
-use route::{web, App, Respondable};
-use route_server::Server;
-use std::error::Error;
+use std::io;
 
-async fn test() -> impl Respondable {
+use route::web;
+use tokio::net::TcpListener;
+
+async fn test() -> &'static str {
   "Hello World"
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-  let mut app = App::default();
-  app.at("/", web::get(test));
+async fn main() -> io::Result<()> {
+  let listener = TcpListener::bind("0.0.0.0:4000").await.unwrap();
 
-  Server::bind("127.0.0.1", 3000).run(app).await
+  route::serve(listener, web::any(test)).await
 }

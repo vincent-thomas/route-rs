@@ -6,25 +6,29 @@ use route_core::{FromRequest, Handler, Respondable, Service};
 use route_http::{
   body::Body, request::Request, response::Response, Method, StatusCode,
 };
-use route_utils::{BoxedFuture, BoxedSendFuture};
+use route_utils::BoxedSendFuture;
 
 /// Represents a web path with a specific HTTP method.
 ///
 /// Guards can be attached to a Route, which are functions that must return true for the route to be matched.
 /// Guards are checked in the order they are added.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Endpoint {
-  pub(crate) methods: HashMap<Method, BoxedSendService<Response>>,
+  pub(crate) methods:
+    HashMap<Method, BoxCloneService<Request, Response, Response>>,
 }
 
 impl Endpoint {
-  pub fn at(&self, method: &Method) -> Option<&BoxedSendService<Response>> {
+  pub fn at(
+    &self,
+    method: &Method,
+  ) -> Option<&BoxCloneService<Request, Response, Response>> {
     self.methods.get(method)
   }
   pub fn at_mut(
     &mut self,
     method: &Method,
-  ) -> Option<&mut BoxedSendService<Response<Body>>> {
+  ) -> Option<&mut BoxCloneService<Request, Response, Response>> {
     self.methods.get_mut(method)
   }
 }
@@ -91,7 +95,7 @@ macro_rules! impl_methodrouter {
                   Args::Error: Send
                 {
                     let route = $crate::route::Route::new(route);
-                    self.methods.insert(route_http::Method::$method, Box::new(route));
+                    self.methods.insert(route_http::Method::$method, BoxCloneService::new(route));
                     self
                 }
             )*

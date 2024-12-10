@@ -1,10 +1,10 @@
 use route::{
   guard::{Guard, GuardOutcome, GuardReason},
   http::request::Parts,
-  server::Server,
   web, App, Respondable,
 };
-use std::error::Error;
+use std::{io, time::Duration};
+use tokio::net::TcpListener;
 
 struct AuthGuard;
 
@@ -15,6 +15,7 @@ impl Guard for AuthGuard {
 }
 
 async fn index() -> impl Respondable {
+  tokio::time::sleep(Duration::from_secs(2)).await;
   "OK"
 }
 
@@ -23,12 +24,12 @@ async fn protected() -> impl Respondable {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-  let mut app = App::default();
+async fn main() -> io::Result<()> {
+  let app = App::default()
+    .at("/", web::get(index))
+    .at("/admin", web::get(protected))
+    .at("/redirect", web::Redirect::new(true, "/admin"));
 
-  app.at("/", web::get(index));
-  app.at("/admin", web::with_guard(AuthGuard, web::get(protected)));
-  app.at("/redirect", web::Redirect::new(true, "/admin"));
-
-  Server::bind("127.0.0.1", 3000).run(app).await
+  let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+  route::serve(listener, app).await
 }

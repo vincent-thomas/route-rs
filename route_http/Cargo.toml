@@ -7,5 +7,6 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
+futures-core = "0.3.31"
 http = "1.1.0"
 mime = "0.3.17"

@@ -7,5 +7,6 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
+futures-core = "0.3.31"
 route_http = { path = "../route_http" }
-tower = {version = "0.5.1", features = ["make", "buffer"]}
+tower = {version = "0.5.1", features = ["util"]}

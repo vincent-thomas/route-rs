@@ -1,13 +1,13 @@
 use route::{
   guard::{Guard, GuardOutcome},
   http::request::Parts,
-  server::Server,
   web::{self, Cookies, Json, Params, Query},
   App, Respondable,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::error::Error;
+use tokio::net::TcpListener;
 
 struct AuthGuard;
 
@@ -50,8 +50,9 @@ async fn test(
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-  let mut app = App::default();
-  app.at("/:test/nice", web::with_guard(AuthGuard, web::post(test)));
+  let app = App::default().at("/:test/nice", web::get(test));
 
-  Server::bind("127.0.0.1", 3000).run(app).await
+  let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+  route::serve(listener, app).await.unwrap();
+  Ok(())
 }

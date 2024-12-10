@@ -12,6 +12,16 @@ where
   _a: PhantomData<Args>,
 }
 
+impl<T, A> Clone for Route<T, A>
+where
+  T: Handler<A> + Clone,
+  A: FromRequest,
+{
+  fn clone(&self) -> Self {
+    Self { _a: PhantomData, handler: self.handler.clone() }
+  }
+}
+
 impl<T, Args> Route<T, Args>
 where
   T: Handler<Args>,

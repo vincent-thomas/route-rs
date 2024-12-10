@@ -8,25 +8,58 @@ use route_http::{
 use route_router::Router;
 use route_utils::BoxedSendFuture;
 use serde_json::Value;
-use std::{collections::HashMap, future::Future, pin::Pin};
+use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc};
 
-#[derive(Default)]
+#[derive(Clone)]
 pub struct App {
-  router: Router<BoxedSendService<Response>>,
+  inner: Arc<AppInner>,
+}
+
+impl Default for App {
+  fn default() -> Self {
+    Self { inner: Arc::new(AppInner(Router::default())) }
+  }
+}
+
+struct AppInner(Router<BoxCloneService<Request, Response, Response>>);
+
+macro_rules! tap_inner {
+    ( $self_:ident, mut $inner:ident => { $($stmt:stmt)* } ) => {
+        #[allow(redundant_semicolons)]
+        {
+            let mut $inner = $self_.into_inner();
+            $($stmt)*
+            App {
+                inner: Arc::new($inner),
+            }
+        }
+    };
 }
 
 impl App {
-  pub fn at<S>(&mut self, path: &str, endpoint: S) -> &mut Self
+  fn into_inner(self) -> AppInner {
+    match Arc::try_unwrap(self.inner) {
+      Ok(inner) => inner,
+      Err(arc) => AppInner(arc.0.clone()),
+    }
+  }
+  pub fn at<S>(self, path: &str, endpoint: S) -> Self
   where
     S: Service<
         Request,
         Response = Response,
         Error = Response,
         Future = BoxedSendFuture<Result<Response, Response>>,
-      > + 'static,
+      >
+      + 'static
+      + Clone
+      + Sync
+      + Send,
   {
-    self.router.at(path, Box::new(endpoint));
-    self
+    tap_inner!(self, mut this => {
+
+    this.0.at(path, BoxCloneService::new(endpoint));
+        })
   }
 }
 
@@ -44,7 +77,7 @@ impl Service<Request> for App {
 
   fn call(&mut self, mut req: Request) -> Self::Future {
     let uri = req.uri().clone();
-    match self.router.at_mut(uri.path()) {
+    match self.inner.0.lookup(uri.path()) {
       Some(endpoint) => {
         let params: HashMap<String, Value> =
           HashMap::from_iter(endpoint.params.iter().map(|(key, value)| {
@@ -55,7 +88,8 @@ impl Service<Request> for App {
 
         *req.extensions_mut() = extensions;
 
-        Box::pin(AppFuture { fut: endpoint.value.call(req) })
+        let mut service = endpoint.value.clone();
+        Box::pin(AppFuture { fut: service.call(req) })
       }
       None => {
         let response =
