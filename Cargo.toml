@@ -6,7 +6,8 @@ members = [
   "route_http", 
   "route_utils",
   "route_server",
-  "route_router"
+  "route_router",
+  "route_html"
 ]
 
 [workspace.package]

@@ -1,0 +1,9 @@
+[package]
+name = "route_html"
+authors.workspace = true
+categories.workspace = true
+license.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]

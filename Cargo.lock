@@ -335,6 +335,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "route_html"
+version = "0.1.0"
+
+[[package]]
 name = "route_http"
 version = "0.1.0"
 dependencies = [
