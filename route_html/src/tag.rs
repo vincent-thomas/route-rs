@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{
-  class::TagClass,
-  style::{Style, StyleRule},
-};
+use crate::{class::TagClass, head::Head, style::Style};
 
 #[derive(Debug, Default)]
 pub struct Html {
@@ -11,7 +8,15 @@ pub struct Html {
   pub body: Body,
 }
 impl Html {
-  pub fn extend(&mut self, tags: Vec<Tag>) {
+  pub fn with_head(head: Head) -> Self {
+    Html { head, body: Body::default() }
+  }
+  pub fn body_from_iter<T, In>(&mut self, tags: T)
+  where
+    T: IntoIterator<Item = In>,
+    In: IntoTag,
+  {
+    let tags: Vec<Tag> = tags.into_iter().flat_map(|x| x.into_tag()).collect();
     self.body.children.extend(tags);
   }
 }
@@ -19,20 +24,30 @@ impl Html {
 impl IntoTag for Html {
   fn into_tag(&self) -> Vec<Tag> {
     let mut children = Vec::default();
+
     children.extend(self.head.into_tag());
     children.extend(self.body.into_tag());
 
-    Vec::from_iter([Tag::Tag {
-      children: Some(children),
-      classes: Vec::default(),
-      attributes: HashMap::default(),
-      ident: "html",
-      ids: Vec::default(),
-    }])
+    Vec::from_iter([
+      Tag::Text("<!DOCTYPE html>".to_string()),
+      Tag::Tag {
+        children: Some(children),
+        classes: Vec::default(),
+        attributes: HashMap::default(),
+        ident: "html",
+        ids: Vec::default(),
+      },
+    ])
   }
 }
 pub trait IntoTag {
   fn into_tag(&self) -> Vec<Tag>;
+}
+
+impl IntoTag for Tag {
+  fn into_tag(&self) -> Vec<Tag> {
+    vec![self.clone()]
+  }
 }
 
 #[derive(Clone, Debug)]
@@ -49,9 +64,9 @@ pub enum Tag {
 }
 
 impl Tag {
-  pub fn style(&mut self, class: StyleRule) {
-    if let Tag::Tag { ref mut classes, .. } = self {
-      classes.push(TagClass::Style(class));
+  pub fn add_id(&mut self, id: String) {
+    if let Tag::Tag { ref mut ids, .. } = self {
+      ids.push(id);
     }
   }
   pub(crate) fn hydrate_styles(&self, styles: &mut Style) {
@@ -77,7 +92,7 @@ impl Tag {
   pub(crate) fn to_string(&self) -> String {
     match self {
       Tag::Text(text) => text.clone(),
-      Tag::Tag { ident, children, classes, ids: _, attributes } => {
+      Tag::Tag { ident, children, classes, ids, attributes } => {
         let mut base = format!("<{ident}");
 
         if !attributes.is_empty() {
@@ -98,6 +113,14 @@ impl Tag {
             class_str.push(class);
           }
           base.push_str(format!(" class=\"{}\"", class_str.join(" ")).as_ref());
+        }
+
+        if !ids.is_empty() {
+          let mut id_str = Vec::new();
+          for id in ids {
+            id_str.push(id.clone());
+          }
+          base.push_str(format!(" id=\"{}\"", id_str.join(" ")).as_ref());
         }
         base.push('>');
 
@@ -155,4 +178,4 @@ macro_rules! testing {
     )*
   };
 }
-testing! { Div div; Body body; Head head; Span span }
+testing! { Div div; Body body; Span span }

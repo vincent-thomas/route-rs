@@ -1,11 +1,14 @@
 [package]
-name = "route_html"
+name = "route_html_derive"
 authors.workspace = true
 categories.workspace = true
 license.workspace = true
 edition.workspace = true
 version.workspace = true
 
+[lib]
+proc-macro = true
+
 [dependencies]
-rand = "0.8.5"
-route_html_derive = {path = "../route_html_derive"}
+syn = { version = "2", features = ["full"] }
+quote = "1"

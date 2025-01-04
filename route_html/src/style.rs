@@ -14,11 +14,12 @@ pub struct StyleRule {
   pub styles: Vec<(String, String)>,
 }
 
-impl FromIterator<(String, String)> for StyleRule {
-  fn from_iter<T: IntoIterator<Item = (String, String)>>(iter: T) -> Self {
-    let iter = iter.into_iter();
-
-    let styles: Vec<(String, String)> = iter.collect();
+impl<'a> FromIterator<(&'a str, &'a str)> for StyleRule {
+  fn from_iter<T: IntoIterator<Item = (&'a str, &'a str)>>(iter: T) -> Self {
+    let styles: Vec<(String, String)> = iter
+      .into_iter()
+      .map(|(key, value)| (key.to_string(), value.to_string()))
+      .collect();
     let mut hasher = DefaultHasher::default();
 
     styles.hash(&mut hasher);

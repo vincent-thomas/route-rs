@@ -8,7 +8,7 @@ members = [
   "route_server",
   "route_router",
   "route_html"
-]
+, "route_html_derive"]
 
 [workspace.package]
 authors = ["Vincent Thomas"]

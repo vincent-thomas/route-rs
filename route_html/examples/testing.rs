@@ -1,22 +1,27 @@
+use route_html::head::{Head, OpenGraph, OpenGraphType};
 use route_html::link::{Link, LinkLoadType};
-use route_html::style::StyleRule;
 use route_html::tag::Html;
-use route_html::tag::IntoTag as _;
 
 fn main() {
-  let link = Link::new("//google.com".to_string(), vec![Box::new("testing")])
-    .preload(LinkLoadType::WhenIdle);
+  let og = OpenGraph::new(
+    "testing",
+    "nice nice",
+    OpenGraphType::Website,
+    "http://localhost:3000",
+    "http//localhost:3000/image.jpg",
+  );
+  let mut root =
+    Html::with_head(Head::default().title("testing").opengraph(og));
 
-  let style_rule = StyleRule::from_iter([
-    ("color".to_string(), "black".to_string()),
-    ("background-color".to_string(), "black".to_string()),
+  root.body_from_iter([
+    Link::text("http://localhost:3000", "testing")
+      .preload(LinkLoadType::WhenIdle)
+      .style_from_iter([("color", "black"), ("background-color", "black")]),
+    Link::text("http://localhost:3000".to_string(), "testing")
+      .preload(LinkLoadType::WhenHover)
+      .style_from_iter([("color", "green"), ("background-color", "black")]),
   ]);
 
-  let mut root = Html::default();
-  let mut link = link.into_tag();
-
-  link.get_mut(0).unwrap().style(style_rule);
-  root.extend(link);
-
+  //dbg!(&root);
   println!("{}", route_html::render(root));
 }
