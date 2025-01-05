@@ -1,4 +1,4 @@
-use crate::style::StyleRule;
+use crate::tags::style::StyleRule;
 
 #[derive(Clone, Debug)]
 pub enum TagClass {
@@ -17,24 +17,3 @@ impl From<StyleRule> for TagClass {
     TagClass::Style(value)
   }
 }
-
-//#[cfg(test)]
-//mod tests {
-//  use super::*;
-//  #[test]
-//  fn tests() {
-//    let tesing = "
-//            color: white;
-//            background-color: black;
-//        ";
-//
-//    let style = StyleRule::from_str(tesing).unwrap();
-//
-//    let facit = Vec::from_iter([
-//      ("color".to_string(), "white".to_string()),
-//      ("background-color".to_string(), "black".to_string()),
-//    ]);
-//
-//    assert_eq!(StyleRule { rule: "".to_string(), styles: facit }, style);
-//  }
-//}

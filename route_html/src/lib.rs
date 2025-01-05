@@ -1,14 +1,10 @@
 #![allow(clippy::to_string_trait_impl)]
 #![allow(clippy::inherent_to_string)]
 pub mod class;
-pub mod head;
-pub mod link;
-pub mod style;
-pub mod tag;
+pub mod tags;
 mod utils;
 
-use style::Style;
-use tag::{Html, IntoTag};
+use tags::{html::Html, style::Style, IntoTag};
 
 pub fn render(mut root: Html) -> String {
   let body = root.body.into_tag();

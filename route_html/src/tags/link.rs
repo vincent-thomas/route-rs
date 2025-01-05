@@ -4,7 +4,7 @@ use rand::Rng as _;
 
 use crate::{
   class::TagClass,
-  tag::{IntoTag, Tag},
+  tags::{IntoTag, Tag},
 };
 
 #[derive(Default, Clone, Copy)]

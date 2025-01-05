@@ -1,6 +1,7 @@
-use route_html::head::{Head, OpenGraph, OpenGraphType};
-use route_html::link::{Link, LinkLoadType};
-use route_html::tag::Html;
+use route_html::tags::head::opengraph::{OpenGraph, OpenGraphType};
+use route_html::tags::head::Head;
+use route_html::tags::html::Html;
+use route_html::tags::link::{Link, LinkLoadType};
 
 fn main() {
   let og = OpenGraph::new(
@@ -10,18 +11,26 @@ fn main() {
     "http://localhost:3000",
     "http//localhost:3000/image.jpg",
   );
-  let mut root =
-    Html::with_head(Head::default().title("testing").opengraph(og));
+  let root =
+    Html::with_head(Head::default().title("testing").opengraph(og).reset_css())
+      .body_from_iter([
+        Link::text("http://localhost:3000", "testing")
+          .preload(LinkLoadType::WhenIdle)
+          .styles(
+            "
+            color: blue;
+            background-color: red;
+          ",
+          ),
+        Link::text("http://localhost:3000".to_string(), "testing")
+          .preload(LinkLoadType::WhenHover)
+          .styles(
+            "
+            color: blue;
+            background-color: red;
+          ",
+          ),
+      ]);
 
-  root.body_from_iter([
-    Link::text("http://localhost:3000", "testing")
-      .preload(LinkLoadType::WhenIdle)
-      .style_from_iter([("color", "black"), ("background-color", "black")]),
-    Link::text("http://localhost:3000".to_string(), "testing")
-      .preload(LinkLoadType::WhenHover)
-      .style_from_iter([("color", "green"), ("background-color", "black")]),
-  ]);
-
-  //dbg!(&root);
   println!("{}", route_html::render(root));
 }
