@@ -1,4 +1,4 @@
-use crate::tags::style::StyleRule;
+use crate::stylerule::StyleRule;
 
 #[derive(Clone, Debug)]
 pub enum TagClass {

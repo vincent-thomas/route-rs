@@ -13,12 +13,11 @@ impl Html {
   pub fn with_head(head: Head) -> Self {
     Html { head, body: Body::default() }
   }
-  pub fn body_from_iter<T, In>(mut self, tags: T) -> Self
+  pub fn body_from_iter<T>(mut self, tags: T) -> Self
   where
-    T: IntoIterator<Item = In>,
-    In: IntoTag,
+    T: IntoIterator<Item = Vec<Tag>>,
   {
-    let tags: Vec<Tag> = tags.into_iter().flat_map(|x| x.into_tag()).collect();
+    let tags = tags.into_iter().flatten();
     self.body.children.extend(tags);
     self
   }

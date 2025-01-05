@@ -904,6 +904,7 @@ dependencies = [
  "futures-util",
  "pin-project-lite",
  "route_core",
+ "route_html",
  "route_http",
  "route_router",
  "route_server",
@@ -919,6 +920,7 @@ name = "route_core"
 version = "0.1.0"
 dependencies = [
  "futures-core",
+ "route_html",
  "route_http",
  "tower",
 ]

@@ -3,6 +3,7 @@ use std::convert::Infallible;
 use futures_core::Stream;
 use route_http::{
   body::Body,
+  header::CONTENT_TYPE,
   response::{Response, ResponseBuilder},
   StatusCode,
 };
@@ -52,6 +53,16 @@ where
 
     *res.status_mut() = status;
     res
+  }
+}
+
+impl Respondable for route_html::tags::html::Html {
+  fn respond(self) -> Response<Body> {
+    let str = route_html::render(self);
+
+    let response = ResponseBuilder::new().status(200);
+
+    response.header(CONTENT_TYPE, "text/html").body(Body::from(str)).unwrap()
   }
 }
 

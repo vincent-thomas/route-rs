@@ -1,6 +1,7 @@
 #![allow(clippy::to_string_trait_impl)]
 #![allow(clippy::inherent_to_string)]
 pub mod class;
+mod stylerule;
 pub mod tags;
 mod utils;
 

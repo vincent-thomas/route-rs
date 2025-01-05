@@ -18,6 +18,10 @@ impl Redirect {
     Redirect { to, permanent }
   }
 
+  pub fn permanent(to: &'static str) -> Redirect {
+    Redirect { permanent: true, to }
+  }
+
   fn gen_response(&self) -> Response {
     let mut res = Response::new(Body::from(()));
     *res.status_mut() = if self.permanent {

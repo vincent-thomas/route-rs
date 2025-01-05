@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use rand::Rng as _;
+use std::collections::HashMap;
 
 use crate::{
   class::TagClass,
@@ -37,7 +36,6 @@ route_html_derive::html_tag! {
     pub children: Vec<Tag>,
     href: String,
     target: LinkTarget,
-
     pub load_type: LinkLoadType,
   }
 }
@@ -132,6 +130,7 @@ impl Link {
         .collect(),
       classes: vec![],
       ids: vec![],
+      attributes: HashMap::default(),
       load_type: LinkLoadType::default(),
       target: LinkTarget::default(),
     }

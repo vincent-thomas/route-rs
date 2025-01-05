@@ -26,6 +26,7 @@ optional = true
 [dependencies]
 route_core = { path = "../route_core" }
 route_http = { path = "../route_http" }
+route_html = { path = "../route_html" }
 route_router = { path = "../route_router" }
 route_server = { path = "../route_server" }
 route_utils = { path = "../route_utils" }

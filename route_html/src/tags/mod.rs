@@ -121,15 +121,15 @@ impl IntoTag for &'static str {
   }
 }
 
-macro_rules! testing {
+macro_rules! impl_tag {
   ($($val:ident $char:ident);*) => {
     $(
 
-        #[derive(Debug, Default)]
-        pub struct $val {
-          pub children: Vec<Tag>,
-          pub classes: Vec<TagClass>,
-          pub ids: Vec<String>,
+        route_html_derive::html_tag! {
+          #[derive(Debug, Default)]
+          pub struct $val {
+            pub children: Vec<Tag>,
+          }
         }
 
             impl IntoTag for $val {
@@ -146,4 +146,23 @@ macro_rules! testing {
     )*
   };
 }
-testing! { Div div; Body body; Span span }
+impl_tag! { Div div; Body body; Span span; P p }
+
+macro_rules! impl_from_text_tag {
+  ($($val:ident $char:ident);*) => {
+    $(
+        impl From<&'static str> for $val {
+          fn from(value: &'static str) -> $val {
+              $val {
+                  children: Vec::from_iter([Tag::Text(value.to_string())]),
+                  classes: Vec::default(),
+                  ids: Vec::default(),
+                  attributes: HashMap::default()
+              }
+          }
+        }
+    )*
+  };
+}
+
+impl_from_text_tag! { Div div; P p; Span span }
