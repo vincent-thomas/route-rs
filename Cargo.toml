@@ -13,7 +13,7 @@ members = [
 
 [workspace.package]
 authors = ["Vincent Thomas"]
-categories = ["Web programming"]
+categories = []
 keywords = ["web"]
 license = "MIT"
 edition = "2021"

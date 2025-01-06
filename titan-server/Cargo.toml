@@ -14,7 +14,7 @@ date-header = ["dep:chrono"]
 
 [dependencies]
 titan-core = { path = "../titan-core", version = "0.1.0" }
-titan-http = { path = "../titan-http" }
+titan-http = { path = "../titan-http", version = "0.1.0" }
 chrono = {version = "0.4.38", optional = true }
 tokio = { version = "1.42.0", features = ["net", "io-util", "rt"] }
 futures-util = "0.3.31"
