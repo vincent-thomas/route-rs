@@ -1097,6 +1097,8 @@ dependencies = [
 name = "route_html_derive"
 version = "0.1.0"
 dependencies = [
+ "cssparser",
+ "lightningcss",
  "quote",
  "syn 2.0.69",
 ]

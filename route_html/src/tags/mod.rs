@@ -1,6 +1,9 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+  collections::{HashMap, HashSet},
+  hash::{Hash, Hasher},
+};
 
-use crate::{class::TagClass, stylerule::StyleRule, Context};
+use crate::{class::TagClass, context::Context, stylerule::StyleRule};
 use cssparser::{Parser, ParserInput};
 use lightningcss::{
   declaration::DeclarationBlock, printer::PrinterOptions,
@@ -12,17 +15,78 @@ pub mod image;
 pub mod link;
 pub mod style;
 
-pub trait IntoTag {
-  fn into_tag(&self) -> Vec<Tag>;
+pub trait IntoTag: Clone {
+  fn into_tag(self) -> Tag;
 }
 
 impl IntoTag for Tag {
-  fn into_tag(&self) -> Vec<Tag> {
-    vec![self.clone()]
+  fn into_tag(self) -> Tag {
+    self
   }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+impl Hash for Tag {
+  fn hash<H: Hasher>(&self, state: &mut H) {
+    match self {
+      Tag::Text(text) => {
+        // Hash the text contained in the Text variant
+        text.hash(state);
+      }
+      Tag::Tag {
+        ident,
+        children,
+        classes,
+        ids,
+        attributes,
+        urls_to_preconnect,
+        urls_to_prefetch,
+      } => {
+        // Hash the static string 'ident'
+        ident.hash(state);
+
+        // Hash the Option<Vec<Tag>> (None is hashed as a distinct value)
+        match children {
+          Some(children_list) => {
+            // Hash each child recursively
+            children_list.hash(state);
+          }
+          None => {
+            // Option::None is treated as a distinct value
+            0u8.hash(state); // You could use any arbitrary value to represent `None`
+          }
+        }
+
+        for s in classes {
+          s.hash(state);
+        }
+
+        //// Hash the HashSet<TagClass>
+        //classes.hash(state);
+
+        // Hash the Vec<String>
+        ids.hash(state);
+
+        for s in attributes {
+          s.hash(state);
+        }
+        // Hash the HashMap<String, String>
+        //attributes.hash(state);
+
+        // Hash the HashSet<String> for urls_to_preconnect
+        for s in urls_to_preconnect {
+          s.hash(state);
+        }
+
+        for s in urls_to_prefetch {
+          s.hash(state);
+        }
+      }
+    }
+  }
+}
+
+#[allow(clippy::large_enum_variant)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Tag {
   Text(String),
   Tag {
@@ -91,7 +155,7 @@ impl Tag {
                 let value = style.value_to_css_string(options).unwrap();
 
                 let rule = StyleRule::from_iter([(key, value)]);
-                ctx.styles.add_rule(rule.clone());
+                ctx.add_styles(rule.clone());
                 classes.insert(TagClass::Normal(rule.rule));
               }
               for style in parsed_styles.important_declarations {
@@ -178,43 +242,41 @@ impl From<String> for Tag {
 }
 
 impl IntoTag for &'static str {
-  fn into_tag(&self) -> Vec<Tag> {
-    Vec::from_iter([Tag::Text(self.to_string())])
+  fn into_tag(self) -> Tag {
+    Tag::Text(self.to_string())
   }
 }
 
 macro_rules! impl_tag {
   ($($val:ident);*) => {
     $(
+      route_html_derive::html_tag! {
+        #[derive(Debug, Default)]
+        pub struct $val {
+          pub children: Vec<Tag>,
+        }
+      }
 
-        route_html_derive::html_tag! {
-          #[derive(Debug, Default)]
-          pub struct $val {
-            pub children: Vec<Tag>,
+      impl IntoTag for $val {
+        fn into_tag(self) -> Tag {
+          Tag::Tag {
+              ident: paste::paste! { stringify!([<$val:lower>]) },
+              children: Some(self.children),
+              classes: self.classes,
+              ids: self.ids,
+              attributes: HashMap::default(),
+
+              urls_to_preconnect: HashSet::default(),
+              urls_to_prefetch: HashSet::default()
           }
         }
-
-            impl IntoTag for $val {
-              fn into_tag(&self) -> Vec<Tag> {
-
-                Vec::from_iter([Tag::Tag {
-                    ident: paste::paste! { stringify!([<$val:lower>]) },
-                    children: Some(self.children.clone()),
-                    classes: self.classes.clone(),
-                    ids: self.ids.clone(),
-                    attributes: HashMap::default(),
-
-                    urls_to_preconnect: HashSet::default(),
-                    urls_to_prefetch: HashSet::default()
-                }])
-            }
-        }
+      }
     )*
   };
 }
 impl_tag! { Div; Body; Span; P; Header; Footer }
 
-macro_rules! impl_from_text_tag {
+macro_rules! impl_children_tag {
   ($($val:ident);*) => {
     $(
         impl $val {
@@ -228,41 +290,18 @@ macro_rules! impl_from_text_tag {
           }
         }
 
-        //impl<T> From<T> for $val where T: IntoIterator<Item = Tag> {
-        //  fn from(value: T) -> $val {
-        //      $val {
-        //          children: value.into_iter().collect::<Vec<Tag>>(),
-        //          classes: HashSet::default(),
-        //          ids: Vec::default(),
-        //          attributes: HashMap::default()
-        //      }
-        //  }
-        //}
-
-        impl<T, I> From<T> for $val where T: IntoIterator<Item = I>, I: IntoIterator<Item = Tag> {
-          fn from(value: T) -> $val {
+        impl<I> From<I> for $val where I: IntoIterator<Item = Tag> {
+          fn from(value: I) -> $val {
               $val {
-                  children: value.into_iter().flatten().collect::<Vec<Tag>>(),
+                  children: value.into_iter().collect::<Vec<Tag>>(),
                   classes: HashSet::default(),
                   ids: Vec::default(),
                   attributes: HashMap::default(),
               }
           }
         }
-
-        //impl From<Vec<Vec<Tag>>> for $val {
-        //  fn from(value: Vec<Vec<Tag>>) -> $val {
-        //      let value = value.into_iter().flatten().collect();
-        //      $val {
-        //          children: value,
-        //          classes: HashSet::default(),
-        //          ids: Vec::default(),
-        //          attributes: HashMap::default()
-        //      }
-        //  }
-        //}
     )*
   };
 }
 
-impl_from_text_tag! { Div; P; Span; Header }
+impl_children_tag! { Div; P; Span; Header; Body }

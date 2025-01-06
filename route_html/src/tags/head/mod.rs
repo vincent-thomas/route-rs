@@ -5,27 +5,26 @@ use std::{
 
 use crate::tags::{style::Style, IntoTag, Tag};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Head {
   children: Vec<Tag>,
   opengraph: Option<opengraph::OpenGraph>,
 }
 
 impl IntoTag for Head {
-  fn into_tag(&self) -> Vec<Tag> {
-    let mut children = self.children.clone();
+  fn into_tag(mut self) -> Tag {
     if let Some(og) = &self.opengraph {
-      children.extend(og.into_tag());
+      self.opengraph_extend(og.clone());
     }
-    Vec::from_iter([Tag::Tag {
+    Tag::Tag {
       ids: Vec::default(),
-      children: Some(children),
+      children: Some(self.children),
       ident: "head",
       classes: HashSet::default(),
       attributes: HashMap::default(),
       urls_to_preconnect: HashSet::default(),
       urls_to_prefetch: HashSet::default(),
-    }])
+    }
   }
 }
 impl Default for Head {
@@ -104,12 +103,19 @@ impl Head {
     self
   }
 
-  pub fn extend_ref(&mut self, tags: Vec<Tag>) {
+  pub(crate) fn append_ref(&mut self, tag: Tag) {
+    self.children.push(tag);
+  }
+
+  pub fn extend_ref<I>(&mut self, tags: I)
+  where
+    I: IntoIterator<Item = Tag>,
+  {
     self.children.extend(tags);
   }
 
   pub fn style(mut self, style: Style) -> Self {
-    self.children.extend(style.into_tag());
+    self.children.push(style.into_tag());
     self
   }
 
@@ -135,8 +141,9 @@ impl Head {
   }
 
   pub fn reset_css(mut self) -> Self {
-    let style = Style::from_str(RESET_CSS).unwrap().into_tag();
-    self.children.extend(style);
+    let style =
+      Style::from_str(include_str!("./reset.css")).unwrap().into_tag();
+    self.children.push(style);
     self
   }
 }
@@ -144,9 +151,11 @@ impl Head {
 pub mod opengraph {
   use std::collections::{HashMap, HashSet};
 
-  use crate::tags::{IntoTag, Tag};
+  use crate::tags::Tag;
 
-  #[derive(Debug)]
+  use super::Head;
+
+  #[derive(Debug, Clone)]
   pub struct OpenGraph {
     title: String,
     description: String,
@@ -170,9 +179,9 @@ pub mod opengraph {
     }
   }
 
-  impl IntoTag for OpenGraph {
-    fn into_tag(&self) -> Vec<Tag> {
-      Vec::from_iter([
+  impl Head {
+    pub(super) fn opengraph_extend(&mut self, opengraph: OpenGraph) {
+      let tags = Vec::from_iter([
         Tag::Tag {
           ident: "meta",
           ids: Vec::default(),
@@ -180,7 +189,7 @@ pub mod opengraph {
           classes: HashSet::default(),
           attributes: HashMap::from_iter([
             ("property".to_string(), "og:title".to_string()),
-            ("content".to_string(), self.title.clone()),
+            ("content".to_string(), opengraph.title.clone()),
           ]),
           urls_to_preconnect: HashSet::default(),
           urls_to_prefetch: HashSet::default(),
@@ -192,7 +201,7 @@ pub mod opengraph {
           children: None,
           attributes: HashMap::from_iter([
             ("property".to_string(), "og:description".to_string()),
-            ("content".to_string(), self.description.to_string()),
+            ("content".to_string(), opengraph.description.to_string()),
           ]),
           urls_to_preconnect: HashSet::default(),
           urls_to_prefetch: HashSet::default(),
@@ -204,7 +213,7 @@ pub mod opengraph {
           children: None,
           attributes: HashMap::from_iter([
             ("property".to_string(), "og:type".to_string()),
-            ("content".to_string(), self.og_type.to_string()),
+            ("content".to_string(), opengraph.og_type.to_string()),
           ]),
           urls_to_preconnect: HashSet::default(),
           urls_to_prefetch: HashSet::default(),
@@ -216,16 +225,17 @@ pub mod opengraph {
           children: None,
           attributes: HashMap::from_iter([
             ("property".to_string(), "og:image".to_string()),
-            ("content".to_string(), self.image_url.to_string()),
+            ("content".to_string(), opengraph.image_url.to_string()),
           ]),
           urls_to_preconnect: HashSet::default(),
           urls_to_prefetch: HashSet::default(),
         },
-      ])
+      ]);
+      self.children.extend(tags);
     }
   }
 
-  #[derive(Debug)]
+  #[derive(Debug, Clone)]
   pub enum OpenGraphType {
     Website,
     Article,
@@ -245,123 +255,3 @@ pub mod opengraph {
     }
   }
 }
-
-const RESET_CSS: &str = "
-/*! modern-normalize v3.0.1 | MIT License | https://github.com/sindresorhus/modern-normalize */
-*,
-::before,
-::after {
-	box-sizing: border-box;
-}
-
-html {
-	font-family:
-		system-ui,
-		'Segoe UI',
-		Roboto,
-		Helvetica,
-		Arial,
-		sans-serif,
-		'Apple Color Emoji',
-		'Segoe UI Emoji';
-	line-height: 1.15;
-	-webkit-text-size-adjust: 100%;
-	tab-size: 4;
-}
-
-body {
-	margin: 0;
-}
-
-b,
-strong {
-	font-weight: bolder;
-}
-
-code,
-kbd,
-samp,
-pre {
-	font-family:
-		ui-monospace,
-		SFMono-Regular,
-		Consolas,
-		'Liberation Mono',
-		Menlo,
-		monospace; /* 1 */
-	font-size: 1em; /* 2 */
-}
-
-small {
-	font-size: 80%;
-}
-
-sub,
-sup {
-	font-size: 75%;
-	line-height: 0;
-	position: relative;
-	vertical-align: baseline;
-}
-
-sub {
-	bottom: -0.25em;
-}
-
-sup {
-	top: -0.5em;
-}
-
-table {
-	border-color: currentcolor;
-}
-
-button,
-input,
-optgroup,
-select,
-textarea {
-	font-family: inherit; /* 1 */
-	font-size: 100%; /* 1 */
-	line-height: 1.15; /* 1 */
-	margin: 0; /* 2 */
-}
-
-button,
-[type='button'],
-[type='reset'],
-[type='submit'] {
-	-webkit-appearance: button;
-}
-
-legend {
-	padding: 0;
-}
-
-progress {
-	vertical-align: baseline;
-}
-
-::-webkit-inner-spin-button,
-::-webkit-outer-spin-button {
-	height: auto;
-}
-
-[type='search'] {
-	-webkit-appearance: textfield; /* 1 */
-	outline-offset: -2px; /* 2 */
-}
-
-::-webkit-search-decoration {
-	-webkit-appearance: none;
-}
-
-::-webkit-file-upload-button {
-	-webkit-appearance: button; /* 1 */
-	font: inherit; /* 2 */
-}
-
-summary {
-	display: list-item;
-}
-";

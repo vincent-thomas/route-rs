@@ -1,6 +1,84 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{Field, Fields, ItemStruct};
+use syn::{parse_macro_input, Field, Fields, ItemStruct, LitStr};
+
+use lightningcss::properties::{custom::CustomPropertyName, Property};
+use lightningcss::stylesheet::ParserOptions;
+
+#[proc_macro]
+pub fn css(input: TokenStream) -> TokenStream {
+  // Parse the input into a string literal
+  let input = parse_macro_input!(input as LitStr);
+
+  // Convert the string literal into a &str
+  let result = input.value();
+
+  let mut parser_input = cssparser::ParserInput::new(&result);
+  let mut parser = cssparser::Parser::new(&mut parser_input);
+
+  let styles = match lightningcss::declaration::DeclarationBlock::parse(
+    &mut parser,
+    &ParserOptions::default(),
+  ) {
+    Ok(value) => value,
+    Err(err) => {
+      let span = input.span();
+
+      let error_msg =
+        format!("line = {}, col = {}", err.location.line, err.location.column);
+
+      let err = syn::Error::new(span, error_msg);
+      return err.to_compile_error().into(); // Return the error as a TokenStream
+    }
+  };
+
+  for item in styles.declarations {
+    if let Property::Custom(custom) = item.clone() {
+      use std::ops::Deref;
+      let name = match custom.name {
+        CustomPropertyName::Custom(dashed_ident) => {
+          let deref = Box::new(dashed_ident);
+          deref.deref().to_string()
+        }
+        CustomPropertyName::Unknown(ident) => {
+          let deref = Box::new(ident);
+          deref.deref().to_string()
+        }
+      };
+      let span = input.span();
+
+      let error_msg = format!("Invalid css property name: {}", name);
+
+      let err = syn::Error::new(span, error_msg);
+      return err.to_compile_error().into(); // Return the error as a TokenStream
+    }
+  }
+
+  for item in styles.important_declarations {
+    if let Property::Custom(custom) = item.clone() {
+      use std::ops::Deref;
+      let name = match custom.name {
+        CustomPropertyName::Custom(dashed_ident) => {
+          let deref = Box::new(dashed_ident);
+          deref.deref().to_string()
+        }
+        CustomPropertyName::Unknown(ident) => {
+          let deref = Box::new(ident);
+          deref.deref().to_string()
+        }
+      };
+      panic!("Invalid css property name: {}", name);
+    }
+  }
+
+  // Generate the code that returns a reference to the string literal (&str)
+  let expanded = quote! {
+    #result
+  };
+
+  // Convert the generated code back into a TokenStream and return it
+  TokenStream::from(expanded)
+}
 
 #[proc_macro]
 pub fn html_tag(item: TokenStream) -> TokenStream {

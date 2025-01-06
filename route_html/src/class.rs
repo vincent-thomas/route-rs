@@ -15,15 +15,3 @@ impl TagClass {
     Self::Style(value)
   }
 }
-
-//impl From<String> for TagClass {
-//  fn from(value: String) -> Self {
-//    Self::Style(value)
-//  }
-//}
-
-//impl From<StyleRule> for TagClass {
-//  fn from(value: StyleRule) -> Self {
-//    TagClass::Style(value)
-//  }
-//}

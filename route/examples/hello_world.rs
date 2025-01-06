@@ -9,7 +9,10 @@ use route::{
   },
   web, App, Respondable,
 };
-use route_html::tags::Header;
+use route_html::{
+  css,
+  tags::{Body, Header, P},
+};
 use tokio::net::TcpListener;
 
 fn default_head() -> Head {
@@ -17,41 +20,44 @@ fn default_head() -> Head {
 }
 
 async fn index() -> impl Respondable {
-  Html::with_head(default_head()).body_from_iter([
-    Header::from([
-      Div::text("testing").into_tag(),
-      Div::text("testing").into_tag(),
-    ])
-    .styles(
-      "
+  Html::from((
+    default_head(),
+    Body::from([
+      Header::from([
+        Div::text("testing").into_tag(),
+        Div::from([P::text("testing").into_tag()]).into_tag(),
+      ])
+      .styles(css!(
+        "
         display: flex;
         flex-direction: row;
         width: 100%;
         justify-content: space-between;
 
         padding: 0.75rem;
-        ",
-    )
-    .into_tag(),
-    Link::text("/", "testing")
-      .preload(LinkLoadType::WhenIdle)
-      .styles(
         "
+      ))
+      .into_tag(),
+      Link::text("/", "testing")
+        .preload(LinkLoadType::WhenIdle)
+        .styles(
+          "
             color: blue;
             background-color: red;
           ",
-      )
-      .into_tag(),
-    Link::text("/about".to_string(), "testing")
-      .preload(LinkLoadType::WhenHover)
-      .styles(
-        "
+        )
+        .into_tag(),
+      Link::text("/about".to_string(), "testing")
+        .preload(LinkLoadType::WhenIdle)
+        .styles(
+          "
             color: blue;
             background-color: red;
           ",
-      )
-      .into_tag(),
-  ])
+        )
+        .into_tag(),
+    ]),
+  ))
 }
 
 #[tokio::main]

@@ -12,3 +12,5 @@ proc-macro = true
 [dependencies]
 syn = { version = "2", features = ["full"] }
 quote = "1"
+cssparser = "0.33.0"
+lightningcss = "1.0.0-alpha.61"

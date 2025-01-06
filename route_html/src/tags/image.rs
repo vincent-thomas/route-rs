@@ -31,7 +31,7 @@ impl Img {
 }
 
 impl IntoTag for Img {
-  fn into_tag(&self) -> Vec<Tag> {
+  fn into_tag(self) -> Tag {
     let mut preconnect = HashSet::from_iter([]);
 
     if self.preload {
@@ -41,18 +41,17 @@ impl IntoTag for Img {
         self.image_url.host_str().unwrap()
       ));
     }
-    let tag = Tag::Tag {
+    Tag::Tag {
       ident: "img",
       children: None,
-      classes: self.classes.clone(),
+      classes: self.classes,
       urls_to_preconnect: preconnect,
-      ids: self.ids.clone(),
+      ids: self.ids,
       attributes: HashMap::from_iter([
         ("src".to_string(), self.image_url.to_string()),
-        ("alt".to_string(), self.alt.clone()),
+        ("alt".to_string(), self.alt),
       ]),
       urls_to_prefetch: HashSet::default(),
-    };
-    Vec::from_iter([tag])
+    }
   }
 }

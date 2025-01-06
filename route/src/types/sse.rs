@@ -52,19 +52,19 @@ impl Event {
   }
 }
 
-impl Into<String> for Event {
-  fn into(self) -> String {
+impl From<Event> for String {
+  fn from(val: Event) -> Self {
     let mut text = String::new();
 
-    if let Some(data) = self.data {
+    if let Some(data) = val.data {
       text.push_str(&format!("data: {data}\n"));
     };
 
-    if let Some(id) = self.id {
+    if let Some(id) = val.id {
       text.push_str(&format!("id: {id}\n"));
     };
 
-    if let Some(event) = self.event {
+    if let Some(event) = val.event {
       text.push_str(&format!("event: {event}\n"));
     };
 

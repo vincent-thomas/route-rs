@@ -5,7 +5,7 @@ use std::{
 
 use lightningcss::{
   printer::PrinterOptions,
-  stylesheet::{MinifyOptions, ParserOptions, StyleSheet},
+  stylesheet::{ParserOptions, StyleSheet},
 };
 
 use crate::{
@@ -13,7 +13,7 @@ use crate::{
   tags::{IntoTag, Tag},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Style {
   Styles(HashSet<StyleRule>),
   Text(String),
@@ -52,7 +52,7 @@ impl Style {
 }
 
 impl IntoTag for Style {
-  fn into_tag(&self) -> Vec<Tag> {
+  fn into_tag(self) -> Tag {
     let content = match self {
       Style::Text(text) => text.clone(),
       Style::Styles(styles) => {
@@ -60,7 +60,7 @@ impl IntoTag for Style {
       }
     };
 
-    let tag = Tag::Tag {
+    Tag::Tag {
       attributes: HashMap::default(),
       ident: "style",
       children: Some(Vec::from_iter([Tag::Text(content)])),
@@ -68,21 +68,17 @@ impl IntoTag for Style {
       ids: Vec::default(),
       urls_to_preconnect: HashSet::default(),
       urls_to_prefetch: HashSet::default(),
-    };
-    Vec::from_iter([tag])
+    }
   }
 }
 
 impl FromStr for Style {
   type Err = ();
   fn from_str(s: &str) -> Result<Self, Self::Err> {
-    let mut stylesheet =
-      StyleSheet::parse(s, ParserOptions::default()).unwrap();
+    let stylesheet = StyleSheet::parse(s, ParserOptions::default()).unwrap();
 
-    stylesheet.minify(MinifyOptions::default()).unwrap();
-
-    let style =
-      Style::Text(stylesheet.to_css(PrinterOptions::default()).unwrap().code);
+    let options = PrinterOptions { minify: true, ..Default::default() };
+    let style = Style::Text(stylesheet.to_css(options).unwrap().code);
 
     Ok(style)
   }
