@@ -2,6 +2,7 @@
 #![allow(clippy::inherent_to_string)]
 pub mod class;
 mod context;
+pub mod prelude;
 mod stylerule;
 pub mod tags;
 mod utils;
