@@ -1,11 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Field, Fields, ItemStruct, LitStr};
-
-// This module and crate::prelude::__private_validatecss::* is the biggest hack of the century
-mod private {
-  include!("../../titan-html/src/prelude/__private_validatecss.rs");
-}
+use titan_utils::validatecss::{validate_css, CSSValidationError};
 
 #[proc_macro]
 pub fn css(input: TokenStream) -> TokenStream {
@@ -15,9 +11,9 @@ pub fn css(input: TokenStream) -> TokenStream {
   // Convert the string literal into a &str
   let result = input.value();
 
-  if let Err(err) = private::validate_css(&result) {
+  if let Err(err) = validate_css(&result) {
     match err {
-      private::CSSValidationError::FieldError(field) => {
+      CSSValidationError::FieldError(field) => {
         let span = input.span();
 
         let error_msg = format!("Invalid css property name: {}", field);
@@ -25,7 +21,7 @@ pub fn css(input: TokenStream) -> TokenStream {
         let err = syn::Error::new(span, error_msg);
         return err.to_compile_error().into(); // Return the error as a TokenStream
       }
-      private::CSSValidationError::EntireFile(location) => {
+      CSSValidationError::EntireFile(location) => {
         let span = input.span();
 
         let error_msg = format!(

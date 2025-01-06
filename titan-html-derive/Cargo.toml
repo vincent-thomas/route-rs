@@ -1,13 +1,15 @@
 [package]
 name = "titan-html-derive"
+authors.workspace = true
+categories.workspace = true
+license.workspace = true
+edition.workspace = true
 version.workspace = true
-edition = "2021"
 
 [lib]
 proc-macro = true
 
 [dependencies]
 syn = { version = "2", features = ["full"] }
+titan-utils = { version = "0.1.0", path = "../titan-utils", features = ["internal-cssvalidate"] }
 quote = "1"
-cssparser = "0.33.0"
-lightningcss = "1.0.0-alpha.61"

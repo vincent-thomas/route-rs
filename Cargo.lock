@@ -1285,6 +1285,7 @@ dependencies = [
  "paste",
  "rand",
  "titan-html-derive",
+ "titan-utils",
  "url",
 ]
 
@@ -1292,10 +1293,9 @@ dependencies = [
 name = "titan-html-derive"
 version = "0.1.0"
 dependencies = [
- "cssparser",
- "lightningcss",
  "quote",
  "syn 2.0.69",
+ "titan-utils",
 ]
 
 [[package]]
@@ -1325,6 +1325,10 @@ dependencies = [
 [[package]]
 name = "titan-utils"
 version = "0.1.0"
+dependencies = [
+ "cssparser",
+ "lightningcss",
+]
 
 [[package]]
 name = "tokio"
