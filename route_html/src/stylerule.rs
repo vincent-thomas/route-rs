@@ -19,7 +19,7 @@ impl<'a> FromIterator<(&'a str, &'a str)> for StyleRule {
     styles.hash(&mut hasher);
     let key = hasher.finish();
 
-    let mut rule = String::from("r");
+    let mut rule = String::from("r"); // CSS-rules cannot start with a number
     rule.push_str(&utils::encode_base62(key));
 
     Self { rule, styles }

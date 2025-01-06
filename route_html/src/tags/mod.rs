@@ -1,10 +1,14 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-use crate::class::TagClass;
-use style::Style;
-
+use crate::{class::TagClass, stylerule::StyleRule, Context};
+use cssparser::{Parser, ParserInput};
+use lightningcss::{
+  declaration::DeclarationBlock, printer::PrinterOptions,
+  stylesheet::ParserOptions,
+};
 pub mod head;
 pub mod html;
+pub mod image;
 pub mod link;
 pub mod style;
 
@@ -18,49 +22,107 @@ impl IntoTag for Tag {
   }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Tag {
   Text(String),
   Tag {
     ident: &'static str,
     children: Option<Vec<Tag>>,
-    classes: Vec<TagClass>,
+    classes: HashSet<TagClass>,
     ids: Vec<String>,
 
     attributes: HashMap<String, String>,
+
+    urls_to_preconnect: HashSet<String>,
+    urls_to_prefetch: HashSet<String>,
   },
 }
 
 impl Tag {
+  pub fn children(&mut self) -> &mut Vec<Tag> {
+    match self {
+      Tag::Text(_) => unimplemented!(),
+      Tag::Tag { children, .. } => {
+        if let Some(value) = children {
+          value
+        } else {
+          panic!("No children :(")
+        }
+      }
+    }
+  }
   pub fn add_id(&mut self, id: String) {
     if let Tag::Tag { ref mut ids, .. } = self {
       ids.push(id);
     }
   }
-  pub(crate) fn hydrate_styles(&self, styles: &mut Style) {
+  pub(crate) fn hydrate(&mut self, ctx: &mut Context) {
     match self {
       Tag::Text(_) => (),
-      Tag::Tag { classes, children, .. } => {
-        if !classes.is_empty() {
-          for class in classes {
+      Tag::Tag {
+        ref mut classes,
+        ref mut children,
+        urls_to_preconnect,
+        urls_to_prefetch,
+        ..
+      } => {
+        {
+          for url in urls_to_preconnect.iter() {
+            ctx.add_preconnect(url.to_string());
+          }
+
+          for url in urls_to_prefetch.iter() {
+            ctx.add_prefetch(url.to_string());
+          }
+
+          for class in classes.clone().iter() {
             if let TagClass::Style(style) = class {
-              styles.add_rule(style.clone());
-            };
+              let mut parser_input = ParserInput::new(style);
+              let mut parser = Parser::new(&mut parser_input);
+              let parsed_styles =
+                DeclarationBlock::parse(&mut parser, &ParserOptions::default())
+                  .expect("Invalid css");
+
+              for style in parsed_styles.declarations {
+                let options =
+                  PrinterOptions { minify: true, ..Default::default() };
+                let id = style.property_id();
+                let key = id.name().to_string();
+                let value = style.value_to_css_string(options).unwrap();
+
+                let rule = StyleRule::from_iter([(key, value)]);
+                ctx.styles.add_rule(rule.clone());
+                classes.insert(TagClass::Normal(rule.rule));
+              }
+              for style in parsed_styles.important_declarations {
+                let options =
+                  PrinterOptions { minify: true, ..Default::default() };
+                let id = style.property_id();
+                let key = id.name().to_string();
+                let value = style.value_to_css_string(options).unwrap();
+
+                let rule = StyleRule::from_iter([(key, value)]);
+                ctx.add_styles(rule.clone());
+                classes.insert(TagClass::Normal(rule.rule));
+              }
+
+              classes.remove(&TagClass::Style(style.clone()));
+            }
           }
         }
 
         if let Some(children) = children {
-          for child in children {
-            child.hydrate_styles(styles)
+          for child in children.iter_mut() {
+            child.hydrate(ctx);
           }
         }
       }
-    }
+    };
   }
   pub(crate) fn to_string(&self) -> String {
     match self {
       Tag::Text(text) => text.clone(),
-      Tag::Tag { ident, children, classes, ids, attributes } => {
+      Tag::Tag { ident, children, classes, ids, attributes, .. } => {
         let mut base = format!("<{ident}");
 
         if !attributes.is_empty() {
@@ -76,7 +138,7 @@ impl Tag {
           for class in classes {
             let class = match class {
               TagClass::Normal(class) => class.clone(),
-              TagClass::Style(style) => style.rule.clone(),
+              TagClass::Style(style) => unreachable!("{:?}", style),
             };
             class_str.push(class);
           }
@@ -122,7 +184,7 @@ impl IntoTag for &'static str {
 }
 
 macro_rules! impl_tag {
-  ($($val:ident $char:ident);*) => {
+  ($($val:ident);*) => {
     $(
 
         route_html_derive::html_tag! {
@@ -134,35 +196,73 @@ macro_rules! impl_tag {
 
             impl IntoTag for $val {
               fn into_tag(&self) -> Vec<Tag> {
+
                 Vec::from_iter([Tag::Tag {
-                    ident: stringify!($char),
+                    ident: paste::paste! { stringify!([<$val:lower>]) },
                     children: Some(self.children.clone()),
                     classes: self.classes.clone(),
                     ids: self.ids.clone(),
-                    attributes: HashMap::default()
+                    attributes: HashMap::default(),
+
+                    urls_to_preconnect: HashSet::default(),
+                    urls_to_prefetch: HashSet::default()
                 }])
             }
         }
     )*
   };
 }
-impl_tag! { Div div; Body body; Span span; P p }
+impl_tag! { Div; Body; Span; P; Header; Footer }
 
 macro_rules! impl_from_text_tag {
-  ($($val:ident $char:ident);*) => {
+  ($($val:ident);*) => {
     $(
-        impl From<&'static str> for $val {
-          fn from(value: &'static str) -> $val {
+        impl $val {
+          pub fn text(value: &'static str) -> $val {
+             $val {
+                 children: Vec::from_iter([Tag::Text(value.to_string())]),
+                 classes: HashSet::default(),
+                 ids: Vec::default(),
+                 attributes: HashMap::default(),
+             }
+          }
+        }
+
+        //impl<T> From<T> for $val where T: IntoIterator<Item = Tag> {
+        //  fn from(value: T) -> $val {
+        //      $val {
+        //          children: value.into_iter().collect::<Vec<Tag>>(),
+        //          classes: HashSet::default(),
+        //          ids: Vec::default(),
+        //          attributes: HashMap::default()
+        //      }
+        //  }
+        //}
+
+        impl<T, I> From<T> for $val where T: IntoIterator<Item = I>, I: IntoIterator<Item = Tag> {
+          fn from(value: T) -> $val {
               $val {
-                  children: Vec::from_iter([Tag::Text(value.to_string())]),
-                  classes: Vec::default(),
+                  children: value.into_iter().flatten().collect::<Vec<Tag>>(),
+                  classes: HashSet::default(),
                   ids: Vec::default(),
-                  attributes: HashMap::default()
+                  attributes: HashMap::default(),
               }
           }
         }
+
+        //impl From<Vec<Vec<Tag>>> for $val {
+        //  fn from(value: Vec<Vec<Tag>>) -> $val {
+        //      let value = value.into_iter().flatten().collect();
+        //      $val {
+        //          children: value,
+        //          classes: HashSet::default(),
+        //          ids: Vec::default(),
+        //          attributes: HashMap::default()
+        //      }
+        //  }
+        //}
     )*
   };
 }
 
-impl_from_text_tag! { Div div; P p; Span span }
+impl_from_text_tag! { Div; P; Span; Header }

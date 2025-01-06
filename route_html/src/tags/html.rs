@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use super::head::Head;
 
@@ -25,19 +25,20 @@ impl Html {
 
 impl IntoTag for Html {
   fn into_tag(&self) -> Vec<Tag> {
-    let mut children = Vec::default();
-
-    children.extend(self.head.into_tag());
+    let mut children = self.head.into_tag();
     children.extend(self.body.into_tag());
 
     Vec::from_iter([
       Tag::Text("<!DOCTYPE html>".to_string()),
       Tag::Tag {
         children: Some(children),
-        classes: Vec::default(),
+        classes: HashSet::default(),
         attributes: HashMap::default(),
         ident: "html",
         ids: Vec::default(),
+
+        urls_to_preconnect: HashSet::default(),
+        urls_to_prefetch: HashSet::default(),
       },
     ])
   }

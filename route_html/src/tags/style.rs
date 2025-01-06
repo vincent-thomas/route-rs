@@ -1,4 +1,12 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+  collections::{HashMap, HashSet},
+  str::FromStr,
+};
+
+use lightningcss::{
+  printer::PrinterOptions,
+  stylesheet::{MinifyOptions, ParserOptions, StyleSheet},
+};
 
 use crate::{
   stylerule::StyleRule,
@@ -26,6 +34,21 @@ impl Style {
       Style::Text(text) => text.push_str(style.to_string().as_str()),
     };
   }
+
+  pub fn external(link: impl Into<String>) -> Tag {
+    Tag::Tag {
+      ids: Vec::default(),
+      ident: "link",
+      children: None,
+      classes: HashSet::default(),
+      attributes: HashMap::from_iter([
+        ("rel".to_string(), "stylesheet".to_string()),
+        ("href".to_string(), link.into()),
+      ]),
+      urls_to_preconnect: HashSet::default(),
+      urls_to_prefetch: HashSet::default(),
+    }
+  }
 }
 
 impl IntoTag for Style {
@@ -41,20 +64,26 @@ impl IntoTag for Style {
       attributes: HashMap::default(),
       ident: "style",
       children: Some(Vec::from_iter([Tag::Text(content)])),
-      classes: Vec::default(),
+      classes: HashSet::default(),
       ids: Vec::default(),
+      urls_to_preconnect: HashSet::default(),
+      urls_to_prefetch: HashSet::default(),
     };
     Vec::from_iter([tag])
   }
 }
 
-impl<T> From<T> for Style
-where
-  T: Into<String>,
-{
-  fn from(value: T) -> Self {
-    let str = value.into();
+impl FromStr for Style {
+  type Err = ();
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    let mut stylesheet =
+      StyleSheet::parse(s, ParserOptions::default()).unwrap();
 
-    Style::Text(str)
+    stylesheet.minify(MinifyOptions::default()).unwrap();
+
+    let style =
+      Style::Text(stylesheet.to_css(PrinterOptions::default()).unwrap().code);
+
+    Ok(style)
   }
 }

@@ -1,4 +1,3 @@
-use chrono::Utc;
 use route_http::request::Request;
 use tokio::{
   io::{AsyncBufReadExt as _, AsyncReadExt as _, BufReader},
@@ -21,10 +20,6 @@ pub(crate) async fn read_request(
     request_lines.push(line.trim().to_string());
   }
   request_lines
-}
-
-pub(crate) fn date_header_format() -> String {
-  Utc::now().format("%a, %d %b %Y %H:%M:%S GMT").to_string()
 }
 
 pub(crate) async fn fill_req_body(

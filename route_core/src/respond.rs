@@ -1,9 +1,8 @@
 use std::convert::Infallible;
 
-use futures_core::Stream;
 use route_http::{
   body::Body,
-  header::CONTENT_TYPE,
+  header,
   response::{Response, ResponseBuilder},
   StatusCode,
 };
@@ -62,7 +61,10 @@ impl Respondable for route_html::tags::html::Html {
 
     let response = ResponseBuilder::new().status(200);
 
-    response.header(CONTENT_TYPE, "text/html").body(Body::from(str)).unwrap()
+    response
+      .header(header::CONTENT_TYPE, "text/html")
+      .body(Body::from(str))
+      .unwrap()
   }
 }
 

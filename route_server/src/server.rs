@@ -5,7 +5,7 @@ use route_core::{Respondable, Service};
 
 use route_http::{
   body::Body,
-  header::{HeaderName, HeaderValue, CONTENT_LENGTH},
+  header::{HeaderValue, CONTENT_LENGTH},
   request::{HttpRequestExt, Request},
   response::HttpResponseExt,
 };
@@ -14,7 +14,7 @@ use tokio::{
   net::{TcpListener, TcpStream},
 };
 
-use crate::utils::{self, date_header_format};
+use crate::utils::{self};
 
 /// Route
 pub struct Server;
@@ -100,14 +100,23 @@ where
         let nice_service = service.clone();
         let mut nice_service = std::mem::replace(&mut service, nice_service);
         tokio::spawn(async move {
+          #[allow(unused_mut)]
           let mut response = match nice_service.call(req).await {
             Ok(result) => result.respond(),
             Err(result) => result.respond(),
           };
-          response.headers_mut().extend([(
-            HeaderName::from_static("date"),
-            HeaderValue::from_str(&date_header_format()).unwrap(),
-          )]);
+
+          #[cfg(feature = "date-header")]
+          {
+            use route_http::header::HeaderName;
+            response.headers_mut().extend([(
+              HeaderName::from_static("date"),
+              HeaderValue::from_str(&chrono::Utc::now()
+                .format("%a, %d %b %Y %H:%M:%S GMT")
+                .to_string()())
+              .unwrap(),
+            )]);
+          }
 
           let (parts, body) = HttpResponseExt(response).parse_parts();
 

@@ -1,10 +1,13 @@
-use std::collections::HashMap;
+use std::{
+  collections::{HashMap, HashSet},
+  str::FromStr,
+};
 
 use crate::tags::{style::Style, IntoTag, Tag};
 
 #[derive(Debug)]
 pub struct Head {
-  pub children: Vec<Tag>,
+  children: Vec<Tag>,
   opengraph: Option<opengraph::OpenGraph>,
 }
 
@@ -18,8 +21,10 @@ impl IntoTag for Head {
       ids: Vec::default(),
       children: Some(children),
       ident: "head",
-      classes: Vec::default(),
+      classes: HashSet::default(),
       attributes: HashMap::default(),
+      urls_to_preconnect: HashSet::default(),
+      urls_to_prefetch: HashSet::default(),
     }])
   }
 }
@@ -35,8 +40,10 @@ impl Default for Head {
             "UTF-8".to_string(),
           )]),
           children: None,
-          classes: Vec::default(),
+          classes: HashSet::default(),
           ids: Vec::default(),
+          urls_to_preconnect: HashSet::default(),
+          urls_to_prefetch: HashSet::default(),
         },
         Tag::Tag {
           ident: "meta",
@@ -48,8 +55,10 @@ impl Default for Head {
             ),
           ]),
           children: None,
-          classes: Vec::default(),
+          classes: HashSet::default(),
           ids: Vec::default(),
+          urls_to_preconnect: HashSet::default(),
+          urls_to_prefetch: HashSet::default(),
         },
       ]),
     }
@@ -57,14 +66,50 @@ impl Default for Head {
 }
 
 impl Head {
+  pub fn empty() -> Self {
+    Self { opengraph: None, children: Vec::default() }
+  }
+
+  pub fn meta_utf8(mut self) -> Self {
+    self.children.push(Tag::Tag {
+      ident: "meta",
+      attributes: HashMap::from_iter([(
+        "charset".to_string(),
+        "UTF-8".to_string(),
+      )]),
+      children: None,
+      classes: HashSet::default(),
+      ids: Vec::default(),
+      urls_to_preconnect: HashSet::default(),
+      urls_to_prefetch: HashSet::default(),
+    });
+    self
+  }
+
   pub fn title(mut self, title: &str) -> Self {
     self.children.push(Tag::Tag {
       ids: Vec::default(),
       ident: "title",
       children: Some(Vec::from_iter([Tag::Text(title.to_string())])),
-      classes: Vec::default(),
+      classes: HashSet::default(),
       attributes: HashMap::default(),
+      urls_to_preconnect: HashSet::default(),
+      urls_to_prefetch: HashSet::default(),
     });
+    self
+  }
+
+  pub fn append(mut self, tag: Tag) -> Self {
+    self.children.push(tag);
+    self
+  }
+
+  pub fn extend_ref(&mut self, tags: Vec<Tag>) {
+    self.children.extend(tags);
+  }
+
+  pub fn style(mut self, style: Style) -> Self {
+    self.children.extend(style.into_tag());
     self
   }
 
@@ -73,11 +118,13 @@ impl Head {
       ids: Vec::default(),
       ident: "meta",
       children: None,
-      classes: Vec::default(),
+      classes: HashSet::default(),
       attributes: HashMap::from_iter([
         ("name".to_string(), "description".to_string()),
         ("content".to_string(), title.to_string()),
       ]),
+      urls_to_preconnect: HashSet::default(),
+      urls_to_prefetch: HashSet::default(),
     });
     self
   }
@@ -88,19 +135,14 @@ impl Head {
   }
 
   pub fn reset_css(mut self) -> Self {
-    let reset: String = String::from_iter(
-      RESET_CSS
-        .to_string()
-        .chars()
-        .filter(|x| !matches!(*x, '\n' | '\t' | ' ')),
-    );
-    self.children.push(Style::from(reset).into_tag()[0].clone());
+    let style = Style::from_str(RESET_CSS).unwrap().into_tag();
+    self.children.extend(style);
     self
   }
 }
 
 pub mod opengraph {
-  use std::collections::HashMap;
+  use std::collections::{HashMap, HashSet};
 
   use crate::tags::{IntoTag, Tag};
 
@@ -109,7 +151,6 @@ pub mod opengraph {
     title: String,
     description: String,
     og_type: OpenGraphType,
-    og_url: String,
     image_url: String,
   }
 
@@ -118,14 +159,12 @@ pub mod opengraph {
       title: &str,
       description: &str,
       og_type: OpenGraphType,
-      og_url: &str,
       image_url: &str,
     ) -> Self {
       Self {
         title: title.to_string(),
         description: description.to_string(),
         og_type,
-        og_url: og_url.to_string(),
         image_url: image_url.to_string(),
       }
     }
@@ -138,41 +177,49 @@ pub mod opengraph {
           ident: "meta",
           ids: Vec::default(),
           children: None,
-          classes: Vec::default(),
+          classes: HashSet::default(),
           attributes: HashMap::from_iter([
             ("property".to_string(), "og:title".to_string()),
             ("content".to_string(), self.title.clone()),
           ]),
+          urls_to_preconnect: HashSet::default(),
+          urls_to_prefetch: HashSet::default(),
         },
         Tag::Tag {
           ident: "meta",
           ids: Vec::default(),
-          classes: Vec::default(),
+          classes: HashSet::default(),
           children: None,
           attributes: HashMap::from_iter([
             ("property".to_string(), "og:description".to_string()),
             ("content".to_string(), self.description.to_string()),
           ]),
+          urls_to_preconnect: HashSet::default(),
+          urls_to_prefetch: HashSet::default(),
         },
         Tag::Tag {
           ident: "meta",
           ids: Vec::default(),
-          classes: Vec::default(),
+          classes: HashSet::default(),
           children: None,
           attributes: HashMap::from_iter([
             ("property".to_string(), "og:type".to_string()),
             ("content".to_string(), self.og_type.to_string()),
           ]),
+          urls_to_preconnect: HashSet::default(),
+          urls_to_prefetch: HashSet::default(),
         },
         Tag::Tag {
           ident: "meta",
           ids: Vec::default(),
-          classes: Vec::default(),
+          classes: HashSet::default(),
           children: None,
           attributes: HashMap::from_iter([
             ("property".to_string(), "og:image".to_string()),
             ("content".to_string(), self.image_url.to_string()),
           ]),
+          urls_to_preconnect: HashSet::default(),
+          urls_to_prefetch: HashSet::default(),
         },
       ])
     }

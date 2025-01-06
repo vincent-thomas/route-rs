@@ -1,10 +1,7 @@
 use rand::Rng as _;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-use crate::{
-  class::TagClass,
-  tags::{IntoTag, Tag},
-};
+use crate::tags::{IntoTag, Tag};
 
 #[derive(Default, Clone, Copy)]
 pub enum LinkTarget {
@@ -23,7 +20,7 @@ impl ToString for LinkTarget {
   }
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, PartialEq)]
 pub enum LinkLoadType {
   #[default]
   No,
@@ -67,27 +64,19 @@ impl IntoTag for Link {
         ("href".to_string(), self.href.to_string()),
         ("target".to_string(), self.target.to_string()),
       ]),
+      urls_to_preconnect: HashSet::default(),
+      urls_to_prefetch: if self.load_type == LinkLoadType::WhenIdle {
+        HashSet::from_iter([self.href.clone()])
+      } else {
+        HashSet::default()
+      },
     };
 
     let mut tags = Vec::from_iter([tag]);
 
     match self.load_type {
       LinkLoadType::No => tags,
-      LinkLoadType::WhenIdle => {
-        let script_tag = Tag::Tag {
-          ident: "link",
-          children: None,
-          ids: Vec::default(),
-          classes: Vec::default(),
-          attributes: HashMap::from_iter([
-            ("rel".to_string(), "prefetch".to_string()),
-            ("href".to_string(), self.href.clone()),
-          ]),
-        };
-
-        tags.push(script_tag);
-        tags
-      }
+      LinkLoadType::WhenIdle => tags,
       LinkLoadType::WhenHover => {
         let id: String = generate_random_letters(8);
         let script_tag = Tag::Tag {
@@ -107,8 +96,10 @@ document.querySelector(\"#{id}\").addEventListener('mouseenter', function() {{
             self.href
           ))])),
           ids: Vec::default(),
-          classes: Vec::default(),
+          classes: HashSet::default(),
           attributes: HashMap::default(),
+          urls_to_preconnect: HashSet::default(),
+          urls_to_prefetch: HashSet::default(),
         };
 
         tags[0].add_id(id);
@@ -128,7 +119,7 @@ impl Link {
         .into_iter()
         .flat_map(|x| x.into_tag().clone())
         .collect(),
-      classes: vec![],
+      classes: HashSet::default(),
       ids: vec![],
       attributes: HashMap::default(),
       load_type: LinkLoadType::default(),
