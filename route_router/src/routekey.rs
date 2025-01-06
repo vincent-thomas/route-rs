@@ -152,7 +152,7 @@ impl From<String> for Segments {
 mod tests {
   use super::*;
   #[test]
-  fn test_static() {
+  fn static_routes() {
     let test = "/test";
 
     let result = Segments::from(test);
@@ -164,7 +164,7 @@ mod tests {
   }
 
   #[test]
-  fn test_dynamic() {
+  fn dynamic_routes() {
     let test = "/test/:dynamic";
 
     let result = Segments::from(test);

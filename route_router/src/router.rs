@@ -108,10 +108,15 @@ mod lib_tests {
     let mut router = Router::default();
 
     let nice = "nice".to_string();
+    let nice_wrong = "nice2".to_string();
 
-    router.at("/test", nice.clone());
+    router.at("/test", nice_wrong.clone());
     router.at("/test/:var/:fdshj", nice.clone());
-    router.at("/test/:var", nice.clone());
-    router.at("/test2", nice.clone());
+    router.at("/test/:var", nice_wrong.clone());
+    router.at("/test2", nice_wrong.clone());
+
+    let result = router.find("/test/nice/nice2").unwrap();
+
+    assert_eq!(result.value, &nice);
   }
 }
