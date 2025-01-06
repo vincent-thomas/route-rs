@@ -1054,84 +1054,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "route"
-version = "0.1.0"
-dependencies = [
- "futures-util",
- "pin-project-lite",
- "route_core",
- "route_html",
- "route_http",
- "route_router",
- "route_server",
- "route_utils",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "tokio",
-]
-
-[[package]]
-name = "route_core"
-version = "0.1.0"
-dependencies = [
- "futures-core",
- "route_html",
- "route_http",
- "tower",
-]
-
-[[package]]
-name = "route_html"
-version = "0.1.0"
-dependencies = [
- "cssparser",
- "lightningcss",
- "paste",
- "rand",
- "route_html_derive",
- "url",
-]
-
-[[package]]
-name = "route_html_derive"
-version = "0.1.0"
-dependencies = [
- "cssparser",
- "lightningcss",
- "quote",
- "syn 2.0.69",
-]
-
-[[package]]
-name = "route_http"
-version = "0.1.0"
-dependencies = [
- "futures-core",
- "http",
- "mime",
-]
-
-[[package]]
-name = "route_router"
-version = "0.1.0"
-
-[[package]]
-name = "route_server"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "futures-util",
- "route_core",
- "route_http",
- "tokio",
-]
-
-[[package]]
-name = "route_utils"
-version = "0.1.0"
-
-[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1325,6 +1247,84 @@ name = "tinyvec_macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
+
+[[package]]
+name = "titan"
+version = "0.1.0"
+dependencies = [
+ "futures-util",
+ "pin-project-lite",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "titan-core",
+ "titan-html",
+ "titan-http",
+ "titan-router",
+ "titan-server",
+ "titan-utils",
+ "tokio",
+]
+
+[[package]]
+name = "titan-core"
+version = "0.1.0"
+dependencies = [
+ "futures-core",
+ "titan-html",
+ "titan-http",
+ "tower",
+]
+
+[[package]]
+name = "titan-html"
+version = "0.1.0"
+dependencies = [
+ "cssparser",
+ "lightningcss",
+ "paste",
+ "rand",
+ "titan-html-derive",
+ "url",
+]
+
+[[package]]
+name = "titan-html-derive"
+version = "0.1.0"
+dependencies = [
+ "cssparser",
+ "lightningcss",
+ "quote",
+ "syn 2.0.69",
+]
+
+[[package]]
+name = "titan-http"
+version = "0.1.0"
+dependencies = [
+ "futures-core",
+ "http",
+ "mime",
+]
+
+[[package]]
+name = "titan-router"
+version = "0.1.0"
+
+[[package]]
+name = "titan-server"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "futures-util",
+ "titan-core",
+ "titan-http",
+ "tokio",
+]
+
+[[package]]
+name = "titan-utils"
+version = "0.1.0"
 
 [[package]]
 name = "tokio"

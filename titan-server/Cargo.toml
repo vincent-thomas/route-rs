@@ -1,0 +1,18 @@
+[package]
+name = "titan-server"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[features]
+default = []
+date-header = ["dep:chrono"]
+
+[dependencies]
+titan-core = { path = "../titan-core", version = "0.1.0" }
+titan-http = { path = "../titan-http" }
+chrono = {version = "0.4.38", optional = true }
+tokio = { version = "1.42.0", features = ["net", "io-util", "rt"] }
+futures-util = "0.3.31"

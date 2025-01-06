@@ -1,0 +1,15 @@
+[package]
+name = "titan-html"
+authors.workspace = true
+categories.workspace = true
+license.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+cssparser = "0.33.0"
+lightningcss = "1.0.0-alpha.61"
+rand = "0.8.5"
+titan-html-derive = {path = "../titan-html-derive"}
+paste = "1.0.15"
+url = "2.5.4"

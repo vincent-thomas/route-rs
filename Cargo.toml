@@ -1,14 +1,15 @@
 [workspace]
 resolver = "2"
 members = [
-  "route",
-  "route_core",
-  "route_http", 
-  "route_utils",
-  "route_server",
-  "route_router",
-  "route_html"
-, "route_html_derive"]
+  "titan",
+  "titan-core",
+  "titan-http", 
+  "titan-utils",
+  "titan-server",
+  "titan-router",
+  "titan-html",
+  "titan-html-derive"
+]
 
 [workspace.package]
 authors = ["Vincent Thomas"]

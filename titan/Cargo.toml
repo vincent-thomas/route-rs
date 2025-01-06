@@ -1,0 +1,38 @@
+[package]
+name = "titan"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[features]
+default = ["types"]
+types = ["dep:serde", "dep:serde_json", "dep:serde_urlencoded"]
+
+[dependencies.serde]
+version = "1"
+features = ["derive"]
+optional = true
+
+[dependencies.serde_json]
+version = "1"
+optional = true
+
+[dependencies.serde_urlencoded]
+version = "0.7"
+optional = true
+
+[dependencies]
+titan-core = { path = "../titan-core", version = "0.1.0" }
+titan-http = { path = "../titan-http", version = "0.1.0" }
+titan-html = { path = "../titan-html", version = "0.1.0" }
+titan-router = { path = "../titan-router", version = "0.1.0" }
+titan-server = { path = "../titan-server", version = "0.1.0" }
+titan-utils = { path = "../titan-utils", version = "0.1.0" }
+
+pin-project-lite = "0.2.14"
+futures-util = "0.3.31"
+
+[dev-dependencies]
+tokio = { version = "1.38.1", features = ["macros", "rt-multi-thread", "time"] }

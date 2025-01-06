@@ -1,0 +1,8 @@
+[package]
+name = "titan-router"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+license.workspace = true
+edition.workspace = true
+

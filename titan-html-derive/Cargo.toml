@@ -1,0 +1,13 @@
+[package]
+name = "titan-html-derive"
+version.workspace = true
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2", features = ["full"] }
+quote = "1"
+cssparser = "0.33.0"
+lightningcss = "1.0.0-alpha.61"

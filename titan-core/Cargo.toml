@@ -1,0 +1,13 @@
+[package]
+name = "titan-core"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+futures-core = "0.3.31"
+titan-http = { path = "../titan-http" }
+titan-html = { path = "../titan-html" }
+tower = {version = "0.5.1", features = ["util"]}
