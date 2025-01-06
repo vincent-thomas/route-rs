@@ -24,6 +24,8 @@
           buildInputs = with pkgs; [
             bacon
             rustc
+
+            cargo
             cargo-expand
             cargo-watch
             cargo-nextest
