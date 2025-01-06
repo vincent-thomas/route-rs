@@ -22,8 +22,18 @@ macro_rules! factory_tuple ({ $($param:ident)* } => {
         }
     }
 });
+impl<Func, Fut> Handler<((),)> for Func
+where
+  Func: Fn() -> Fut + Send + 'static,
+  Fut: Future + Send,
+{
+  type Future = Pin<Box<dyn Future<Output = Response> + Send>>;
 
-factory_tuple! {}
+  fn call(self, _req: Request, _state: S) -> Self::Future {
+    Box::pin(async move { self().await.into_response() })
+  }
+}
+
 factory_tuple! { A }
 factory_tuple! { A B }
 factory_tuple! { A B C }
