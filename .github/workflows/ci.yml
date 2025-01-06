@@ -18,7 +18,10 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/flake-checker-action@main
 
-      - name: Build
+      - name: Check
         run: cargo check
+
+      - name: Lint
+        run: cargo clippy
       - name: Run tests
         run: cargo test
