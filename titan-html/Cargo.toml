@@ -1,10 +1,12 @@
 [package]
 name = "titan-html"
+description = "HTML Generator with builtin css-in-rust support. Mainly used in the titan family, but can be used independently"
 authors.workspace = true
 categories.workspace = true
 license.workspace = true
 edition.workspace = true
 version.workspace = true
+keywords.workspace = true
 
 [dependencies]
 cssparser = "0.33.0"

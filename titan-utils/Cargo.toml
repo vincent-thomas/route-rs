@@ -1,5 +1,6 @@
 [package]
 name = "titan-utils"
+description = "Internal crate for the titan-family"
 authors.workspace = true
 categories.workspace = true
 license.workspace = true

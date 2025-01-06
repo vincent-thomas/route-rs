@@ -1,10 +1,12 @@
 [package]
 name = "titan"
+description = "Titan is a web-framework, SSR engine with css-in-rust support, http server and http router."
 version.workspace = true
 authors.workspace = true
 categories.workspace = true
 license.workspace = true
 edition.workspace = true
+keywords.workspace = true
 
 [features]
 default = ["types"]

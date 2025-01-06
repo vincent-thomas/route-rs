@@ -1,10 +1,12 @@
 [package]
 name = "titan-core"
+description = "Traits and core structs/enums for titan"
 version.workspace = true
 authors.workspace = true
 categories.workspace = true
 license.workspace = true
 edition.workspace = true
+keywords.workspace = true
 
 [dependencies]
 futures-core = "0.3.31"

@@ -1,10 +1,12 @@
 [package]
 name = "titan-server"
+description = "A http server for the titan family, but can be used independently!"
 version.workspace = true
 authors.workspace = true
 categories.workspace = true
 license.workspace = true
 edition.workspace = true
+keywords.workspace = true
 
 [features]
 default = []

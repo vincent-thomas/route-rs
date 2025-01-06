@@ -1,5 +1,6 @@
 [package]
 name = "titan-html-derive"
+description = "Internal proc-macros for the package titan-html"
 authors.workspace = true
 categories.workspace = true
 license.workspace = true

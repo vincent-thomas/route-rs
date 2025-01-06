@@ -1,10 +1,12 @@
 [package]
 name = "titan-http"
+description = "Base http structs for titan"
 authors.workspace = true
 categories.workspace = true
 license.workspace = true
 edition.workspace = true
 version.workspace = true
+keywords.workspace = true
 
 [dependencies]
 futures-core = "0.3.31"
