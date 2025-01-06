@@ -8,7 +8,7 @@ use route::{
 use route_http::request::Request;
 use tokio::{net::TcpListener, time::sleep};
 
-async fn test(req: Request) -> impl Respondable {
+async fn test(_: Request) -> impl Respondable {
   let chunks = vec![Event::new("yes".to_string()); 5];
 
   let nice = stream::iter(chunks)

@@ -1,6 +1,4 @@
 use route::{
-  guard::{Guard, GuardOutcome},
-  http::request::Parts,
   web::{self, Cookies, Json, Params, Query},
   App, Respondable,
 };
@@ -8,14 +6,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::error::Error;
 use tokio::net::TcpListener;
-
-struct AuthGuard;
-
-impl Guard for AuthGuard {
-  fn check(&self, _: &Parts) -> GuardOutcome {
-    GuardOutcome::WeJustPassinBy
-  }
-}
 
 #[derive(Deserialize, Debug, Serialize)]
 struct Thing {

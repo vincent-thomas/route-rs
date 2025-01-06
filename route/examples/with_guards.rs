@@ -1,18 +1,6 @@
-use route::{
-  guard::{Guard, GuardOutcome, GuardReason},
-  http::request::Parts,
-  web, App, Respondable,
-};
+use route::{web, App, Respondable};
 use std::{io, time::Duration};
 use tokio::net::TcpListener;
-
-struct AuthGuard;
-
-impl Guard for AuthGuard {
-  fn check(&self, _: &Parts) -> GuardOutcome {
-    GuardOutcome::Reason(GuardReason::Unauthorized)
-  }
-}
 
 async fn index() -> impl Respondable {
   tokio::time::sleep(Duration::from_secs(2)).await;
