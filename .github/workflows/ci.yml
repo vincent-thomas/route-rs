@@ -19,9 +19,9 @@ jobs:
       - uses: DeterminateSystems/flake-checker-action@main
 
       - name: Check
-        run: nix develop -c "cargo check"
+        run: nix develop -c cargo check
 
       - name: Lint
-        run: nix develop -c "cargo clippy"
+        run: nix develop -c cargo clippy
       - name: Run tests
-        run: nix develop -c "cargo test"
+        run: nix develop -c cargo test
