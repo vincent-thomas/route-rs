@@ -18,7 +18,7 @@ fn default_head() -> Head {
   Head::default().title("testing").reset_css()
 }
 
-async fn index() -> impl Respondable {
+async fn index(tesing: String) -> impl Respondable {
   Html::from((
     Head::default().title("testing").reset_css(),
     Body::from([
@@ -42,6 +42,7 @@ async fn index() -> impl Respondable {
         .styles(
           "
             color: blue;
+            padding: 0.55;
             background-color: red;
           ",
         )
@@ -51,6 +52,7 @@ async fn index() -> impl Respondable {
         .styles(
           "
             color: blue;
+            padding: 0.55;
             background-color: red;
           ",
         )
