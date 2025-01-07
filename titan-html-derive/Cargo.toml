@@ -12,5 +12,5 @@ proc-macro = true
 
 [dependencies]
 syn = { version = "2", features = ["full"] }
-titan-utils = { version = "0.1.2", path = "../titan-utils", features = ["internal-cssvalidate"] }
+titan-utils = { version = "0.1.3", path = "../titan-utils", features = ["internal-cssvalidate"] }
 quote = "1"

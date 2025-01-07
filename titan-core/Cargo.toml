@@ -10,6 +10,6 @@ keywords.workspace = true
 
 [dependencies]
 futures-core = "0.3.31"
-titan-http = { path = "../titan-http", version = "0.1.2" }
-titan-html = { path = "../titan-html", version = "0.1.2" }
+titan-http = { path = "../titan-http", version = "0.1.3" }
+titan-html = { path = "../titan-html", version = "0.1.3" }
 tower = {version = "0.5.1", features = ["util"]}
