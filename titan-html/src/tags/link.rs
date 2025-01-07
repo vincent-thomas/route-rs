@@ -27,6 +27,14 @@ pub enum LinkLoadType {
   WhenHover,
 }
 
+// TODO: quick fetch
+// function quicklink(path) {
+//    let doc = await fetch(path).then(v => v.text())
+//      let parsed = new DOMParser().parseFromString(nice, "text/html");
+//      document.querySelector("body").replaceWith(parsed.querySelector("body"))
+//      document.querySelector("head").replaceWith(parsed.querySelector("head"))
+// }
+// TODO: Figure out popstate
 titan_html_derive::html_tag! {
   pub struct Link {
     pub children: Vec<Tag>,

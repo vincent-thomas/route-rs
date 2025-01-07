@@ -20,7 +20,7 @@ fn default_head() -> Head {
 
 async fn index() -> impl Respondable {
   Html::from((
-    default_head(),
+    Head::default().title("testing").reset_css(),
     Body::from([
       Header::from([
         Div::text("testing").into_tag(),
