@@ -17,4 +17,4 @@ categories = []
 keywords = ["web"]
 license = "MIT"
 edition = "2021"
-version = "0.1.3"
+version = "0.1.4"

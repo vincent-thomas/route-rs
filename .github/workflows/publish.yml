@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    tags: [ "v*" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/flake-checker-action@main
+
+      - name: Check
+        run: nix develop -c cargo check
+
+      - name: Lint
+        run: nix develop -c cargo clippy
+      - name: Run tests
+        run: nix develop -c cargo test
+      
+      - run: bash ./scripts/publish.sh
+        env:
+          CARGO_REGISTRY_TOKEN: ${ secrets.CARGO_REGISTRY_TOKEN }

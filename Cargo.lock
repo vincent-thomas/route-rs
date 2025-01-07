@@ -1261,7 +1261,7 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "titan"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "futures-util",
  "pin-project-lite",
@@ -1279,7 +1279,7 @@ dependencies = [
 
 [[package]]
 name = "titan-core"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "futures-core",
  "titan-html",
@@ -1289,7 +1289,7 @@ dependencies = [
 
 [[package]]
 name = "titan-html"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "cssparser",
  "lightningcss",
@@ -1302,7 +1302,7 @@ dependencies = [
 
 [[package]]
 name = "titan-html-derive"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "quote",
  "syn 2.0.95",
@@ -1311,7 +1311,7 @@ dependencies = [
 
 [[package]]
 name = "titan-http"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "futures-core",
  "http",
@@ -1320,11 +1320,11 @@ dependencies = [
 
 [[package]]
 name = "titan-router"
-version = "0.1.3"
+version = "0.1.4"
 
 [[package]]
 name = "titan-server"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "chrono",
  "futures-util",
@@ -1335,7 +1335,7 @@ dependencies = [
 
 [[package]]
 name = "titan-utils"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "cssparser",
  "lightningcss",

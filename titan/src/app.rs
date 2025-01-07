@@ -1,11 +1,12 @@
-use crate::prelude::*;
+use crate::{prelude::*, route::Route, web};
 use serde_json::Value;
 use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc};
-use titan_core::Service;
+use titan_core::{Respondable, Service};
 use titan_http::{
   body::Body,
   request::Request,
   response::{Response, ResponseBuilder},
+  StatusCode,
 };
 use titan_router::Router;
 use titan_utils::BoxedSendFuture;
@@ -15,13 +16,25 @@ pub struct App {
   inner: Arc<AppInner>,
 }
 
+async fn default_fallback() -> impl Respondable {
+  (StatusCode::NOT_FOUND, "404 Not Found")
+}
+
 impl Default for App {
   fn default() -> Self {
-    Self { inner: Arc::new(AppInner(Router::default())) }
+    Self {
+      inner: Arc::new(AppInner {
+        router: Router::default(),
+        fallback: BoxCloneService::new(Route::new(default_fallback)),
+      }),
+    }
   }
 }
 
-struct AppInner(Router<BoxCloneService<Request, Response, Response>>);
+struct AppInner {
+  router: Router<BoxCloneService<Request, Response, Response>>,
+  fallback: BoxCloneService<Request, Response, Response>,
+}
 
 macro_rules! tap_inner {
     ( $self_:ident, mut $inner:ident => { $($stmt:stmt)* } ) => {
@@ -40,8 +53,20 @@ impl App {
   fn into_inner(self) -> AppInner {
     match Arc::try_unwrap(self.inner) {
       Ok(inner) => inner,
-      Err(arc) => AppInner(arc.0.clone()),
+      Err(arc) => {
+        AppInner { router: arc.router.clone(), fallback: arc.fallback.clone() }
+      }
     }
+  }
+  pub fn fallback<H>(self, handler: H) -> Self
+  where
+    H: titan_core::Handler<()> + Sync + Clone,
+    H::Future: std::future::Future<Output = H::Output> + Send,
+    H::Output: titan_core::Respondable,
+  {
+    tap_inner!(self, mut this => {
+        this.fallback = BoxCloneService::new(Route::new(handler));
+    })
   }
   pub fn at<S>(self, path: &str, endpoint: S) -> Self
   where
@@ -57,9 +82,8 @@ impl App {
       + Send,
   {
     tap_inner!(self, mut this => {
-
-    this.0.at(path, BoxCloneService::new(endpoint));
-        })
+      this.router.at(path, BoxCloneService::new(endpoint));
+    })
   }
 }
 
@@ -77,7 +101,7 @@ impl Service<Request> for App {
 
   fn call(&mut self, mut req: Request) -> Self::Future {
     let uri = req.uri().clone();
-    match self.inner.0.lookup(uri.path()) {
+    match self.inner.router.lookup(uri.path()) {
       Some(endpoint) => {
         let params: HashMap<String, Value> =
           HashMap::from_iter(endpoint.params.iter().map(|(key, value)| {
@@ -92,9 +116,8 @@ impl Service<Request> for App {
         Box::pin(AppFuture { fut: service.call(req) })
       }
       None => {
-        let response =
-          ResponseBuilder::new().status(404).body(Body::from(())).unwrap();
-        Box::pin(AppFuture { fut: async move { Ok(response) } })
+        let mut fallback = self.inner.fallback.clone();
+        Box::pin(AppFuture { fut: fallback.call(req) })
       }
     }
   }

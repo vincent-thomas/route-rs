@@ -12,6 +12,7 @@ use titan::{
   },
   web, App, Respondable,
 };
+use titan_http::StatusCode;
 use tokio::net::TcpListener;
 
 fn default_head() -> Head {
