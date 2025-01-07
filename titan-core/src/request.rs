@@ -46,6 +46,13 @@ impl FromRequest for Request {
   }
 }
 
+impl FromRequest for () {
+  type Error = Infallible;
+  fn from_request(req: Request) -> Result<Self, Self::Error> {
+    Ok(())
+  }
+}
+
 macro_rules! impl_from_request {
     (
         [$($ty:ident),*], $last:ident
