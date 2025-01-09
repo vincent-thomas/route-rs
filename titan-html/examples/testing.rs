@@ -11,7 +11,7 @@ use titan_html::{
 fn main() {
   let root = Html::with_head(Head::empty()).body_from_iter([
     Link::text("http://localhost:3000", "testing")
-      //.preload(LinkLoadType::WhenHover)
+      .preload(LinkLoadType::WhenIdle)
       .styles(
         "
           color: blue;
@@ -21,7 +21,6 @@ fn main() {
       .add_id("testing")
       .into_tag(),
     Link::text("http://localhost:3000".to_string(), "testing")
-      //.preload(LinkLoadType::WhenHover)
       .styles(
         "
           color: blue;

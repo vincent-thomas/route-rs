@@ -12,16 +12,15 @@ use titan::{
   },
   web, App, Respondable,
 };
-use titan_http::StatusCode;
 use tokio::net::TcpListener;
 
 fn default_head() -> Head {
   Head::default().title("testing").reset_css()
 }
 
-async fn index(tesing: String) -> impl Respondable {
+async fn index(body: String) -> impl Respondable {
   Html::from((
-    Head::default().title("testing").reset_css(),
+    default_head(),
     Body::from([
       Header::from([
         Div::text("testing").into_tag(),
@@ -58,6 +57,7 @@ async fn index(tesing: String) -> impl Respondable {
           ",
         )
         .into_tag(),
+      Div::text(body).into_tag(),
     ]),
   ))
 }

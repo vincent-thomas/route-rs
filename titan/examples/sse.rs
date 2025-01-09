@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use futures_util::{stream, StreamExt as _};
 use titan::{
-  http::request::Request,
+  http::Request,
   web::{self, Event, Sse},
   App, Respondable,
 };

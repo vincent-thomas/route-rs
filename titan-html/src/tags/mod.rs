@@ -269,9 +269,9 @@ macro_rules! impl_children_tag {
   ($($val:ident);*) => {
     $(
         impl $val {
-          pub fn text(value: &'static str) -> $val {
+          pub fn text(value: impl Into<String>) -> $val {
              $val {
-                 children: Vec::from_iter([Tag::Text(value.to_string())]),
+                 children: Vec::from_iter([Tag::Text(value.into())]),
                  classes: HashSet::default(),
                  ids: Vec::default(),
                  attributes: HashMap::default(),
