@@ -1,7 +1,7 @@
 use std::{future::Future, marker::PhantomData, pin::Pin, task::Poll};
 
 use titan_core::{FromRequest, Handler, Respondable};
-use titan_http::{request::Request, response::Response};
+use titan_http::{Request, Response};
 
 pub struct Route<T, Args>
 where

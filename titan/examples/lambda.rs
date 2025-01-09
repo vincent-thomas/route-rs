@@ -6,4 +6,7 @@ async fn testing() -> impl Respondable {
   "testing"
 }
 
-fn main() {}
+#[tokio::main]
+async fn main() {
+  run(wrap_lambda(testings)).await
+}

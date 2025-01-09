@@ -3,7 +3,7 @@ use titan_core::Respondable;
 use titan_http::{
   body::Body,
   header::{HeaderMap, HeaderName, HeaderValue},
-  response::Response,
+  Response,
 };
 
 #[derive(Clone)]
@@ -15,7 +15,7 @@ impl<T> Respondable for Sse<T>
 where
   T: Stream<Item = Event> + Send + 'static,
 {
-  fn respond(self) -> titan_http::response::Response<Body> {
+  fn respond(self) -> titan_http::Response<Body> {
     let stream = self.0.map(|item| {
       let t: String = item.into();
       t.as_bytes().to_vec()

@@ -2,9 +2,7 @@ use std::task::Poll;
 
 use titan_core::Respondable;
 use titan_core::Service;
-use titan_http::{
-  body::Body, header, request::Request, response::Response, StatusCode,
-};
+use titan_http::{body::Body, header, Request, Response, StatusCode};
 use titan_utils::BoxedSendFuture;
 
 #[derive(Clone)]

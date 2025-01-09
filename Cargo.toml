@@ -8,8 +8,10 @@ members = [
   "titan-server",
   "titan-router",
   "titan-html",
-  "titan-html-derive"
-, "titan-lambda"]
+  "titan-html-derive",
+  "titan-lambda",
+]
+exclude = ["lambda"]
 
 [workspace.package]
 authors = ["Vincent Thomas"]
@@ -17,4 +19,4 @@ categories = []
 keywords = ["web"]
 license = "MIT"
 edition = "2021"
-version = "0.1.4"
+version = "0.1.5"

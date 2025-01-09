@@ -6,8 +6,7 @@ use titan_core::{Respondable, Service};
 use titan_http::{
   body::Body,
   header::{HeaderValue, CONTENT_LENGTH},
-  request::{HttpRequestExt, Request},
-  response::HttpResponseExt,
+  HttpRequestExt, HttpResponseExt, Request,
 };
 use tokio::{
   io::{self, AsyncWriteExt as _, BufReader},

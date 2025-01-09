@@ -3,9 +3,7 @@ use std::{collections::HashMap, future::Future, pin::Pin, task::Poll};
 use crate::prelude::*;
 use pin_project_lite::pin_project;
 use titan_core::{FromRequest, Handler, Respondable, Service};
-use titan_http::{
-  body::Body, request::Request, response::Response, Method, StatusCode,
-};
+use titan_http::{body::Body, Method, Request, Response, StatusCode};
 use titan_utils::BoxedSendFuture;
 
 /// Represents a web path with a specific HTTP method.

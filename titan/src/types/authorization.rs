@@ -1,5 +1,5 @@
 use titan_core::{FromRequestParts, Respondable};
-use titan_http::{request::Parts, StatusCode};
+use titan_http::{Parts, StatusCode};
 
 pub enum AuthorizationError {
   Invalid,
@@ -7,7 +7,7 @@ pub enum AuthorizationError {
 }
 
 impl Respondable for AuthorizationError {
-  fn respond(self) -> titan_http::response::Response<titan_http::body::Body> {
+  fn respond(self) -> titan_http::Response<titan_http::body::Body> {
     match self {
       AuthorizationError::Invalid => {
         (StatusCode::BAD_REQUEST, "Invalid Authorization format").respond()

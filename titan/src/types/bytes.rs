@@ -1,4 +1,4 @@
-use titan_http::{body::Body, request::Request, response::Response};
+use titan_http::{body::Body, Request, Response};
 
 use crate::{FromRequest, Respondable};
 

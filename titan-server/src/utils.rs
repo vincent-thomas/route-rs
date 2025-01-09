@@ -1,4 +1,4 @@
-use titan_http::request::Request;
+use titan_http::Request;
 use tokio::{
   io::{AsyncBufReadExt as _, AsyncReadExt as _, BufReader},
   net::TcpStream,

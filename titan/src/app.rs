@@ -1,13 +1,8 @@
-use crate::{prelude::*, route::Route, web};
+use crate::{prelude::*, route::Route};
 use serde_json::Value;
 use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc};
 use titan_core::{Respondable, Service};
-use titan_http::{
-  body::Body,
-  request::Request,
-  response::{Response, ResponseBuilder},
-  StatusCode,
-};
+use titan_http::{body::Body, Request, Response, StatusCode};
 use titan_router::Router;
 use titan_utils::BoxedSendFuture;
 

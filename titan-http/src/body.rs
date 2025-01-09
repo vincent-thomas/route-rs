@@ -1,24 +1,66 @@
-use std::pin::Pin;
+use std::{
+  convert::Infallible,
+  pin::{pin, Pin},
+  task::Poll,
+};
 
+use bytes::Bytes;
 use futures_core::Stream;
+use http_body::{Frame, SizeHint};
 
 pub enum Body {
   Full(Box<[u8]>),
   Stream(Pin<Box<dyn Stream<Item = Vec<u8>> + Send>>),
 }
 
-impl Body {
-  //pub fn len(&self) -> usize {
-  //  match self {
-  //    Self::Full(value) => value.len(),
-  //  }
-  //}
+impl http_body::Body for Body {
+  type Data = Bytes;
+  type Error = Infallible;
 
-  //pub fn is_empty(&self) -> bool {
-  //  match self {
-  //    Self::Full(value) => value.is_empty(),
-  //  }
-  //}
+  fn size_hint(&self) -> http_body::SizeHint {
+    match self {
+      Body::Full(value) => SizeHint::with_exact(value.len() as u64),
+      Body::Stream(body) => {
+        let (lower, higher) = body.size_hint();
+        let mut size_hint = SizeHint::default();
+        size_hint.set_lower(lower as u64);
+        if let Some(higher) = higher {
+          size_hint.set_upper(higher as u64);
+        }
+        size_hint
+      }
+    }
+  }
+
+  fn poll_frame(
+    self: Pin<&mut Self>,
+    cx: &mut std::task::Context<'_>,
+  ) -> std::task::Poll<Option<Result<http_body::Frame<Self::Data>, Self::Error>>>
+  {
+    match self.get_mut() {
+      Body::Full(body) => {
+        Poll::Ready(Some(Ok(Frame::data(Bytes::from(body.clone())))))
+      }
+      Body::Stream(body) => {
+        let value = pin!(body);
+        let value = match value.poll_next(cx) {
+          Poll::Pending => return Poll::Pending,
+          Poll::Ready(value) => match value {
+            None => return Poll::Ready(None),
+            Some(value) => value,
+          },
+        };
+
+        let frame = Frame::data(Bytes::from(value));
+        Poll::Ready(Some(Ok(frame)))
+      }
+    }
+  }
+
+  fn is_end_stream(&self) -> bool {
+    // TODO
+    true
+  }
 }
 
 impl From<String> for Body {
@@ -53,7 +95,7 @@ impl From<Vec<u8>> for Body {
 
 impl From<&'_ [u8]> for Body {
   fn from(value: &'_ [u8]) -> Self {
-    Self::Full(value.clone().into())
+    Self::Full(value.into())
   }
 }
 

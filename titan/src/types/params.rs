@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::Value;
 use titan_core::{FromRequestParts, Respondable};
-use titan_http::{body::Body, request::Parts, response::Response};
+use titan_http::{body::Body, Parts, Response};
 
 #[derive(Deserialize)]
 pub struct Params<T = HashMap<String, Value>>(pub T);

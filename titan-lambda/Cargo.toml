@@ -9,6 +9,7 @@ version.workspace = true
 
 [dependencies]
 lambda_http = "0.14.0"
-titan-http = { path = "../titan-http", version = "0.1.4" }
-titan-core = { path = "../titan-core", version = "0.1.4" }
 futures-util = "0.3.31"
+
+titan-http = { path = "../titan-http", version = "0.1.5" }
+titan-core = { path = "../titan-core", version = "0.1.5", features = ["deploy-lambda"] }

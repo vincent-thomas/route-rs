@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::str::FromStr as _;
 
 use super::Request;
 use http::{Error, HeaderMap, HeaderValue, Method, Uri};

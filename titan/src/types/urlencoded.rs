@@ -1,6 +1,6 @@
 use serde::{de::DeserializeOwned, Serialize};
 use titan_core::Respondable;
-use titan_http::{body::Body, request::Request, response::Response};
+use titan_http::{body::Body, Request, Response};
 
 use super::BodyParsingError;
 use crate::FromRequest;

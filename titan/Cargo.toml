@@ -11,7 +11,6 @@ keywords.workspace = true
 [features]
 default = ["types"]
 types = ["dep:serde", "dep:serde_json", "dep:serde_urlencoded"]
-deploy-lambda = ["dep:lambda_http"]
 
 [dependencies.serde]
 version = "1"
@@ -26,17 +25,13 @@ optional = true
 version = "0.7"
 optional = true
 
-[dependencies.lambda_http]
-version = "0.14.0"
-# optional = true
-
 [dependencies]
-titan-core = { path = "../titan-core", version = "0.1.4" }
-titan-http = { path = "../titan-http", version = "0.1.4" }
-titan-html = { path = "../titan-html", version = "0.1.4" }
-titan-router = { path = "../titan-router", version = "0.1.4" }
-titan-server = { path = "../titan-server", version = "0.1.4" }
-titan-utils = { path = "../titan-utils", version = "0.1.4" }
+titan-core = { path = "../titan-core", version = "0.1.5" }
+titan-http = { path = "../titan-http", version = "0.1.5" }
+titan-html = { path = "../titan-html", version = "0.1.5" }
+titan-router = { path = "../titan-router", version = "0.1.5" }
+titan-server = { path = "../titan-server", version = "0.1.5" }
+titan-utils = { path = "../titan-utils", version = "0.1.5" }
 
 pin-project-lite = "0.2.14"
 futures-util = "0.3.31"

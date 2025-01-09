@@ -1,11 +1,6 @@
 use std::convert::Infallible;
 
-use titan_http::{
-  body::Body,
-  header,
-  response::{Response, ResponseBuilder},
-  StatusCode,
-};
+use titan_http::{body::Body, header, Response, ResponseBuilder, StatusCode};
 
 pub trait Respondable {
   fn respond(self) -> Response<Body>;

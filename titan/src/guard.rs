@@ -1,6 +1,6 @@
 use titan_core::Respondable;
 use titan_http::body::Body;
-use titan_http::{request::Parts, response::Response, StatusCode};
+use titan_http::{Parts, Response, StatusCode};
 
 pub trait Guard: Sync + Send {
   fn check(&self, head: &Parts) -> GuardOutcome;

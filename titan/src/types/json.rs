@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::Value;
-use titan_http::{body::Body, request::Request, response::Response};
+use titan_http::{body::Body, Request, Response};
 
 use crate::{FromRequest, Respondable};
 

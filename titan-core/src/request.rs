@@ -1,9 +1,6 @@
 use crate::Respondable;
 use std::convert::Infallible;
-use titan_http::{
-  request::{Parts, Request},
-  response::Response,
-};
+use titan_http::{Parts, Request, Response};
 
 /// Types that can be created from requests.
 ///
@@ -105,3 +102,16 @@ macro_rules! impl_from_request {
 }
 
 all_the_tuples!(impl_from_request);
+
+#[cfg(feature = "deploy-lambda")]
+impl FromRequest for lambda_http::http::Request<lambda_http::Body> {
+  type Error = ();
+  fn from_request(req: Request) -> Result<Self, Self::Error> {
+    let (parts, body) = req.into_parts();
+
+    Ok(lambda_http::http::Request::from_parts(
+      parts,
+      lambda_http::Body::Binary(body.to_vec()),
+    ))
+  }
+}

@@ -1,5 +1,5 @@
 use titan_core::Respondable;
-use titan_http::{body::Body, header::HeaderName, response::Response};
+use titan_http::{body::Body, header::HeaderName, Response};
 
 macro_rules! host_use {
   ($($name:ident),*) => {
@@ -18,7 +18,8 @@ host_use! {
   cookie,
   query,
   params,
-  sse
+  sse,
+  path
 }
 
 pub mod authorization;
@@ -31,7 +32,7 @@ pub enum BodyParsingError {
 }
 
 impl Respondable for BodyParsingError {
-  fn respond(self) -> titan_http::response::Response<titan_http::body::Body> {
+  fn respond(self) -> titan_http::Response<titan_http::body::Body> {
     let body = match self {
       Self::NoBody => "Body is empty".into(),
       Self::InvalidBody => "Invalid Body".into(),

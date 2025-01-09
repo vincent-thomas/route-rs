@@ -1,8 +1,10 @@
 mod method;
 pub use method::*;
 
-pub mod request;
-pub mod response;
+mod request;
+pub use request::*;
+mod response;
+pub use response::*;
 
 mod status;
 pub use status::*;

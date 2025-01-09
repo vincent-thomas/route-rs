@@ -1,18 +1,18 @@
-use std::{convert::Infallible, future::Future, pin::Pin, task::Poll};
+mod lambda_service;
+use std::future::Future;
 
-use lambda_http::Request as LambdaRequest;
-use titan_core::FromRequest;
-use titan_http::request::Request;
+pub use lambda_http::Request;
 
-//impl FromRequest for LambdaRequest {
-//  type Error = Infallible;
-//
-//  fn from_request(req: Request) -> Result<Self, Self::Error> {
-//
-//  }
-//}
+use lambda_service::LambdaHandlerService;
+use titan_core::{FromRequest, Handler, Respondable};
 
-//S: Service<Request, Response = R, Error = E>,
-//   S::Future: Send + 'a,
-//   R: IntoResponse,
-//   E: std::fmt::Debug + Into<Diagnostic>,
+pub fn handler_runtime<H, Args>(handler: H) -> LambdaHandlerService<H, Args>
+where
+  H: Handler<Args> + Clone,
+  H::Future: Future<Output = H::Output> + Send,
+  H::Output: Respondable,
+  Args: FromRequest + Send + Sync + 'static,
+  Args::Error: Send,
+{
+  LambdaHandlerService::new(handler)
+}
