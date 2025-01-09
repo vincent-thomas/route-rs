@@ -1,5 +1,6 @@
 [package]
 name = "titan-lambda"
+description = "AWS lambda deployayer for titan and cargo-lambda"
 authors.workspace = true
 categories.workspace = true
 keywords.workspace = true
@@ -13,3 +14,4 @@ futures-util = "0.3.31"
 
 titan-http = { path = "../titan-http", version = "0.1.5" }
 titan-core = { path = "../titan-core", version = "0.1.5", features = ["deploy-lambda"] }
+titan = { path = "../titan", version = "0.1.5", features = ["internal-titan-lambda"] }

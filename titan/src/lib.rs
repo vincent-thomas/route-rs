@@ -2,6 +2,9 @@ mod app;
 pub mod guard;
 mod prelude;
 pub mod route;
+
+#[cfg(feature = "internal-titan-lambda")]
+pub mod lambda;
 pub use app::*;
 pub mod endpoint;
 

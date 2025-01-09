@@ -1,9 +1,10 @@
-mod lambda_service;
+mod lambda_handler_service;
 use std::future::Future;
 
 pub use lambda_http::Request;
 
-use lambda_service::LambdaHandlerService;
+use lambda_handler_service::LambdaHandlerService;
+use titan::{lambda::LambdaAppService, App};
 use titan_core::{FromRequest, Handler, Respondable};
 
 pub fn handler_runtime<H, Args>(handler: H) -> LambdaHandlerService<H, Args>
@@ -15,4 +16,8 @@ where
   Args::Error: Send,
 {
   LambdaHandlerService::new(handler)
+}
+
+pub fn app_runtime(app: App) -> LambdaAppService {
+  LambdaAppService::new(app)
 }

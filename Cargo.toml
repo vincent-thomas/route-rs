@@ -9,7 +9,7 @@ members = [
   "titan-router",
   "titan-html",
   "titan-html-derive",
-  "titan-lambda",
+  "titan-lambda", "lambda-test",
 ]
 exclude = ["lambda"]
 
