@@ -49,6 +49,7 @@ impl FromRequest for Request {
 impl FromRequest for () {
   type Error = Infallible;
   fn from_request(req: Request) -> Result<Self, Self::Error> {
+    let _ = req;
     Ok(())
   }
 }
