@@ -51,6 +51,12 @@ impl From<Vec<u8>> for Body {
   }
 }
 
+impl From<&'_ [u8]> for Body {
+  fn from(value: &'_ [u8]) -> Self {
+    Self::Full(value.clone().into())
+  }
+}
+
 //impl From<StatusCode> for Body {
 //  fn from(value: StatusCode) -> Self {
 //    match value {

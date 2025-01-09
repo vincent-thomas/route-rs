@@ -9,7 +9,7 @@ members = [
   "titan-router",
   "titan-html",
   "titan-html-derive"
-]
+, "titan-lambda"]
 
 [workspace.package]
 authors = ["Vincent Thomas"]

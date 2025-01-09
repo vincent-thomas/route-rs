@@ -13,3 +13,5 @@ pub use titan_core::*;
 pub use titan_html as html;
 pub use titan_http as http;
 pub use titan_server::serve;
+
+pub mod deploy;
