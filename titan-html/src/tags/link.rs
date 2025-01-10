@@ -34,7 +34,6 @@ pub enum LinkLoadType {
 //      document.querySelector("body").replaceWith(parsed.querySelector("body"))
 //      document.querySelector("head").replaceWith(parsed.querySelector("head"))
 // }
-// TODO: Figure out popstate
 titan_html_derive::html_tag! {
   pub struct Link {
     pub children: Vec<Tag>,

@@ -113,5 +113,9 @@ mod lib_tests {
     router.at("/test/:var/:fdshj", nice.clone());
     router.at("/test/:var", nice.clone());
     router.at("/test2", nice.clone());
+
+    router.at("/nice", "nice2".to_string());
+
+    assert!(router.lookup("/ni").is_none()); // BIG PROBLEM FATAL TODO:
   }
 }
