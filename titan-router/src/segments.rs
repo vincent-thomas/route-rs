@@ -50,7 +50,7 @@ impl Segments {
 }
 
 #[cfg(test)]
-mod test2 {
+mod tests {
   use super::*;
 
   #[test]
@@ -138,7 +138,7 @@ impl From<String> for Segments {
 }
 
 #[cfg(test)]
-mod tests {
+mod tests_segment_parsing {
   use super::*;
   #[test]
   fn test_static() {

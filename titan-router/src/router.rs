@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::routekey::{FindSegmentResult, Segments};
+use crate::segments::{FindSegmentResult, Segments};
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 pub(crate) struct RouteId(usize);
@@ -110,15 +110,26 @@ mod lib_tests {
 
     let nice = "nice".to_string();
 
-    router.at("/test", nice.clone());
-    assert_eq!(router.lookup("/te"), None); // BIG PROBLEM FATAL TODO:
+    router.at("/test/testing2", "testing2".to_string());
     router.at("/test/:var/:fdshj", nice.clone());
-    assert!(router.lookup("/test/test").is_none()); // BIG PROBLEM FATAL TODO:
-    router.at("/test/:var", nice.clone());
+    router.at("/test/:var", ":var".to_string());
     router.at("/test2", nice.clone());
 
     router.at("/nice", "nice2".to_string());
 
+    if let Some(_static) = router.lookup("/test/testing2") {
+      if _static.value == "testing2" {
+        assert_eq!(_static.params.len(), 0);
+      }
+    };
+
+    if let Some(_static) = router.lookup("/test/testing") {
+      if _static.value == ":var" {
+        assert_eq!(_static.params.len(), 1);
+      }
+    };
+
+    assert_eq!(router.lookup("/te"), None); // BIG PROBLEM FATAL TODO:
     assert!(router.lookup("/ni").is_none()); // BIG PROBLEM FATAL TODO:
   }
 }

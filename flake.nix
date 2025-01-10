@@ -30,6 +30,7 @@
             cargo-watch
             cargo-nextest
             cargo-release
+            cargo-mutants
 
             clippy
 

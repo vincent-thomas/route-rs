@@ -88,4 +88,22 @@ mod testing {
       CompareSegmentOut::NoMatch,
     );
   }
+
+  #[test]
+  fn test_compare_segment_slash() {
+    let contract = Segment::Slash;
+    let request = Segment::Slash;
+
+    assert_eq!(
+      CompareSegment::eq(&contract, &request),
+      CompareSegmentOut::Match(None)
+    );
+
+    let request2 = Segment::Exact("something".to_string());
+
+    assert_eq!(
+      CompareSegment::eq(&contract, &request2),
+      CompareSegmentOut::NoMatch,
+    );
+  }
 }

@@ -10,3 +10,10 @@ keywords.workspace = true
 repository.workspace = true
 documentation.workspace = true
 
+[[bench]]
+name = "router_bench"
+harness = false
+
+[dev-dependencies]
+criterion = "0.5.1"
+
