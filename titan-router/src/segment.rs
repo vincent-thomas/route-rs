@@ -27,7 +27,7 @@ impl CompareSegment for Segment {
       }
 
       Segment::Exact(str) => match from_request {
-        Segment::Exact(str_contract) if dbg!(str_contract) == dbg!(str) => {
+        Segment::Exact(str_contract) if str_contract == str => {
           CompareSegmentOut::Match(None)
         }
 

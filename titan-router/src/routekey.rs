@@ -28,7 +28,7 @@ impl Segments {
     let mut ctx = FindSegmentResult::NoMatch;
 
     for (contract, request) in self.0.iter().zip(_extern) {
-      match dbg!(CompareSegment::eq(contract, request)) {
+      match CompareSegment::eq(contract, request) {
         CompareSegmentOut::NoMatch => return FindSegmentResult::NoMatch,
         CompareSegmentOut::Match(None) => {
           if FindSegmentResult::NoMatch == ctx {

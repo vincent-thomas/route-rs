@@ -76,9 +76,7 @@ where
     };
 
     for (contract, value) in &self.routes {
-      if let FindSegmentResult::Match(params) =
-        dbg!(contract).find(dbg!(&from_request.0))
-      {
+      if let FindSegmentResult::Match(params) = contract.find(&from_request.0) {
         return Some(Match { value, params });
       };
     }
