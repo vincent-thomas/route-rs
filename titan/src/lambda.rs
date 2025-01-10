@@ -7,7 +7,9 @@ use lambda_http::{Request, Response};
 use serde_json::Value;
 use titan_core::Service;
 
-use super::{App, AppFuture};
+use crate::AppFuture;
+
+use super::App;
 #[derive(Debug)]
 pub struct LambdaError;
 

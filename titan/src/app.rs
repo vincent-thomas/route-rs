@@ -8,7 +8,7 @@ use titan_utils::BoxedSendFuture;
 
 #[derive(Clone)]
 pub struct App {
-  pub inner: Arc<AppInner>,
+  pub(crate) inner: Arc<AppInner>,
 }
 
 async fn default_fallback() -> impl Respondable {
@@ -26,9 +26,9 @@ impl Default for App {
   }
 }
 
-struct AppInner {
-  pub router: Router<BoxCloneService<Request, Response, Response>>,
-  pub fallback: BoxCloneService<Request, Response, Response>,
+pub(crate) struct AppInner {
+  pub(crate) router: Router<BoxCloneService<Request, Response, Response>>,
+  pub(crate) fallback: BoxCloneService<Request, Response, Response>,
 }
 
 macro_rules! tap_inner {
@@ -119,9 +119,9 @@ impl Service<Request> for App {
 }
 
 pin_project_lite::pin_project! {
-  struct AppFuture<F> {
+  pub(crate) struct AppFuture<F> {
       #[pin]
-      fut: F
+      pub(crate) fut: F
   }
 }
 
