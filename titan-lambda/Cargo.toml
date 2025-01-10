@@ -12,6 +12,6 @@ version.workspace = true
 lambda_http = "0.14.0"
 futures-util = "0.3.31"
 
-titan-http = { path = "../titan-http", version = "0.1.5" }
-titan-core = { path = "../titan-core", version = "0.1.5", features = ["deploy-lambda"] }
-titan = { path = "../titan", version = "0.1.5", features = ["internal-titan-lambda"] }
+titan-http = { path = "../titan-http", version = "0.1.6" }
+titan-core = { path = "../titan-core", version = "0.1.6", features = ["deploy-lambda"] }
+titan = { path = "../titan", version = "0.1.6", features = ["internal-titan-lambda"] }

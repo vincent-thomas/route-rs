@@ -59,8 +59,8 @@ pub fn from_titan_response_lambda(
 
   let new_body = lambda_http::Body::Binary(match body {
     titan_http::body::Body::Full(vec) => vec.to_vec(),
-    titan_http::body::Body::Stream(stream) => {
-      panic!("stream not supported in lambda")
+    titan_http::body::Body::Stream(_) => {
+      unimplemented!("stream not supported in lambda")
     }
   });
   Response::from_parts(parts, new_body)
@@ -79,7 +79,7 @@ impl Service<Request> for App {
     std::task::Poll::Ready(Ok(()))
   }
 
-  fn call(&mut self, mut req: Request) -> Self::Future {
+  fn call(&mut self, req: Request) -> Self::Future {
     let uri = req.uri().clone();
 
     let mut req = from_lambda_request_titan(req);
