@@ -71,7 +71,6 @@ where
 
     if let Some(RouteId(route_index)) = self.lookup_cache.get(&from_request) {
       let (_, value) = &self.routes[*route_index];
-      eprintln!("found match {route}");
       return Some(Match { value, params: HashMap::default() });
     };
 
