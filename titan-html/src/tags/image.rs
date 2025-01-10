@@ -24,7 +24,7 @@ impl Img {
     }
   }
 
-  pub fn preload(mut self) -> Self {
+  pub const fn preload(mut self) -> Self {
     self.preload = true;
     self
   }

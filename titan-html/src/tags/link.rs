@@ -135,7 +135,7 @@ impl Link {
     Self::new(href.into(), vec![Tag::from(text.to_string())])
   }
 
-  pub fn preload(mut self, preload: LinkLoadType) -> Self {
+  pub const fn preload(mut self, preload: LinkLoadType) -> Self {
     self.load_type = preload;
     self
   }

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use crate::routekey::{Params, Segments};
+use crate::routekey::{FindSegmentResult, Segments};
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 pub(crate) struct RouteId(usize);
 
 #[derive(Clone)]
@@ -23,6 +23,7 @@ where
   }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Match<V> {
   pub value: V,
   pub params: HashMap<String, String>,
@@ -55,7 +56,7 @@ where
     };
 
     for (index, (key, value)) in self.routes.iter().enumerate() {
-      if let Some(Params(params)) = key.find(&segments.0) {
+      if let FindSegmentResult::Match(params) = key.find(&segments.0) {
         if params.is_empty() {
           self.lookup_cache.insert(segments, RouteId(index));
         }
@@ -66,21 +67,24 @@ where
   }
 
   pub fn lookup(&self, route: &str) -> Option<Match<&V>> {
-    let segments = Segments::from(route.to_string());
+    let from_request = Segments::from(route.to_string());
 
-    if let Some(RouteId(route_index)) = self.lookup_cache.get(&segments) {
+    if let Some(RouteId(route_index)) = self.lookup_cache.get(&from_request) {
       let (_, value) = &self.routes[*route_index];
+      eprintln!("found match {route}");
       return Some(Match { value, params: HashMap::default() });
     };
 
-    for (key, value) in &self.routes {
-      if let Some(Params(params)) = key.find(&segments.0) {
+    for (contract, value) in &self.routes {
+      if let FindSegmentResult::Match(params) =
+        dbg!(contract).find(dbg!(&from_request.0))
+      {
         return Some(Match { value, params });
       };
     }
     None
   }
-  pub fn at_mut(&mut self, route: &str) -> Option<Match<&mut V>> {
+  pub fn lookup_mut(&mut self, route: &str) -> Option<Match<&mut V>> {
     let segments = Segments::from(route.to_string());
 
     if let Some(RouteId(route_index)) = self.lookup_cache.get_mut(&segments) {
@@ -89,7 +93,7 @@ where
     };
 
     for (index, (key, value)) in self.routes.iter_mut().enumerate() {
-      if let Some(Params(params)) = key.find(&segments.0) {
+      if let FindSegmentResult::Match(params) = key.find(&segments.0) {
         if params.is_empty() {
           self.lookup_cache.insert(segments, RouteId(index));
         }
@@ -110,7 +114,9 @@ mod lib_tests {
     let nice = "nice".to_string();
 
     router.at("/test", nice.clone());
+    assert_eq!(router.lookup("/te"), None); // BIG PROBLEM FATAL TODO:
     router.at("/test/:var/:fdshj", nice.clone());
+    assert!(router.lookup("/test/test").is_none()); // BIG PROBLEM FATAL TODO:
     router.at("/test/:var", nice.clone());
     router.at("/test2", nice.clone());
 

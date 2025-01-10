@@ -1,16 +1,15 @@
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq, Hash, Eq, Clone)]
-pub(crate) enum Segment {
-  Slash,
-  Exact(String),
-  Param(String),
-}
+use crate::segment::{CompareSegment, CompareSegmentOut, Segment};
 
-#[derive(Default, Hash, Eq, PartialEq, Clone)]
+#[derive(Default, Hash, Clone, Debug, Eq, PartialEq)]
 pub(crate) struct Segments(pub(crate) Vec<Segment>);
 
-pub(crate) struct Params(pub(crate) HashMap<String, String>);
+#[derive(PartialEq, Debug)]
+pub enum FindSegmentResult {
+  NoMatch,
+  Match(HashMap<String, String>),
+}
 
 impl Segments {
   pub(crate) fn num_params(&self) -> usize {
@@ -22,41 +21,31 @@ impl Segments {
     }
     count
   }
-  pub(crate) fn find(&self, _extern: &[Segment]) -> Option<Params> {
-    let mut params = HashMap::new();
-
+  pub(crate) fn find(&self, _extern: &[Segment]) -> FindSegmentResult {
     if self.0.len() != _extern.len() {
-      return None;
+      return FindSegmentResult::NoMatch;
     }
+    let mut ctx = FindSegmentResult::NoMatch;
 
-    for (index, segment) in self.0.iter().enumerate() {
-      match _extern.get(index)? {
-        Segment::Param(_) => unreachable!("Doesnt show here"),
-        Segment::Exact(segment_str_request) => {
-          if let Segment::Param(key) = segment {
-            params.insert(key.clone(), segment_str_request.clone());
-            continue;
-          }
-          if let Segment::Exact(segment_str_route) = segment {
-            if segment_str_request == segment_str_route {
-              Segment::Exact(segment_str_request.to_string())
-            } else {
-              break;
-            }
-          } else {
-            break;
+    for (contract, request) in self.0.iter().zip(_extern) {
+      match dbg!(CompareSegment::eq(contract, request)) {
+        CompareSegmentOut::NoMatch => return FindSegmentResult::NoMatch,
+        CompareSegmentOut::Match(None) => {
+          if FindSegmentResult::NoMatch == ctx {
+            ctx = FindSegmentResult::Match(HashMap::default());
           }
         }
-        Segment::Slash => {
-          if *segment == Segment::Slash {
-            Segment::Slash
-          } else {
-            break;
+        CompareSegmentOut::Match(Some(value)) => match ctx {
+          FindSegmentResult::NoMatch => {
+            ctx = FindSegmentResult::Match(HashMap::from_iter([value]));
           }
-        }
-      };
+          FindSegmentResult::Match(ref mut value1) => {
+            value1.insert(value.0, value.1);
+          }
+        },
+      }
     }
-    Some(Params(params))
+    ctx
   }
 }
 
@@ -76,14 +65,14 @@ mod test2 {
 
     let result = registered.find(&req);
 
-    let Some(testing) = result else {
+    let FindSegmentResult::Match(testing) = result else {
       panic!();
     };
 
     let hash: HashMap<String, String> =
       HashMap::from_iter([("test".to_string(), "test".to_string())]);
 
-    assert_eq!(testing.0, hash);
+    assert_eq!(testing, hash);
   }
 }
 

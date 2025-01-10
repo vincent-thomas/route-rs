@@ -20,3 +20,5 @@ keywords = ["web"]
 license = "MIT"
 edition = "2021"
 version = "0.1.6"
+repository = "https://github.com/vincent-thomas/route-rs"
+documentation = "https://docs.rs/titan"

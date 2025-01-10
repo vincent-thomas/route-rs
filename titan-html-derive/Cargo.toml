@@ -6,11 +6,15 @@ categories.workspace = true
 license.workspace = true
 edition.workspace = true
 version.workspace = true
+repository.workspace = true
+documentation.workspace = true
 
 [lib]
 proc-macro = true
 
 [dependencies]
+# Build dependencies
 syn = { version = "2", features = ["full"] }
-titan-utils = { version = "0.1.6", path = "../titan-utils", features = ["internal-cssvalidate"] }
 quote = "1"
+
+titan-utils = { version = "0.1.6", path = "../titan-utils", features = ["internal-cssvalidate"] }

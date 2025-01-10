@@ -29,7 +29,7 @@
             cargo-expand
             cargo-watch
             cargo-nextest
-            cargo-lambda # Lambda integration testing
+            cargo-release
 
             clippy
 

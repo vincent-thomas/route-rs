@@ -5,6 +5,8 @@ authors.workspace = true
 categories.workspace = true
 license.workspace = true
 edition.workspace = true
+repository.workspace = true
+documentation.workspace = true
 
 [dependencies]
 quote = "1.0.36"
