@@ -18,5 +18,5 @@ syn = { version = "2", features = ["full"] }
 quote = "1"
 proc-macro2 = "1.0.92"
 
-titan-utils = { version = "0.1.10", path = "../titan-utils", features = ["internal-cssvalidate"] }
-titan-html-core = { version = "0.1.10", path = "../titan-html-core" }
+titan-utils = { version = "0.2.0", path = "../titan-utils", features = ["internal-cssvalidate"] }
+titan-html-core = { version = "0.2.0", path = "../titan-html-core" }

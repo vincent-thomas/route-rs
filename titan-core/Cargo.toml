@@ -15,7 +15,7 @@ deploy-lambda = ["dep:lambda_http"]
 
 [dependencies]
 futures-core = "0.3.31"
-titan-http = { path = "../titan-http", version = "0.1.10" }
-titan-html = { path = "../titan-html", version = "0.1.10" }
+titan-http = { path = "../titan-http", version = "0.2.0" }
+titan-html = { path = "../titan-html", version = "0.2.0" }
 lambda_http = { version = "0.14.0", optional = true }
 tower = {version = "0.5.1", features = ["util"]}

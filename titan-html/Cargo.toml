@@ -21,8 +21,8 @@ criterion.workspace = true
 cssparser = "0.33.0"
 lightningcss = "1.0.0-alpha.61"
 rand = "0.8.5"
-titan-html-derive = {path = "../titan-html-derive", version = "0.1.10" }
-titan-html-core = {path = "../titan-html-core", version = "0.1.10" }
-titan-utils = {path = "../titan-utils", version = "0.1.10", features = ["internal-cssvalidate"]}
+titan-html-derive = {path = "../titan-html-derive", version = "0.2.0" }
+titan-html-core = {path = "../titan-html-core", version = "0.2.0" }
+titan-utils = {path = "../titan-utils", version = "0.2.0", features = ["internal-cssvalidate"]}
 paste = "1.0.15"
 url = "2.5.4"
