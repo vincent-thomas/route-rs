@@ -3,12 +3,7 @@ use std::{
   hash::{Hash, Hasher},
 };
 
-use crate::{class::TagClass, context::Context, stylerule::StyleRule};
-use cssparser::{Parser, ParserInput};
-use lightningcss::{
-  declaration::DeclarationBlock, printer::PrinterOptions,
-  stylesheet::ParserOptions,
-};
+use crate::{class::TagClass, context::Context};
 pub mod head;
 pub mod html;
 pub mod image;
@@ -128,38 +123,11 @@ impl Tag {
             ctx.add_prefetch(url.to_string());
           }
 
-          for class in classes.clone().iter() {
-            if let TagClass::Style(style) = class {
-              let mut parser_input = ParserInput::new(style);
-              let mut parser = Parser::new(&mut parser_input);
-              let parsed_styles =
-                DeclarationBlock::parse(&mut parser, &ParserOptions::default())
-                  .expect("Invalid css");
-
-              for style in parsed_styles.declarations {
-                let options =
-                  PrinterOptions { minify: true, ..Default::default() };
-                let id = style.property_id();
-                let key = id.name().to_string();
-                let value = style.value_to_css_string(options).unwrap();
-
-                let rule = StyleRule::from_iter([(key, value)]);
-                ctx.add_styles(rule.clone());
-                classes.insert(TagClass::Normal(rule.rule));
-              }
-              for style in parsed_styles.important_declarations {
-                let options =
-                  PrinterOptions { minify: true, ..Default::default() };
-                let id = style.property_id();
-                let key = id.name().to_string();
-                let value = style.value_to_css_string(options).unwrap();
-
-                let rule = StyleRule::from_iter([(key, value)]);
-                ctx.add_styles(rule.clone());
-                classes.insert(TagClass::Normal(rule.rule));
-              }
-
-              classes.remove(&TagClass::Style(style.clone()));
+          for class in classes.clone().into_iter() {
+            if let TagClass::StyleRule(style) = class {
+              ctx.add_styles(style.clone());
+              classes.insert(TagClass::Normal(style.rule.clone()));
+              classes.remove(&TagClass::StyleRule(style));
             }
           }
         }
@@ -191,7 +159,7 @@ impl Tag {
           for class in classes {
             let class = match class {
               TagClass::Normal(class) => class.clone(),
-              TagClass::Style(style) => unreachable!("{:?}", style),
+              TagClass::StyleRule(style) => unreachable!("{:?}", style),
             };
             class_str.push(class);
           }
@@ -279,14 +247,10 @@ macro_rules! impl_children_tag {
           }
         }
 
-        impl<I> From<I> for $val where I: IntoIterator<Item = Tag> {
-          fn from(value: I) -> $val {
-              $val {
-                  children: value.into_iter().collect::<Vec<Tag>>(),
-                  classes: HashSet::default(),
-                  ids: Vec::default(),
-                  attributes: HashMap::default(),
-              }
+        impl $val {
+          pub fn children<I>(mut self, children: I) -> $val where I: IntoIterator<Item = Tag> {
+             self.children = children.into_iter().collect::<Vec<Tag>>();
+             self
           }
         }
     )*

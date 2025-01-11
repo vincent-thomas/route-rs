@@ -1,21 +1,36 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::{
-  stylerule::StyleRule,
-  tags::{head::Head, style::Style, IntoTag, Tag},
-};
+use titan_html_core::StyleRule;
+
+use crate::tags::{head::Head, style::Style, IntoTag, Tag};
 
 #[derive(Default)]
 pub(crate) struct Context {
   styles: Style,
+  old_head: Head,
   other_tags: HashSet<Tag>,
 }
 
-impl Context {
-  pub(crate) fn mutate_head(self, head: &mut Head) {
-    let style_tag = self.styles.into_tag().clone();
-    head.append_ref(style_tag);
-    head.extend_ref(self.other_tags);
+impl From<Context> for Head {
+  fn from(value: Context) -> Self {
+    let mut head = value.old_head;
+
+    head.append_ref(value.styles.into_tag());
+
+    for item in value.other_tags {
+      head.append_ref(item);
+    }
+    head
+  }
+}
+
+impl From<Head> for Context {
+  fn from(value: Head) -> Self {
+    Context {
+      old_head: value,
+      other_tags: HashSet::default(),
+      styles: Style::default(),
+    }
   }
 }
 

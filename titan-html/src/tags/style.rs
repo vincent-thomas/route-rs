@@ -7,11 +7,9 @@ use lightningcss::{
   printer::PrinterOptions,
   stylesheet::{ParserOptions, StyleSheet},
 };
+use titan_html_core::StyleRule;
 
-use crate::{
-  stylerule::StyleRule,
-  tags::{IntoTag, Tag},
-};
+use crate::tags::{IntoTag, Tag};
 
 #[derive(Debug, Clone)]
 pub enum Style {

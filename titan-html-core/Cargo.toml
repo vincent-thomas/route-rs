@@ -1,0 +1,17 @@
+[package]
+name = "titan-html-core"
+description = "Internal package to titan-html"
+authors.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
+edition.workspace = true
+version.workspace = true
+repository.workspace = true
+documentation.workspace = true
+
+[dependencies]
+lightningcss = "1.0.0-alpha.63"
+quote = "1"
+cssparser = "0.33.0"
+proc-macro2 = "1.0.92"

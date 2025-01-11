@@ -1,7 +1,8 @@
 use cssparser::SourceLocation;
 use lightningcss::{
+  printer::PrinterOptions,
   properties::{custom::CustomPropertyName, Property},
-  stylesheet::ParserOptions,
+  stylesheet::{ParserOptions, StyleSheet},
 };
 
 pub enum CSSValidationError {
@@ -54,4 +55,16 @@ pub fn validate_css(value: &str) -> Result<(), CSSValidationError> {
     }
   }
   Ok(())
+}
+
+pub fn validate_globalcss(value: &str) -> String {
+  let styles = match StyleSheet::parse(value, ParserOptions::default()) {
+    Ok(value) => value,
+    Err(_) => panic!("invalid global css"),
+  };
+
+  styles
+    .to_css(PrinterOptions { minify: true, ..Default::default() })
+    .unwrap()
+    .code
 }

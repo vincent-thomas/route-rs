@@ -114,7 +114,7 @@ impl Head {
     self.children.extend(tags);
   }
 
-  pub fn style(mut self, style: Style) -> Self {
+  pub fn global_style(mut self, style: Style) -> Self {
     self.children.push(style.into_tag());
     self
   }

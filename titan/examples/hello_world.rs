@@ -12,50 +12,52 @@ use titan::{
   },
   web, App, Respondable,
 };
+use titan_html::StyleRule;
 use tokio::net::TcpListener;
 
 fn default_head() -> Head {
   Head::default().title("testing").reset_css()
 }
 
+#[inline]
+fn link_css() -> Vec<StyleRule> {
+  css!(
+    "
+    color: blue;
+    padding: 0.55;
+    background-color: red;
+"
+  )
+}
+
 async fn index(body: String) -> impl Respondable {
+  let testing = css!(
+    "
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+
+  padding: 0.75rem;
+      "
+  );
   Html::from((
     default_head(),
-    Body::from([
-      Header::from([
-        Div::text("testing").into_tag(),
-        Div::from([P::text("testing").into_tag()]).into_tag(),
-      ])
-      .styles(css!(
-        "
-        display: flex;
-        flex-direction: row;
-        width: 100%;
-        justify-content: space-between;
-
-        padding: 0.75rem;
-        "
-      ))
-      .into_tag(),
+    Body::default().children([
+      Header::default()
+        .styles(testing)
+        .children([
+          Div::text("testing").into_tag(),
+          Div::default().children([P::text("testing").into_tag()]).into_tag(),
+        ])
+        .into_tag(),
       Link::text("/", "testing")
         .preload(LinkLoadType::WhenIdle)
-        .styles(
-          "
-            color: blue;
-            padding: 0.55;
-            background-color: red;
-          ",
-        )
+        .styles(link_css())
         .into_tag(),
       Link::text("/about".to_string(), "testing")
         .preload(LinkLoadType::WhenIdle)
-        .styles(
-          "
-            color: blue;
-            padding: 0.55;
-            background-color: red;
-          ",
-        )
+        .styles(link_css())
         .into_tag(),
       Div::text(body).into_tag(),
     ]),

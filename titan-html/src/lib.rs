@@ -3,24 +3,29 @@
 pub mod class;
 mod context;
 pub mod prelude;
-mod stylerule;
 pub mod tags;
-mod utils;
 
-pub use titan_html_derive::css;
+pub use titan_html_core::*;
+
+pub use titan_html_derive::{css, global_css};
 
 use context::Context;
-use tags::{html::Html, IntoTag};
+use tags::{html::Html, Body, IntoTag};
 
-pub fn render(mut root: Html) -> String {
-  let mut body = root.body.clone().into_tag();
+const DOCTYPE: &str = "<!DOCTYPE html>";
 
-  let mut ctx = Context::default();
-  body.hydrate(&mut ctx);
-  ctx.mutate_head(&mut root.head);
+pub fn render(root: Html) -> String {
+  let mut body = root.body.into_tag();
+  let mut context = Context::from(root.head);
+  body.hydrate(&mut context);
 
-  let mut root_tag = root.into_tag();
-  root_tag.children()[1] = body;
+  let mut html = Html {
+    head: context.into(),
+    // Removed by line below
+    body: Body::default(),
+  }
+  .into_tag();
+  html.children()[1] = body;
 
-  format!("<!DOCTYPE html>{}", root_tag.to_string())
+  format!("{}{}", DOCTYPE, html.to_string())
 }
