@@ -80,7 +80,7 @@ impl IntoTag for Script {
         attributes.insert("src".to_string(), url.to_string());
         Tag::Tag {
           ident: "script",
-          children: None,
+          children: Some(Vec::default()),
           attributes,
           ids: Vec::default(),
           urls_to_prefetch: HashSet::default(),

@@ -8,6 +8,24 @@ use bytes::Bytes;
 use futures_core::Stream;
 use http_body::{Frame, SizeHint};
 
+/// Represents the body of an HTTP response.
+///
+/// The `Body` enum can either represent a fully-loaded body in memory or a stream of data.
+/// It is used as the response body when implementing the `Respondable` trait, allowing
+/// handlers to return either a complete body or a body that streams data incrementally.
+///
+/// # Variants
+///
+/// - `Full(Box<[u8]>)`:
+///   This variant holds the full body of the response in memory as a boxed byte slice. This is typically used
+///   when the response body is small enough to be loaded entirely into memory at once.
+///   
+/// - `Stream(Pin<Box<dyn Stream<Item = Vec<u8>> + Send>>)`:
+///   This variant represents a streaming body, where the body is returned incrementally in chunks. This is useful
+///   when dealing with large responses (e.g., files or large datasets) that should be sent in multiple parts.
+///   The stream yields `Vec<u8>` chunks, allowing the receiver to process the data incrementally as it arrives.
+///
+/// This enum is not usually used of the library user and is quite low-level.
 pub enum Body {
   Full(Box<[u8]>),
   Stream(Pin<Box<dyn Stream<Item = Vec<u8>> + Send>>),

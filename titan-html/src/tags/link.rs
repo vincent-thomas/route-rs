@@ -119,7 +119,11 @@ impl IntoTag for Link {
 }
 
 impl Link {
-  pub fn new(href: String, children: Vec<Tag>) -> Self {
+  pub fn new<C>(href: String, children: C) -> Self
+  where
+    C: IntoIterator<Item = Tag>,
+  {
+    let children: Vec<Tag> = children.into_iter().collect();
     Self {
       href,
       children,
@@ -132,7 +136,7 @@ impl Link {
   }
 
   pub fn text(href: impl Into<String>, text: &'static str) -> Self {
-    Self::new(href.into(), vec![Tag::from(text.to_string())])
+    Self::new(href.into(), vec![text.to_string().into_tag()])
   }
 
   pub const fn preload(mut self, preload: LinkLoadType) -> Self {

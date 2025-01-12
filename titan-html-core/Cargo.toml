@@ -9,9 +9,10 @@ edition.workspace = true
 version.workspace = true
 repository.workspace = true
 documentation.workspace = true
+rust-version.workspace = true
 
 [dependencies]
-lightningcss = "1.0.0-alpha.63"
+lightningcss = { version = "1.0.0-alpha.63", default-features = false, features = ["grid"] }
 quote = "1"
 cssparser = "0.33.0"
 proc-macro2 = "1.0.92"

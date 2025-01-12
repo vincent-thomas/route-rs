@@ -193,15 +193,15 @@ impl Tag {
   }
 }
 
-impl From<String> for Tag {
-  fn from(value: String) -> Self {
-    Self::Text(value)
+impl IntoTag for &'static str {
+  fn into_tag(self) -> Tag {
+    self.to_string().into_tag()
   }
 }
 
-impl IntoTag for &'static str {
+impl IntoTag for String {
   fn into_tag(self) -> Tag {
-    Tag::Text(self.to_string())
+    Tag::Text(self)
   }
 }
 

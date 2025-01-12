@@ -1,25 +1,21 @@
 use std::io;
 
 use titan::{
-  html::{
-    css,
-    tags::{
-      head::Head,
-      html::Html,
-      link::{Link, LinkLoadType},
-      Body, Div, Header, IntoTag as _, P,
-    },
+  html::tags::{
+    head::Head,
+    html::Html,
+    link::{Link, LinkLoadType},
+    Body, Div, Header, IntoTag as _, P,
   },
   web, App, Respondable,
 };
-use titan_html::StyleRule;
+use titan_html::{css, global_css, StyleRule};
 use tokio::net::TcpListener;
 
-fn default_head() -> Head {
-  Head::default().title("testing").reset_css()
-}
+//fn default_head() -> Head {
+//  Head::default().title("testing").reset_css()
+//}
 
-#[inline]
 fn link_css() -> Vec<StyleRule> {
   css!(
     "
@@ -42,7 +38,7 @@ async fn index(body: String) -> impl Respondable {
       "
   );
   Html::from((
-    default_head(),
+    Head::default().global_style(global_css!("")),
     Body::default().children([
       Header::default()
         .styles(testing)
@@ -59,7 +55,7 @@ async fn index(body: String) -> impl Respondable {
         .preload(LinkLoadType::WhenIdle)
         .styles(link_css())
         .into_tag(),
-      Div::text(body).into_tag(),
+      //Div::text(body).into_tag(),
     ]),
   ))
 }

@@ -1,7 +1,7 @@
 mod lambda_service;
 use std::future::Future;
 
-pub type Request = lambda_http;
+pub type Request = lamda_http::Request;
 
 use lambda_service::LambdaHandlerService;
 use titan_core::{FromRequest, Handler, Respondable};

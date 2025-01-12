@@ -9,6 +9,10 @@ edition.workspace = true
 keywords.workspace = true
 repository.workspace = true
 documentation.workspace = true
+rust-version.workspace = true
+
+[package.metadata.docs.rs]
+ignore-features = ["internal-titan-lambda"]
 
 [features]
 default = ["types"]

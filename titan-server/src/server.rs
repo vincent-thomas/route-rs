@@ -15,9 +15,74 @@ use tokio::{
 
 use crate::utils::{self};
 
-/// Route
-pub struct Server;
-
+/// Starts a server that listens on the provided `TcpListener` and handles requests using the given `service`.
+///
+/// # Type Parameters
+/// - `S`: The type of the service that processes incoming requests. It must implement the [`Service`] trait
+///   for requests of type `Request<Box<[u8]>>`.
+///
+/// # Parameters
+/// - `listener`: A [`tokio::net::TcpListener`] instance used to accept incoming TCP connections.
+/// - `service`: An implementation of the [`Service`] trait to handle the requests.
+///
+/// # Constraints
+/// - `S`: The service must:
+///   - Implement the [`Service`] trait for `Request<Box<[u8]>>`.
+///   - Be both [`Send`] and [`Clone`].
+///   - Have a `'static` lifetime.
+/// - The associated [`std::future::Future`] type of the service must be [`Send`].
+/// - The associated `Response` and `Error` types of the service must implement [`Respondable`].
+///
+/// # Returns
+/// A [`Serve`] instance that drives the server.
+///
+/// # Examples
+/// ```
+/// use titan_server::{serve};
+/// use titan_core::{Respondable,Service};
+/// use titan_http::Request;
+/// use std::{future::Future, task::Poll, pin::Pin};
+/// use tokio::net::TcpListener;
+///
+/// #[derive(Clone)]
+/// struct MyService;
+///
+/// impl Service<Request> for MyService {
+///     type Response = &'static str;
+///     type Error = ();
+///     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+///
+///  fn poll_ready(
+///   &mut self,
+///   _cx: &mut std::task::Context<'_>,
+///  ) -> Poll<Result<(), Self::Error>> {
+///    Poll::Ready(Ok(()))
+/// }
+///
+///     fn call(&mut self, req: Request) -> Self::Future {
+///         // Process the request and return a future
+///         Box::pin(async move {Ok("testing")})
+///     }
+/// }
+///
+/// #[tokio::main]
+/// async fn main() {
+///   let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
+///   let service = MyService;
+///   
+///   // Uncomment the last part in your app
+///   serve(listener, service); // .await.unwrap();
+/// }
+///
+/// ```
+///
+/// # Errors
+/// Any errors from the underlying network layer or service will be propagated and should be handled appropriately.
+///
+/// # See Also
+/// - [`TcpListener`]: For details on how to set up a TCP listener.
+/// - [`Service`]: For implementing request handling logic.
+/// - [`Respondable`]: For implementing custom response and error types.
 pub fn serve<S>(listener: TcpListener, service: S) -> Serve<S>
 where
   S: titan_core::Service<Request> + Send + Clone + 'static,
@@ -172,61 +237,3 @@ mod private {
     }
   }
 }
-
-//let listener = TcpListener::bind(self.socket).await?;
-//loop {
-//  let (stream, _) = listener.accept().await?;
-//  let this = service.clone();
-//  let mut this = std::mem::replace(&mut service, this);
-//  tokio::spawn(async move {
-//    Self::handle_connection(stream, &mut this).await;
-//  });
-//}
-//
-//
-//
-//
-//
-//
-//
-//async fn handle_connection<S>(mut stream: TcpStream, service: &mut S)
-//where
-//  S: Service<Request>,
-//  S::Response: Respondable,
-//  S::Error: Respondable,
-//{
-//  let mut buf_reader = BufReader::new(&mut stream);
-//  let http_headers = utils::read_request(&mut buf_reader).await.join("\n");
-//
-//  let req_empty_body = HttpRequestExt::from(http_headers).0;
-//  let body_length = req_empty_body
-//    .headers()
-//    .get(CONTENT_LENGTH)
-//    .unwrap_or(&HeaderValue::from(0))
-//    .to_str()
-//    .unwrap()
-//    .parse()
-//    .unwrap();
-//
-//  let req =
-//    utils::fill_req_body(req_empty_body, body_length, buf_reader).await;
-//
-//  let mut response = match Service::call(service, req).await {
-//    Ok(value) => value.respond(),
-//    Err(err) => err.respond(),
-//  };
-//
-//  response.headers_mut().extend([
-//    (
-//      HeaderName::from_static("date"),
-//      HeaderValue::from_str(&date_header_format()).unwrap(),
-//    ),
-//    (
-//      HeaderName::from_static("server"),
-//      HeaderValue::from_str("route-rs").unwrap(),
-//    ),
-//  ]);
-//
-//  let response_ext: String = HttpResponseExt(response).into();
-//  stream.write_all(response_ext.as_bytes()).await.unwrap();
-//}

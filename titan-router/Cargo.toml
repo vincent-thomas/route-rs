@@ -9,6 +9,7 @@ edition.workspace = true
 keywords.workspace = true
 repository.workspace = true
 documentation.workspace = true
+rust-version.workspace = true
 
 [[bench]]
 name = "router_bench"

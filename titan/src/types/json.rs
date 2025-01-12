@@ -8,6 +8,31 @@ use crate::{FromRequest, Respondable};
 
 use super::BodyParsingError;
 
+/// A wrapper around deserialized JSON data.
+///
+/// The `Json` extractor is used to parse and deserialize JSON data from the request body. It is
+/// typically used when you expect the body of an HTTP request to contain JSON and want to convert
+/// it into a Rust type. The type `T` represents the data structure you're deserializing into. By default,
+/// `T` is `HashMap<String, Value>`, but you can specify any type that implements `DeserializeOwned`.
+///
+/// # Example
+///
+/// ```
+/// use titan::{web, Respondable};
+/// use serde::{Deserialize, Serialize};
+/// use serde_json::Value;
+///
+/// #[derive(Deserialize, Serialize, Clone)]
+/// struct MyData {
+///     name: String,
+///     age: u32,
+/// }
+///
+/// // Extracting JSON from the request and deserializing it into a custom type.
+/// async fn handle_request(web::Json(data): web::Json<MyData>) -> impl Respondable {
+///   data.name
+/// }
+/// ```
 #[derive(Clone)]
 pub struct Json<T = HashMap<String, Value>>(pub T);
 

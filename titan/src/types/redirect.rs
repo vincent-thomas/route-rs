@@ -5,6 +5,30 @@ use titan_core::Service;
 use titan_http::{body::Body, header, Request, Response, StatusCode};
 use titan_utils::BoxedSendFuture;
 
+/// A struct representing an HTTP redirect.
+///
+/// The `Redirect` struct is used to generate HTTP responses for redirects. It supports both
+/// permanent (`301 Moved Permanently`) and temporary (`302 Found`) redirects. The redirect
+/// target is specified by a URL, and the response will include the `Location` header pointing to
+/// that URL.
+///
+/// # Example
+///
+/// ```no_run
+/// use titan::{web, App, web::Redirect};
+///
+/// #[tokio::main]
+/// async fn main() {
+///   // Create a permanent redirect
+///   let redirect = Redirect::permanent("https://example.com");
+///
+///   // Create a temporary redirect
+///   let _ = Redirect::temporary("https://example.com");
+///
+///   let app = App::default().at("to-google", redirect);
+///   // ...
+/// }
+/// ```
 #[derive(Clone)]
 pub struct Redirect {
   to: &'static str,
@@ -12,12 +36,25 @@ pub struct Redirect {
 }
 
 impl Redirect {
-  pub fn new(permanent: bool, to: &'static str) -> Redirect {
-    Redirect { to, permanent }
-  }
-
+  /// Creates a permanent (`301 Moved Permanently`) redirect to the specified URL.
+  ///
+  /// # Arguments
+  /// - `to`: The target URL for the redirect, which must be a valid URL string.
+  ///
+  /// # Returns
+  /// [`Redirect`] with permanent redirection
   pub fn permanent(to: &'static str) -> Redirect {
     Redirect { permanent: true, to }
+  }
+  /// Creates a temporary (`302 Moved Temporarily`) redirect to the specified URL.
+  ///
+  /// # Arguments
+  /// - `to`: The target URL for the redirect, which must be a valid URL string.
+  ///
+  /// # Returns
+  /// [`Redirect`] with temporary redirection
+  pub fn temporary(to: &'static str) -> Redirect {
+    Redirect { permanent: false, to }
   }
 
   fn gen_response(&self) -> Response {

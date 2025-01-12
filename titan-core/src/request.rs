@@ -2,15 +2,53 @@ use crate::Respondable;
 use std::convert::Infallible;
 use titan_http::{Parts, Request, Response};
 
-/// Types that can be created from requests.
+/// Types that can be extracted from a request.
 ///
-/// Extractors that implement `FromRequest` can consume the request body and can thus only be run
-/// once for handlers.
+/// The `FromRequest` trait is used for types that can be constructed from an HTTP request. Extractors
+/// implementing this trait are responsible for parsing the incoming request body, headers, or other
+/// parts of the request, and converting them into a structured type that can be used by handlers.
 ///
-/// If your extractor doesn't need to consume the request body then you should implement
-/// [`FromRequestParts`] and not [`FromRequest`].
+/// Since `FromRequest` extractors consume the request body, they can only be executed once for each
+/// handler. If your extractor doesn't need to consume the request body (for example, when you only
+/// need access to the request headers or parts of the URL), you should implement [`FromRequestParts`]
+/// instead of [`FromRequest`].
 ///
+/// # Associated Types
+/// - `Error`: The type of error that can occur while extracting the request data. It must implement
+///   the [`Respondable`] trait to allow the error to be returned as a valid HTTP response.
 ///
+/// This method extracts the data from the given HTTP request and returns a result. If the extraction
+/// is successful, it returns `Ok(Self)`, where `Self` is the type implementing `FromRequest`. If
+/// an error occurs during extraction (e.g., due to invalid data or missing fields), it returns an
+/// error of type `Self::Error`, which will be transformed into an HTTP response via the `Respondable`
+/// trait.
+///
+/// # Example
+///
+/// ```
+/// use titan_core::{FromRequest, Respondable};
+/// use titan_http::{Request, body::Body};
+///
+/// // A custom extractor type that implements `FromRequest`.
+/// struct MyExtractor {
+///     pub field: String,
+/// }
+///
+/// // Implement `FromRequest` for `MyExtractor`.
+/// impl FromRequest for MyExtractor {
+///     type Error = String; // The error type we will return if extraction fails.
+///
+///     fn from_request(req: Request) -> Result<Self, Self::Error> {
+///         // Attempt to extract the data from the request (e.g., reading the body).
+///         let field_value = req.uri().path().to_string(); // Example of extracting from the URL path.
+///         Ok(MyExtractor { field: field_value })
+///     }
+/// }
+///
+/// async fn handler(data: MyExtractor) -> impl titan_core::Respondable { /* ... */}
+///
+/// // Now, `MyExtractor` can be used in a handler to extract data from the request.
+/// ```
 pub trait FromRequest: Sized {
   type Error: Respondable;
   fn from_request(req: Request) -> Result<Self, Self::Error>;

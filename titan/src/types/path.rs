@@ -1,19 +1,23 @@
 use std::convert::Infallible;
 
-use serde::Deserialize;
-use titan_core::{FromRequestParts, Respondable};
-use titan_http::{Parts, Response};
+use titan_core::FromRequestParts;
+use titan_http::Parts;
 
-#[derive(Deserialize)]
+/// A struct representing the path component of a request's URI.
+///
+/// The `Path` struct is used to extract and store the path part of the URI from an incoming request.
+/// This can be useful for web applications to capture the path of the URL when handling routes.
+///
+/// # Example
+/// ```
+/// use titan::web::Path;
+///
+/// // Extract the URI path from the request
+/// async fn handle_request(Path(path_str): Path) -> String {
+///   format!("Path: {path_str}")
+/// }
+/// ```
 pub struct Path(pub String);
-
-pub struct PathError;
-
-impl Respondable for PathError {
-  fn respond(self) -> Response {
-    unreachable!()
-  }
-}
 
 impl FromRequestParts for Path {
   type Error = Infallible;

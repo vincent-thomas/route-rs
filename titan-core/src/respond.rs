@@ -2,6 +2,45 @@ use std::convert::Infallible;
 
 use titan_http::{body::Body, header, Response, ResponseBuilder, StatusCode};
 
+/// A trait for types that can be converted into an HTTP response.
+///
+/// The `Respondable` trait is intended for types that can be transformed into a valid HTTP response.
+/// Any type returned by a handler (or any function) that implements this trait can be converted into
+/// a `Response<Body>`. This is typically used to ensure that different types can be unified into
+/// a standard response format for HTTP APIs or services.
+///
+/// This method converts the implementing type into an HTTP response represented by a `Response<Body>`.
+/// It allows various types (e.g., structs, enums, or other custom types) to be returned from a handler
+/// and automatically converted into HTTP responses.
+///
+/// # Implementing `Respondable`
+///
+/// To implement the `Respondable` trait, you need to define how your custom type can be turned into
+/// an HTTP response. This is commonly done by converting your type into a response body (e.g., a string,
+/// JSON, or some binary data) and returning it wrapped in a `Response<Body>`.
+///
+/// # Example
+///
+/// ```
+/// use titan_http::{body::Body, Response};
+/// use titan_core::Respondable;
+///
+/// // Define a type that represents a response body.
+/// pub struct MyResponse {
+///     message: String,
+/// }
+///
+/// // Implement `Respondable` for `MyResponse`.
+/// impl Respondable for MyResponse {
+///     fn respond(self) -> Response<Body> {
+///         // Convert the struct into an HTTP response with the message in the body.
+///         Response::new(Body::from(self.message))
+///     }
+/// }
+///
+/// // Now you can return `MyResponse` from a handler, and it will be automatically
+/// // converted into an HTTP response.
+/// ```
 pub trait Respondable {
   fn respond(self) -> Response<Body>;
 }
@@ -33,7 +72,7 @@ impl Respondable for Infallible {
 
 impl Respondable for () {
   fn respond(self) -> Response<Body> {
-    ResponseBuilder::new().status(200).body(Body::from(())).unwrap()
+    ResponseBuilder::new().status(204).body(Body::from(())).unwrap()
   }
 }
 
