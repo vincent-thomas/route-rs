@@ -1837,7 +1837,7 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "titan"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "futures-util",
  "lambda_http",
@@ -1856,7 +1856,7 @@ dependencies = [
 
 [[package]]
 name = "titan-core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "futures-core",
  "lambda_http",
@@ -1867,7 +1867,7 @@ dependencies = [
 
 [[package]]
 name = "titan-html"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "criterion",
  "cssparser",
@@ -1882,7 +1882,7 @@ dependencies = [
 
 [[package]]
 name = "titan-html-core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "cssparser",
  "lightningcss",
@@ -1892,7 +1892,7 @@ dependencies = [
 
 [[package]]
 name = "titan-html-derive"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1903,7 +1903,7 @@ dependencies = [
 
 [[package]]
 name = "titan-http"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bytes",
  "futures-core",
@@ -1914,7 +1914,7 @@ dependencies = [
 
 [[package]]
 name = "titan-lambda"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "futures-util",
  "lambda_http",
@@ -1925,14 +1925,14 @@ dependencies = [
 
 [[package]]
 name = "titan-router"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "criterion",
 ]
 
 [[package]]
 name = "titan-server"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "chrono",
  "futures-util",
@@ -1943,7 +1943,7 @@ dependencies = [
 
 [[package]]
 name = "titan-utils"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "cssparser",
  "lightningcss",

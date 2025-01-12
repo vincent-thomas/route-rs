@@ -29,12 +29,12 @@ version = "0.7"
 optional = true
 
 [dependencies]
-titan-core = { path = "../titan-core", version = "0.2.0" }
-titan-http = { path = "../titan-http", version = "0.2.0" }
-titan-html = { path = "../titan-html", version = "0.2.0" }
-titan-router = { path = "../titan-router", version = "0.2.0" }
-titan-server = { path = "../titan-server", version = "0.2.0" }
-titan-utils = { path = "../titan-utils", version = "0.2.0" }
+titan-core = { path = "../titan-core", version = "0.3.0" }
+titan-http = { path = "../titan-http", version = "0.3.0" }
+titan-html = { path = "../titan-html", version = "0.3.0" }
+titan-router = { path = "../titan-router", version = "0.3.0" }
+titan-server = { path = "../titan-server", version = "0.3.0" }
+titan-utils = { path = "../titan-utils", version = "0.3.0" }
 
 pin-project-lite = "0.2.14"
 futures-util = "0.3.31"
