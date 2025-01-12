@@ -8,9 +8,10 @@ pub mod head;
 pub mod html;
 pub mod image;
 pub mod link;
+pub mod script;
 pub mod style;
 
-pub trait IntoTag: Clone {
+pub trait IntoTag {
   fn into_tag(self) -> Tag;
 }
 
@@ -228,33 +229,81 @@ macro_rules! impl_tag {
           }
         }
       }
-    )*
-  };
-}
-impl_tag! { Div; Body; Span; P; Header; Footer }
 
-macro_rules! impl_children_tag {
-  ($($val:ident);*) => {
-    $(
-        impl $val {
-          pub fn text(value: impl Into<String>) -> $val {
-             $val {
-                 children: Vec::from_iter([Tag::Text(value.into())]),
-                 classes: HashSet::default(),
-                 ids: Vec::default(),
-                 attributes: HashMap::default(),
-             }
-          }
+      impl $val {
+        pub fn text(value: impl Into<String>) -> Self {
+           $val {
+               children: Vec::from_iter([Tag::Text(value.into())]),
+               classes: HashSet::default(),
+               ids: Vec::default(),
+               attributes: HashMap::default(),
+           }
         }
 
-        impl $val {
-          pub fn children<I>(mut self, children: I) -> $val where I: IntoIterator<Item = Tag> {
-             self.children = children.into_iter().collect::<Vec<Tag>>();
-             self
-          }
+        pub fn children<I>(mut self, children: I) -> Self where I: IntoIterator<Item = Tag> {
+           self.children = children.into_iter().collect::<Vec<Tag>>();
+           self
         }
+      }
     )*
   };
 }
 
-impl_children_tag! { Div; P; Span; Header; Body }
+impl_tag! {
+    Body;
+
+    // Content Section
+    Header;
+    Nav;
+    Main;
+    Footer;
+    Articles;
+    Aside;
+    Section;
+
+    // Text Content
+    BlockQuote;
+    Div;
+    Dl;
+    Dt;
+    Hr;
+    Li;
+    Ol;
+    P;
+    Pre;
+    Ul;
+    // A is a special one. Use [Link] instead
+    B;
+    Bdi;
+    Bdo;
+    Br;
+    Cite;
+    Code;
+    Data;
+    Em;
+    I;
+    Kbd;
+    Mark;
+    Q;
+    S;
+    Small;
+    Span;
+    Strong;
+    Sub;
+    Sup;
+    Time;
+    U;
+    Var;
+    Wbr;
+
+    // Scripting
+    NoScript;
+    // TODO: Script
+
+    H1;
+    H2;
+    H3;
+    H4;
+    H5;
+    H6
+}
