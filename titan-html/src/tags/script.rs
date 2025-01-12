@@ -35,14 +35,17 @@ impl Script {
 
   pub fn set_async(mut self) -> Self {
     self.is_async = true;
+    self
   }
 
   pub fn set_defer(mut self) -> Self {
     self.is_defer = true;
+    self
   }
 
   pub fn set_module(mut self) -> Self {
     self.is_modules = true;
+    self
   }
 }
 
