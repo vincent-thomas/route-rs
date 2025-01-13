@@ -2,16 +2,13 @@ use std::collections::HashMap;
 
 use crate::segments::{FindSegmentResult, Segments};
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
-pub(crate) struct RouteId(usize);
-
 #[derive(Clone)]
 pub struct Router<V>
 where
   V: Clone,
 {
   routes: Vec<(Segments, V)>,
-  lookup_cache: HashMap<Segments, RouteId>,
+  lookup_cache: HashMap<Segments, V>,
 }
 
 impl<V> Default for Router<V>
@@ -36,30 +33,25 @@ where
   pub fn at(&mut self, route: &str, handler: V) {
     let segments: Segments = route.to_string().into();
 
-    let index = self.routes.len(); // (self.routes.len() - 1) + 1
-
-    let route_id = RouteId(index);
-
-    self.routes.push((segments.clone(), handler));
-
     if segments.num_params() == 0 {
-      self.lookup_cache.insert(segments, route_id);
+      self.lookup_cache.insert(segments, handler);
+    } else {
+      self.routes.push((segments.clone(), handler));
     }
   }
 
   pub fn find(&mut self, route: &str) -> Option<Match<&V>> {
     let segments = Segments::from(route.to_string());
 
-    if let Some(RouteId(route_index)) = self.lookup_cache.get(&segments) {
-      let (_, value) = &self.routes[*route_index];
+    if let Some(value) = self.lookup_cache.get(&segments) {
       return Some(Match { value, params: HashMap::default() });
     };
 
-    for (index, (key, value)) in self.routes.iter().enumerate() {
+    for (key, value) in self.routes.iter() {
       if let FindSegmentResult::Match(params) = key.find(&segments.0) {
-        if params.is_empty() {
-          self.lookup_cache.insert(segments, RouteId(index));
-        }
+        //if params.is_empty() {
+        //self.lookup_cache.insert(segments, RouteId(index));
+        //}
         return Some(Match { value, params });
       };
     }
@@ -69,8 +61,8 @@ where
   pub fn lookup(&self, route: &str) -> Option<Match<&V>> {
     let from_request = Segments::from(route.to_string());
 
-    if let Some(RouteId(route_index)) = self.lookup_cache.get(&from_request) {
-      let (_, value) = &self.routes[*route_index];
+    if let Some(value) = self.lookup_cache.get(&from_request) {
+      //let (_, value) = &self.routes[*route_index];
       return Some(Match { value, params: HashMap::default() });
     };
 
@@ -84,16 +76,12 @@ where
   pub fn lookup_mut(&mut self, route: &str) -> Option<Match<&mut V>> {
     let segments = Segments::from(route.to_string());
 
-    if let Some(RouteId(route_index)) = self.lookup_cache.get_mut(&segments) {
-      let (_, value) = &mut self.routes[*route_index];
+    if let Some(value) = self.lookup_cache.get_mut(&segments) {
       return Some(Match { value, params: HashMap::default() });
     };
 
-    for (index, (key, value)) in self.routes.iter_mut().enumerate() {
+    for (key, value) in self.routes.iter_mut() {
       if let FindSegmentResult::Match(params) = key.find(&segments.0) {
-        if params.is_empty() {
-          self.lookup_cache.insert(segments, RouteId(index));
-        }
         return Some(Match { value, params });
       };
     }
