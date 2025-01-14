@@ -91,14 +91,19 @@ where
 
 impl Respondable for titan_html::tags::html::Html {
   fn respond(self) -> Response<Body> {
-    let str = titan_html::render(self);
-
     let response = ResponseBuilder::new().status(200);
 
-    response
-      .header(header::CONTENT_TYPE, "text/html")
-      .body(Body::from(str))
-      .unwrap()
+    let mut head_response = response.header(header::CONTENT_TYPE, "text/html");
+
+    if let Some(nonce) = self.with_csp_nonce.clone() {
+      head_response
+        .headers_mut()
+        .unwrap()
+        .insert(header::CONTENT_SECURITY_POLICY, format!("script-src 'self' 'nonce-{nonce}'; style-src 'self' 'nonce-{nonce}';").parse().unwrap());
+    }
+
+    let str = titan_html::render(self);
+    head_response.body(Body::from(str)).unwrap()
   }
 }
 

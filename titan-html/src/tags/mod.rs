@@ -4,12 +4,21 @@ use std::{
 };
 
 use crate::{class::TagClass, context::Context};
+
 pub mod head;
 pub mod html;
-pub mod image;
-pub mod link;
-pub mod script;
-pub mod style;
+
+mod image;
+pub use image::*;
+
+mod link;
+pub use link::*;
+
+mod script;
+pub use script::*;
+
+mod style;
+pub use style::*;
 
 pub trait IntoTag {
   fn into_tag(self) -> Tag;
@@ -105,6 +114,27 @@ impl Tag {
       ids.push(id);
     }
   }
+
+  pub(crate) fn apply_nonce(&mut self, nonce: &str) {
+    match self {
+      Tag::Text(_) => (),
+      Tag::Tag { ident, ref mut attributes, ref mut children, .. } => {
+        if *ident == "script" && children.is_some() {
+          attributes.insert("nonce".to_string(), nonce.to_string());
+        }
+        if *ident == "style" {
+          attributes.insert("nonce".to_string(), nonce.to_string());
+        }
+
+        if let Some(children) = children {
+          for child in children.iter_mut() {
+            child.apply_nonce(nonce);
+          }
+        }
+      }
+    }
+  }
+
   pub(crate) fn hydrate(&mut self, ctx: &mut Context) {
     match self {
       Tag::Text(_) => (),
@@ -127,7 +157,7 @@ impl Tag {
           for class in classes.clone().into_iter() {
             if let TagClass::StyleRule(style) = class {
               ctx.add_styles(style.clone());
-              classes.insert(TagClass::Normal(style.rule.clone()));
+              classes.insert(TagClass::Normal(style.rule.to_string()));
               classes.remove(&TagClass::StyleRule(style));
             }
           }

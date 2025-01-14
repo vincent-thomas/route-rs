@@ -1,4 +1,4 @@
-use crate::prelude::BoxCloneService;
+use crate::utils::BoxCloneService;
 
 #[cfg(feature = "types")]
 pub use crate::types::*;
@@ -17,7 +17,6 @@ macro_rules! impl_method {
     {
       let mut methods = std::collections::HashMap::default();
       let route = $crate::route::Route::new(handler);
-      //let boxed: $crate::prelude::BoxedSendService<titan_http::response::Response<titan_http::body::Body>> = Box::new(route);
 
       methods.insert(titan_http::Method::$method, BoxCloneService::new(route));
       $crate::endpoint::Endpoint { methods }

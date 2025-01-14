@@ -23,9 +23,15 @@ pub fn render(root: Html) -> String {
     head: context.into(),
     // Removed by line below
     body: Body::default(),
+    with_csp_nonce: root.with_csp_nonce.clone(),
   }
   .into_tag();
   html.children()[1] = body;
 
-  format!("{}{}", DOCTYPE, html.to_string())
+  if let Some(nonce) = root.with_csp_nonce {
+    html.apply_nonce(&nonce);
+  }
+  dbg!(&html);
+
+  dbg!(format!("{}{}", DOCTYPE, html.to_string()))
 }

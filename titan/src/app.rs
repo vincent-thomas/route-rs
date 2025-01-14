@@ -1,4 +1,4 @@
-use crate::{prelude::*, route::Route};
+use crate::{route::Route, utils::BoxCloneService};
 use serde_json::Value;
 use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc};
 use titan_core::{Respondable, Service};
@@ -20,6 +20,17 @@ impl Default for App {
     Self {
       inner: Arc::new(AppInner {
         router: Router::default(),
+        fallback: BoxCloneService::new(Route::new(default_fallback)),
+      }),
+    }
+  }
+}
+
+impl From<Router<BoxCloneService<Request, Response, Response>>> for App {
+  fn from(value: Router<BoxCloneService<Request, Response, Response>>) -> Self {
+    Self {
+      inner: Arc::new(AppInner {
+        router: value,
         fallback: BoxCloneService::new(Route::new(default_fallback)),
       }),
     }

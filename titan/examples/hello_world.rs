@@ -1,47 +1,38 @@
 use std::io;
+use titan::App;
 
 use titan::{
-  html::tags::{
-    head::Head,
-    html::Html,
-    link::{Link, LinkLoadType},
-    Body, Div, Header, IntoTag as _, P,
-  },
-  web, App, Respondable,
+  html::tags::{head::Head, html::Html, *},
+  web, Respondable,
 };
 use titan_html::{css, global_css, StyleRule};
 use tokio::net::TcpListener;
 
-//fn default_head() -> Head {
-//  Head::default().title("testing").reset_css()
-//}
-
-fn link_css() -> Vec<StyleRule> {
-  css!(
-    "
-    color: blue;
-    padding: 0.55;
-    background-color: red;
+const LINK_CSS: &[StyleRule] = css!(
+  "
+  color: blue;
+  padding: 0.55;
+  background-color: red;
 "
-  )
-}
+);
 
-async fn index(body: String) -> impl Respondable {
-  let testing = css!(
-    "
+const TESTING: &[StyleRule] = css!(
+  "
   display: flex;
   flex-direction: row;
   width: 100%;
   justify-content: space-between;
 
   padding: 0.75rem;
-      "
-  );
+"
+);
+
+async fn index() -> impl Respondable {
   Html::from((
-    Head::default().global_style(global_css!("")),
+    Head::default().global_style(global_css!("")).reset_css(),
     Body::default().children([
       Header::default()
-        .styles(testing)
+        .styles(TESTING)
         .children([
           Div::text("testing").into_tag(),
           Div::default().children([P::text("testing").into_tag()]).into_tag(),
@@ -49,15 +40,16 @@ async fn index(body: String) -> impl Respondable {
         .into_tag(),
       Link::text("/", "testing")
         .preload(LinkLoadType::WhenIdle)
-        .styles(link_css())
+        .styles(LINK_CSS)
         .into_tag(),
-      Link::text("/about".to_string(), "testing")
+      Link::text("/about", "testing")
         .preload(LinkLoadType::WhenIdle)
-        .styles(link_css())
+        .styles(LINK_CSS)
         .into_tag(),
-      //Div::text(body).into_tag(),
+      Script::from_text("console.log(\"Hello World!\");").into_tag(),
     ]),
   ))
+  .with_csp("examplenonce")
 }
 
 #[tokio::main]

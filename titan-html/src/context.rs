@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use titan_html_core::StyleRule;
 
-use crate::tags::{head::Head, style::Style, IntoTag, Tag};
+use crate::tags::{head::Head, IntoTag, Style, Tag};
 
 #[derive(Default)]
 pub(crate) struct Context {
@@ -69,11 +69,3 @@ impl Context {
     });
   }
 }
-
-//impl IntoTag for Context {
-//  fn into_tag(&self) -> Vec<tags::Tag> {
-//    let mut vec = self.styles.into_tag();
-//    vec.extend(self.other_tags.clone());
-//    vec
-//  }
-//}

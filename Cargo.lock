@@ -1623,6 +1623,7 @@ dependencies = [
 name = "titan-html-derive"
 version = "0.4.0"
 dependencies = [
+ "lightningcss",
  "proc-macro2",
  "quote",
  "syn 2.0.95",
@@ -1658,6 +1659,16 @@ name = "titan-router"
 version = "0.4.0"
 dependencies = [
  "criterion",
+ "titan-router-derive",
+]
+
+[[package]]
+name = "titan-router-derive"
+version = "0.4.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.95",
 ]
 
 [[package]]

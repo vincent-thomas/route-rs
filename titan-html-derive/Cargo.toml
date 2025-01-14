@@ -21,3 +21,4 @@ proc-macro2 = "1.0.92"
 
 titan-utils = { version = "0.4.0", path = "../titan-utils", features = ["internal-cssvalidate"] }
 titan-html-core = { version = "0.4.0", path = "../titan-html-core" }
+lightningcss = { version = "1.0.0-alpha.63", default-features = false, features = ["grid"] }

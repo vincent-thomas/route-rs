@@ -1,25 +1,32 @@
+use lightningcss::{printer::PrinterOptions, properties::Property};
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{parse_macro_input, Field, Fields, ItemStruct, LitStr};
-use titan_html_core::StyleRule;
 use titan_utils::validatecss::{self, CSSValidationError};
 
-fn from_stylerule_to_tokenstream(rules: StyleRule) -> TokenStream2 {
-  let styles_tokens: Vec<TokenStream2> = rules
-    .styles
+fn from_stylerules_to_tokenstream(
+  prop: Vec<(String, Property<'_>)>,
+) -> TokenStream2 {
+  let styles_tokens: Vec<TokenStream2> = prop
     .iter()
-    .map(|(key, value)| {
-      quote::quote! { (#key.into(), #value.into()) }
+    .map(|(hash, prop)| {
+      let prop_id = prop.property_id();
+      let key = prop_id.name();
+
+      let value = prop.value_to_css_string(PrinterOptions::default()).unwrap();
+
+      quote::quote! {
+          titan::html::StyleRule {
+              rule: #hash,
+              styles: &[(#key, #value)],
+          }
+      }
     })
     .collect();
-  let rule = rules.rule;
 
   quote::quote! {
-      titan::html::StyleRule {
-          rule: #rule.to_string(),
-          styles: vec![#(#styles_tokens),*],
-      }
+      #(#styles_tokens),*
   }
 }
 
@@ -32,7 +39,7 @@ pub fn global_css(input: TokenStream) -> TokenStream {
 
   let err = validatecss::validate_globalcss(&result);
 
-  quote! { titan::html::tags::style::Style::Text(#err.to_string()) }.into()
+  quote! { titan::html::tags::Style::Text(#err.to_string()) }.into()
 }
 
 #[proc_macro]
@@ -66,11 +73,11 @@ pub fn css(input: TokenStream) -> TokenStream {
     }
   };
 
-  let rules = titan_html_core::parse_css_block(result)
-    .into_iter()
-    .map(|x| from_stylerule_to_tokenstream(x));
+  let rules = titan_html_core::parse_css_block(&result);
 
-  quote! { vec![ #(#rules),* ] }.into()
+  let rules = from_stylerules_to_tokenstream(rules);
+
+  quote! { &[#rules] }.into()
 }
 
 #[proc_macro]
@@ -126,9 +133,9 @@ pub fn html_tag(item: TokenStream) -> TokenStream {
             self
           }
 
-          pub fn styles(mut self, style_rules: Vec<titan_html_core::StyleRule>) -> Self {
+          pub fn styles(mut self, style_rules: &[titan_html_core::StyleRule]) -> Self {
             for style in style_rules {
-              self.classes.insert(crate::tags::TagClass::StyleRule(style));
+              self.classes.insert(crate::tags::TagClass::StyleRule(style.clone()));
             };
             self
           }

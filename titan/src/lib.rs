@@ -1,7 +1,8 @@
 mod app;
 pub mod guard;
-mod prelude;
+pub mod prelude;
 pub mod route;
+mod utils;
 
 #[doc(hidden)]
 #[cfg(feature = "internal-titan-lambda")]

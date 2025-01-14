@@ -148,6 +148,8 @@ impl Head {
   }
 }
 
+pub use opengraph::*;
+
 pub mod opengraph {
   use std::collections::{HashMap, HashSet};
 
