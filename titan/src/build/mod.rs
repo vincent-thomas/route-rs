@@ -60,8 +60,12 @@ pub async fn build_static(app: crate::App, path: PathBuf) {
 
     fs::create_dir_all(path.parent().unwrap()).unwrap();
 
-    let mut nice =
-      fs::OpenOptions::new().create(true).write(true).open(path).unwrap();
+    let mut nice = fs::OpenOptions::new()
+      .create(true)
+      .truncate(true)
+      .write(true)
+      .open(path)
+      .unwrap();
 
     nice.write_all(text_string.as_bytes()).unwrap();
   }

@@ -9,7 +9,7 @@ use lightningcss::{
   stylesheet::ParserOptions,
 };
 
-pub fn parse_css_block<'a>(string: &'a str) -> Vec<(String, Property<'a>)> {
+pub fn parse_css_block(string: &str) -> Vec<(String, Property<'_>)> {
   let mut parser_input = ParserInput::new(string);
   let mut parser = Parser::new(&mut parser_input);
   let parsed_styles =
