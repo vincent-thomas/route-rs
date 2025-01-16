@@ -5,6 +5,16 @@ pub(crate) enum Segment {
   Param(String),
 }
 
+impl std::fmt::Display for Segment {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      Segment::Slash => f.write_str("/"),
+      Segment::Exact(string) => f.write_str(string),
+      Segment::Param(param) => f.write_str(format!(":{}", param).as_str()),
+    }
+  }
+}
+
 pub(crate) trait CompareSegment {
   fn eq(&self, may_be_dynamic: &Self) -> CompareSegmentOut;
 }

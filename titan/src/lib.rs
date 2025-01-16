@@ -1,4 +1,5 @@
 mod app;
+pub mod build;
 pub mod guard;
 pub mod prelude;
 pub mod route;

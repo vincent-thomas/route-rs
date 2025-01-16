@@ -69,5 +69,8 @@ async fn main() -> io::Result<()> {
   let app =
     App::default().at("/", web::get(index)).at("/test", web::get(testing));
 
-  titan::serve(listener, app).await
+  titan::build::build_static(app, std::path::PathBuf::from("./dist")).await;
+  Ok(())
+
+  //titan::serve(listener, app).await
 }

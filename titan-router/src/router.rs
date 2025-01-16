@@ -26,6 +26,20 @@ pub struct Match<V> {
   pub params: HashMap<String, String>,
 }
 
+impl<V> IntoIterator for Router<V>
+where
+  V: Clone,
+{
+  type Item = (Segments, V);
+  type IntoIter = std::vec::IntoIter<Self::Item>;
+  fn into_iter(self) -> Self::IntoIter {
+    let mut vec: Vec<(Segments, V)> = self.lookup_cache.into_iter().collect();
+
+    vec.extend(self.routes);
+    vec.into_iter()
+  }
+}
+
 impl<V> Router<V>
 where
   V: Clone,
@@ -49,9 +63,6 @@ where
 
     for (key, value) in self.routes.iter() {
       if let FindSegmentResult::Match(params) = key.find(&segments.0) {
-        //if params.is_empty() {
-        //self.lookup_cache.insert(segments, RouteId(index));
-        //}
         return Some(Match { value, params });
       };
     }
@@ -62,7 +73,6 @@ where
     let from_request = Segments::from(route.to_string());
 
     if let Some(value) = self.lookup_cache.get(&from_request) {
-      //let (_, value) = &self.routes[*route_index];
       return Some(Match { value, params: HashMap::default() });
     };
 

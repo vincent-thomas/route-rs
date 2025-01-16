@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::segment::{CompareSegment, CompareSegmentOut, Segment};
 
 #[derive(Default, Hash, Clone, Debug, Eq, PartialEq)]
-pub(crate) struct Segments(pub(crate) Vec<Segment>);
+pub struct Segments(pub(crate) Vec<Segment>);
 
 #[derive(PartialEq, Debug)]
 pub enum FindSegmentResult {
@@ -11,8 +11,17 @@ pub enum FindSegmentResult {
   Match(HashMap<String, String>),
 }
 
+impl std::fmt::Display for Segments {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    for item in self.0.iter() {
+      f.write_str(item.to_string().as_str())?;
+    }
+    Ok(())
+  }
+}
+
 impl Segments {
-  pub(crate) fn num_params(&self) -> usize {
+  pub fn num_params(&self) -> usize {
     let mut count = 0;
     for item in &self.0 {
       if let Segment::Param(_) = item {

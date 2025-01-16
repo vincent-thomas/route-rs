@@ -56,7 +56,7 @@ macro_rules! tap_inner {
 }
 
 impl App {
-  fn into_inner(self) -> AppInner {
+  pub(crate) fn into_inner(self) -> AppInner {
     match Arc::try_unwrap(self.inner) {
       Ok(inner) => inner,
       Err(arc) => {
