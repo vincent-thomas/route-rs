@@ -1,11 +1,15 @@
 [package]
 name = "titan-router-derive"
+description = "Internal package for titan-router"
+version.workspace = true
 authors.workspace = true
 categories.workspace = true
-keywords.workspace = true
 license.workspace = true
 edition.workspace = true
-version.workspace = true
+keywords.workspace = true
+repository.workspace = true
+documentation.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 quote = "1.0.36"

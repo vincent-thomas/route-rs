@@ -1,5 +1,6 @@
 [package]
 name = "titan-derive"
+description = "internal package for titan"
 authors.workspace = true
 categories.workspace = true
 keywords.workspace = true
