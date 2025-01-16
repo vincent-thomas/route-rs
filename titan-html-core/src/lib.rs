@@ -24,7 +24,7 @@ pub fn parse_css_block(string: &str) -> Vec<(String, Property<'_>)> {
     let options = PrinterOptions { minify: true, ..Default::default() };
     hasher.write(style.value_to_css_string(options).unwrap().as_bytes());
     let hash = encode_base62(hasher.finish());
-    nice.push((hash, style));
+    nice.push((format!("r{hash}"), style));
   }
   for style in parsed_styles.important_declarations {
     let mut hasher = DefaultHasher::default();
