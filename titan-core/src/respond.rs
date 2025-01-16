@@ -42,7 +42,7 @@ use titan_http::{body::Body, header, Response, ResponseBuilder, StatusCode};
 /// // converted into an HTTP response.
 /// ```
 pub trait Respondable {
-  fn respond(self) -> Response<Body>;
+  fn respond(self) -> Response;
 }
 
 impl<T, E> Respondable for Result<T, E>
@@ -50,7 +50,7 @@ where
   T: Respondable,
   E: Respondable,
 {
-  fn respond(self) -> Response<Body> {
+  fn respond(self) -> Response {
     match self {
       Ok(t) => t.respond(),
       Err(e) => e.respond(),
@@ -58,20 +58,20 @@ where
   }
 }
 
-impl Respondable for Response<Body> {
-  fn respond(self) -> Response<Body> {
+impl Respondable for Response {
+  fn respond(self) -> Response {
     self
   }
 }
 
 impl Respondable for Infallible {
-  fn respond(self) -> Response<Body> {
+  fn respond(self) -> Response {
     panic!("Not fallible :(")
   }
 }
 
 impl Respondable for () {
-  fn respond(self) -> Response<Body> {
+  fn respond(self) -> Response {
     ResponseBuilder::new().status(204).body(Body::from(())).unwrap()
   }
 }
@@ -80,7 +80,7 @@ impl<T> Respondable for (StatusCode, T)
 where
   T: Respondable,
 {
-  fn respond(self) -> Response<Body> {
+  fn respond(self) -> Response {
     let (status, body) = self;
     let mut res = body.respond();
 
@@ -111,7 +111,7 @@ macro_rules! impl_respondable_for_int {
     ($($t:ty)*) => {
         $(
           impl Respondable for $t {
-            fn respond(self) -> Response<Body> {
+            fn respond(self) -> Response {
               let body = Body::from(self);
 
               let mut res = Response::new(body);

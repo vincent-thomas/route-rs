@@ -3,6 +3,11 @@ use std::task::{Context, Poll};
 use futures_util::future::BoxFuture;
 use titan_core::{Service, ServiceExt};
 
+// Required for titan-derive
+pub use lazy_static::lazy_static;
+
+pub use futures_util::FutureExt;
+
 pub trait CloneService<R>: Service<R> {
   fn clone_box(
     &self,

@@ -19,6 +19,16 @@ struct Queries {
   test: Option<i32>,
 }
 
+use titan_derive::ssg;
+
+#[titan::ssg]
+pub fn testing() -> titan_html::tags::html::Html {
+  titan::html::tags::html::Html::from((
+    titan::html::tags::head::Head::default(),
+    titan::html::tags::Body::default(),
+  ))
+}
+
 async fn index(
   Cookies(cookies): Cookies,
   authorization::Bearer(token): authorization::Bearer,

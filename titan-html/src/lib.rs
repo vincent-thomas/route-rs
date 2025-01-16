@@ -31,7 +31,5 @@ pub fn render(root: Html) -> String {
   if let Some(nonce) = root.with_csp_nonce {
     html.apply_nonce(&nonce);
   }
-  dbg!(&html);
-
-  dbg!(format!("{}{}", DOCTYPE, html.to_string()))
+  format!("{}{}", DOCTYPE, html.to_string())
 }

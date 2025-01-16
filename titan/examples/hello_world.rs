@@ -27,7 +27,9 @@ const TESTING: &[StyleRule] = css!(
 "
 );
 
-async fn index() -> impl Respondable {
+#[ssg]
+fn index() -> impl Respondable {
+  println!("ran");
   Html::from((
     Head::default().global_style(global_css!("")).reset_css(),
     Body::default().children([
@@ -52,11 +54,20 @@ async fn index() -> impl Respondable {
   .with_csp("examplenonce")
 }
 
+use titan_derive::ssg;
+
+#[ssg]
+pub fn testing() -> titan_html::tags::html::Html {
+  println!("ran");
+  Html::from((Head::default(), Body::default()))
+}
+
 #[tokio::main]
 async fn main() -> io::Result<()> {
   let listener = TcpListener::bind("0.0.0.0:4000").await.unwrap();
 
-  let app = App::default().at("/", web::get(index));
+  let app =
+    App::default().at("/", web::get(index)).at("/test", web::get(testing));
 
   titan::serve(listener, app).await
 }

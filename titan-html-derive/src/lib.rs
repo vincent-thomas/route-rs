@@ -2,8 +2,10 @@ use lightningcss::{printer::PrinterOptions, properties::Property};
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{parse_macro_input, Field, Fields, ItemStruct, LitStr};
-use titan_utils::validatecss::{self, CSSValidationError};
+use syn::{parse_macro_input, Field, Fields, Ident, ItemStruct, LitStr};
+use titan_utils::validatecss::{
+  validate_css, validate_globalcss, CSSValidationError,
+};
 
 fn from_stylerules_to_tokenstream(
   prop: Vec<(String, Property<'_>)>,
@@ -29,6 +31,30 @@ fn from_stylerules_to_tokenstream(
       #(#styles_tokens),*
   }
 }
+//
+//// Helper function to find and extract variables from CSS values
+//fn extract_variables(css: &str) -> Vec<(usize, usize, String)> {
+//  let mut variables = Vec::new();
+//  let mut start = 0;
+//  while let Some(var_start) = css[start..].find("{") {
+//    if let Some(var_end) = css[start + var_start..].find('}') {
+//      let abs_start = start + var_start;
+//      let abs_end = start + var_start + var_end + 1;
+//      let var_name = css[abs_start + 1..abs_end - 1].to_string();
+//      variables.push((abs_start, abs_end, var_name));
+//      start = abs_end;
+//    } else {
+//      break;
+//    }
+//  }
+//  variables
+//}
+//
+//#[derive(Debug)]
+//enum StringBit {
+//  Var(Ident),
+//  Text(String),
+//}
 
 #[proc_macro]
 pub fn global_css(input: TokenStream) -> TokenStream {
@@ -37,7 +63,7 @@ pub fn global_css(input: TokenStream) -> TokenStream {
   let input = parse_macro_input!(input as LitStr);
   let result = input.value();
 
-  let err = validatecss::validate_globalcss(&result);
+  let err = validate_globalcss(&result);
 
   quote! { titan::html::tags::Style::Text(#err.to_string()) }.into()
 }
@@ -49,7 +75,7 @@ pub fn css(input: TokenStream) -> TokenStream {
   let input = parse_macro_input!(input as LitStr);
   let result = input.value();
 
-  if let Err(err) = validatecss::validate_css(&result) {
+  if let Err(err) = validate_css(&result) {
     match err {
       CSSValidationError::FieldError(field) => {
         let span = input.span();

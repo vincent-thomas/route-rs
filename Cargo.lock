@@ -1570,11 +1570,13 @@ version = "0.4.0"
 dependencies = [
  "futures-util",
  "lambda_http",
+ "lazy_static",
  "pin-project-lite",
  "serde",
  "serde_json",
  "serde_urlencoded",
  "titan-core",
+ "titan-derive",
  "titan-html",
  "titan-http",
  "titan-router",
@@ -1592,6 +1594,15 @@ dependencies = [
  "titan-html",
  "titan-http",
  "tower 0.5.2",
+]
+
+[[package]]
+name = "titan-derive"
+version = "0.4.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.95",
 ]
 
 [[package]]

@@ -11,7 +11,7 @@ members = [
   "titan-html-core",
   "titan-html-derive",
   "titan-lambda"
-]
+, "titan-derive"]
 
 [workspace.package]
 authors = ["Vincent Thomas"]

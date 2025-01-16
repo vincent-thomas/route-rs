@@ -4,6 +4,10 @@ pub mod prelude;
 pub mod route;
 mod utils;
 
+// For titan-derive
+pub use utils::lazy_static;
+pub use utils::FutureExt;
+
 #[doc(hidden)]
 #[cfg(feature = "internal-titan-lambda")]
 pub mod lambda;
