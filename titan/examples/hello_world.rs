@@ -6,7 +6,6 @@ use titan::{
   web, Respondable,
 };
 use titan_html::{css, global_css, StyleRule};
-use tokio::net::TcpListener;
 
 const LINK_CSS: &[StyleRule] = css!(
   "
@@ -27,9 +26,7 @@ const TESTING: &[StyleRule] = css!(
 "
 );
 
-#[ssg]
-fn index() -> impl Respondable {
-  println!("ran");
+async fn index() -> impl Respondable {
   Html::from((
     Head::default().global_style(global_css!("")).reset_css(),
     Body::default().children([
@@ -54,23 +51,18 @@ fn index() -> impl Respondable {
   .with_csp("examplenonce")
 }
 
-use titan_derive::ssg;
-
-#[ssg]
-pub fn testing() -> titan_html::tags::html::Html {
+pub async fn testing() -> titan_html::tags::html::Html {
   println!("ran");
   Html::from((Head::default(), Body::default()))
 }
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-  let listener = TcpListener::bind("0.0.0.0:4000").await.unwrap();
+  let app = App::default()
+    .at("/", web::get(index))
+    .at("/test/testing", web::get(testing));
 
-  let app =
-    App::default().at("/", web::get(index)).at("/test", web::get(testing));
+  titan::build_static(app, std::path::PathBuf::from("./dist")).await;
 
-  titan::build::build_static(app, std::path::PathBuf::from("./dist")).await;
   Ok(())
-
-  //titan::serve(listener, app).await
 }

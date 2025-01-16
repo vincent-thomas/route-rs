@@ -1,9 +1,11 @@
 mod app;
-pub mod build;
+mod build;
+pub use build::build_static;
 pub mod guard;
 pub mod prelude;
 pub mod route;
 mod utils;
+pub use titan_derive::ssg;
 
 // For titan-derive
 pub use utils::lazy_static;
