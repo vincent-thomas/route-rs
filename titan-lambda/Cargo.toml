@@ -15,9 +15,9 @@ rust-version.workspace = true
 lambda_http = "0.14.0"
 futures-util = "0.3.31"
 
-titan-http = { path = "../titan-http", version = "0.4.1" }
-titan-core = { path = "../titan-core", version = "0.4.1", features = ["deploy-lambda"] }
-titan = { path = "../titan", version = "0.4.1", features = ["internal-titan-lambda"] }
+titan-http = { path = "../titan-http", version = "0.4.2" }
+titan-core = { path = "../titan-core", version = "0.4.2", features = ["deploy-lambda"] }
+titan = { path = "../titan", version = "0.4.2", features = ["internal-titan-lambda"] }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros"] }

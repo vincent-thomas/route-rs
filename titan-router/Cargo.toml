@@ -19,4 +19,4 @@ harness = false
 criterion.workspace = true
 
 [dependencies]
-titan-router-derive = { path = "../titan-router-derive", version = "0.4.1" }
+titan-router-derive = { path = "../titan-router-derive", version = "0.4.2" }
