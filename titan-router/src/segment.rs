@@ -3,6 +3,7 @@ pub(crate) enum Segment {
   Slash,
   Exact(String),
   Param(String),
+  Rest,
 }
 
 impl std::fmt::Display for Segment {
@@ -11,6 +12,7 @@ impl std::fmt::Display for Segment {
       Segment::Slash => f.write_str("/"),
       Segment::Exact(string) => f.write_str(string),
       Segment::Param(param) => f.write_str(format!(":{}", param).as_str()),
+      Segment::Rest => f.write_str("**"),
     }
   }
 }
@@ -23,6 +25,7 @@ pub(crate) trait CompareSegment {
 pub(crate) enum CompareSegmentOut {
   NoMatch,
   Match(Option<(String, String)>),
+  MatchRestPartValue(String),
 }
 
 impl CompareSegment for Segment {
@@ -48,6 +51,15 @@ impl CompareSegment for Segment {
           param_name.clone(),
           param_value.clone(),
         ))),
+        _ => CompareSegmentOut::NoMatch,
+      },
+      Segment::Rest => match from_request {
+        Segment::Exact(value) => {
+          CompareSegmentOut::MatchRestPartValue(value.clone())
+        }
+        Segment::Slash => {
+          CompareSegmentOut::MatchRestPartValue("/".to_string())
+        }
         _ => CompareSegmentOut::NoMatch,
       },
     }

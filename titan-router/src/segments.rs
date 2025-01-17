@@ -27,66 +27,80 @@ impl Segments {
       if let Segment::Param(_) = item {
         count += 1;
       }
+
+      if let Segment::Rest = item {
+        count += 1;
+      }
     }
     count
   }
   pub(crate) fn find(&self, _extern: &[Segment]) -> FindSegmentResult {
-    if self.0.len() != _extern.len() {
-      return FindSegmentResult::NoMatch;
-    }
-    let mut ctx = FindSegmentResult::NoMatch;
+    let mut iter = self.0.iter().enumerate();
 
-    for (contract, request) in self.0.iter().zip(_extern) {
+    fn compare_segment(
+      contract: &Segment,
+      request: &Segment,
+      ctx: &mut FindSegmentResult,
+    ) {
       match CompareSegment::eq(contract, request) {
-        CompareSegmentOut::NoMatch => return FindSegmentResult::NoMatch,
+        CompareSegmentOut::NoMatch => *ctx = FindSegmentResult::NoMatch,
         CompareSegmentOut::Match(None) => {
-          if FindSegmentResult::NoMatch == ctx {
-            ctx = FindSegmentResult::Match(HashMap::default());
+          if FindSegmentResult::NoMatch == *ctx {
+            *ctx = FindSegmentResult::Match(HashMap::default());
           }
         }
         CompareSegmentOut::Match(Some(value)) => match ctx {
           FindSegmentResult::NoMatch => {
-            ctx = FindSegmentResult::Match(HashMap::from_iter([value]));
+            *ctx = FindSegmentResult::Match(HashMap::from_iter([value]));
           }
           FindSegmentResult::Match(ref mut value1) => {
             value1.insert(value.0, value.1);
           }
         },
+        CompareSegmentOut::MatchRestPartValue(rest_value) => {
+          if FindSegmentResult::NoMatch == *ctx {
+            *ctx = FindSegmentResult::Match(HashMap::default());
+          }
+
+          match ctx {
+            FindSegmentResult::Match(hashmap) => {
+              if let Some(thing) = hashmap.get_mut("_") {
+                thing.push_str(&rest_value)
+              } else {
+                hashmap.insert("_".to_string(), rest_value);
+              }
+            }
+            _ => unreachable!(),
+          }
+        }
       }
     }
+
+    let mut ctx = FindSegmentResult::NoMatch;
+
+    while let Some((index, contract)) = iter.next() {
+      if *contract == Segment::Rest {
+        let mut iter = _extern.iter().skip(index);
+        while let Some(request) = iter.next() {
+          compare_segment(contract, request, &mut ctx);
+        }
+        break;
+      }
+
+      let request = match _extern.get(index) {
+        Some(v) => v,
+        None => break,
+      };
+
+      compare_segment(contract, request, &mut ctx);
+    }
+
     ctx
   }
 }
 
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn test_test() {
-    let registered = Segments(Vec::from_iter([
-      Segment::Slash,
-      Segment::Param("test".to_string()),
-    ]));
-
-    let req =
-      Vec::from_iter([Segment::Slash, Segment::Exact("test".to_string())]);
-
-    let result = registered.find(&req);
-
-    let FindSegmentResult::Match(testing) = result else {
-      panic!();
-    };
-
-    let hash: HashMap<String, String> =
-      HashMap::from_iter([("test".to_string(), "test".to_string())]);
-
-    assert_eq!(testing, hash);
-  }
-}
-
-impl From<&'static str> for Segments {
-  fn from(value: &'static str) -> Self {
+impl From<&'_ str> for Segments {
+  fn from(value: &'_ str) -> Self {
     Segments::from(value.to_string())
   }
 }
@@ -109,15 +123,27 @@ impl From<String> for Segments {
         continue;
       }
 
+      if this_byte == '*' {
+        if iter.peek().is_some_and(|v| *v != '*') || iter.peek().is_none() {
+          panic!("False syntax, '**' signalises catch all");
+        }
+
+        iter.next().unwrap();
+
+        vec.push(Segment::Rest);
+
+        if iter.next() != None {
+          panic!("False router syntax: ** must at the very end of the path");
+        }
+
+        break;
+      }
+
       if this_byte == ':' {
         let mut var_name = String::new();
         loop {
-          if iter.peek().is_some_and(|v| *v == '/') {
+          if iter.peek().is_some_and(|v| *v == '/') || iter.peek().is_none() {
             // End of dynamic string
-            break;
-          }
-
-          if iter.peek().is_none() {
             break;
           }
 
@@ -151,14 +177,22 @@ mod tests_segment_parsing {
   use super::*;
   #[test]
   fn test_static() {
-    let test = "/test";
+    let test = "/test/**";
 
-    let result = Segments::from(test);
+    let contract = Segments::from(test);
 
-    let expected_result =
-      Vec::from_iter([Segment::Slash, Segment::Exact("test".to_string())]);
+    let request = Segments::from("/test/very/nice/indeed");
 
-    assert_eq!(result.0, expected_result);
+    let result = contract.find(&request.0);
+
+    if let FindSegmentResult::Match(result) = result {
+      assert_eq!(
+        result,
+        HashMap::from_iter([("_".to_string(), "very/nice/indeed".to_string())])
+      );
+    } else {
+      panic!("aaaww");
+    }
   }
 
   #[test]
@@ -175,5 +209,32 @@ mod tests_segment_parsing {
     ]);
 
     assert_eq!(result.0, expected_result);
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_test() {
+    let registered = Segments(Vec::from_iter([
+      Segment::Slash,
+      Segment::Param("test".to_string()),
+    ]));
+
+    let req =
+      Vec::from_iter([Segment::Slash, Segment::Exact("test".to_string())]);
+
+    let result = registered.find(&req);
+
+    let FindSegmentResult::Match(testing) = result else {
+      panic!();
+    };
+
+    let hash: HashMap<String, String> =
+      HashMap::from_iter([("test".to_string(), "test".to_string())]);
+
+    assert_eq!(testing, hash);
   }
 }
