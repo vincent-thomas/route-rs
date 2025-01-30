@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 mod router;
 pub mod segment;
 mod segments;

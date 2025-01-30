@@ -6,34 +6,26 @@ use std::{
 };
 
 use futures_util::FutureExt as _;
-use lambda_http::lambda_runtime::Diagnostic;
-use titan_core::{FromRequest, Handler, Respondable, Service};
+use lambda_http::{
+  lambda_runtime::Diagnostic, Body as LambdaBody, Request as LambdaRequest,
+};
 
-use lambda_http::{Body as LambdaBody, Request as LambdaRequest};
-use titan_http::{Request, Response};
+use titan_core::{FromRequest, Handler, Respondable, Service};
+use titan_http::{
+  body::Body as TitanBody, Request as TitanRequest, Response as TitanResponse,
+};
 
 pub struct LambdaHandlerService<H, Args> {
   f: H,
   _args: PhantomData<Args>,
 }
 
-impl<F, Args> LambdaHandlerService<F, Args>
+impl<H, Args> From<H> for LambdaHandlerService<H, Args>
 where
-  F: Handler<Args>,
-  F::Output: Respondable,
-  F::Future: Send + 'static,
+  H: Handler<Args>,
 {
-  pub(crate) fn new(f: F) -> Self {
-    Self { f, _args: PhantomData }
-  }
-
-  pub async fn run(self) -> Result<(), lambda_http::Error>
-  where
-    Args: FromRequest,
-    F::Output: Respondable,
-    F::Future: Send,
-  {
-    lambda_http::run(self).await
+  fn from(value: H) -> Self {
+    Self { f: value, _args: PhantomData }
   }
 }
 
@@ -56,7 +48,7 @@ where
   H::Future: Future<Output = H::Output> + Send + 'static,
   H::Output: Respondable,
 {
-  type Response = Response<lambda_http::Body>;
+  type Response = TitanResponse<lambda_http::Body>;
   type Error = LambdaError;
 
   type Future =
@@ -79,7 +71,7 @@ where
     }
     .into_boxed_slice();
 
-    let req = Request::from_parts(parts, body);
+    let req = TitanRequest::from_parts(parts, body);
 
     let args = match Args::from_request(req) {
       Ok(value) => value,
@@ -90,12 +82,10 @@ where
 
       let (parts, body) = body.into_parts();
       let new_body = match body {
-        titan_http::body::Body::Full(full) => {
-          lambda_http::Body::Binary(full.to_vec())
-        }
-        titan_http::body::Body::Stream(_) => panic!("bnono"),
+        TitanBody::Full(full) => lambda_http::Body::Binary(full.to_vec()),
+        TitanBody::Stream(_) => panic!("bnono"),
       };
-      let res = titan_http::Response::from_parts(parts, new_body);
+      let res = TitanResponse::from_parts(parts, new_body);
       Ok(res)
     });
     Box::pin(fut)

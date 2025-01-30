@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 use std::{error::Error, future::Future, pin::Pin};
 
 #[cfg(feature = "internal-cssvalidate")]

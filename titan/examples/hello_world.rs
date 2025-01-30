@@ -62,7 +62,7 @@ async fn main() -> io::Result<()> {
     .at("/", web::get(index))
     .at("/test/testing", web::get(testing));
 
-  titan::build_static(app, std::path::PathBuf::from("./dist")).await;
+  //titan::build_static(app, std::path::PathBuf::from("./dist")).await;
 
   Ok(())
 }

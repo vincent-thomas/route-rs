@@ -1659,7 +1659,6 @@ version = "0.4.2"
 dependencies = [
  "futures-util",
  "lambda_http",
- "titan",
  "titan-core",
  "titan-http",
  "tokio",

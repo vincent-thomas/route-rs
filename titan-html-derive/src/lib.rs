@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 use lightningcss::{printer::PrinterOptions, properties::Property};
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;

@@ -106,26 +106,30 @@ impl Service<Request> for App {
   }
 
   fn call(&mut self, mut req: Request) -> Self::Future {
-    let uri = req.uri().clone();
-    match self.inner.router.lookup(uri.path()) {
-      Some(endpoint) => {
-        let params: HashMap<String, Value> =
-          HashMap::from_iter(endpoint.params.iter().map(|(key, value)| {
-            (key.to_string(), Value::from(value.to_string()))
-          }));
-        let mut extensions = titan_http::Extensions::new();
-        extensions.insert(params);
+    let mut service = call_app(self, &mut req);
+    Box::pin(AppFuture { fut: service.call(req) })
+  }
+}
 
-        *req.extensions_mut() = extensions;
+pub(crate) fn call_app(
+  app: &mut App,
+  req: &mut Request,
+) -> BoxCloneService<Request, Response<Body>, Response<Body>> {
+  let uri = req.uri().clone();
+  match app.inner.router.lookup(uri.path()) {
+    Some(endpoint) => {
+      let params: HashMap<String, Value> =
+        HashMap::from_iter(endpoint.params.iter().map(|(key, value)| {
+          (key.to_string(), Value::from(value.to_string()))
+        }));
+      let mut extensions = titan_http::Extensions::new();
+      extensions.insert(params);
 
-        let mut service = endpoint.value.clone();
-        Box::pin(AppFuture { fut: service.call(req) })
-      }
-      None => {
-        let mut fallback = self.inner.fallback.clone();
-        Box::pin(AppFuture { fut: fallback.call(req) })
-      }
+      *req.extensions_mut() = extensions;
+
+      endpoint.value.clone()
     }
+    None => app.inner.fallback.clone(),
   }
 }
 

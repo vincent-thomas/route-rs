@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 mod stylerule;
 use std::hash::{DefaultHasher, Hasher};
 

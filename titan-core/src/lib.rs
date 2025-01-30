@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #[macro_use]
 pub(crate) mod macros;
 

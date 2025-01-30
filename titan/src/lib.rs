@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 mod app;
 mod build;
 pub use build::build_static;
@@ -12,7 +14,6 @@ pub use utils::lazy_static;
 pub use utils::FutureExt;
 
 #[doc(hidden)]
-#[cfg(feature = "internal-titan-lambda")]
 pub mod lambda;
 pub use app::*;
 pub mod endpoint;
