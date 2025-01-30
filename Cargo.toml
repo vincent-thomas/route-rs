@@ -2,16 +2,12 @@
 resolver = "2"
 members = [
   "titan",
-  "titan-core",
-  "titan-http", 
   "titan-utils",
-  "titan-server",
   "titan-router",
   "titan-html",
   "titan-html-core",
   "titan-html-derive",
-  "titan-lambda"
-, "titan-derive"]
+  "titan-derive", "examples/lambda-runtime"]
 
 [workspace.package]
 authors = ["Vincent Thomas"]

@@ -1,7 +1,10 @@
-use std::{future::Future, marker::PhantomData, pin::Pin, task::Poll};
+use tower::Service;
 
-use titan_core::{FromRequest, Handler, Respondable};
-use titan_http::{Request, Response};
+use crate::{
+  handler::Handler,
+  http::{FromRequest, Request, Respondable, Response},
+};
+use std::{future::Future, marker::PhantomData, pin::Pin, task::Poll};
 
 pub struct Route<T, Args>
 where
@@ -32,7 +35,7 @@ where
   }
 }
 
-impl<T, Args> titan_core::Service<Request> for Route<T, Args>
+impl<T, Args> Service<Request> for Route<T, Args>
 where
   T: Handler<Args> + Sync + Clone + 'static,
   T::Future: Future<Output = T::Output> + Send + 'static,

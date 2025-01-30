@@ -22,19 +22,6 @@ macro_rules! factory_tuple ({ $($param:ident)* } => {
         }
     }
 });
-//impl<Func, Fut> Handler<((),)> for Func
-//where
-//  Func: Fn() -> Fut + Send + 'static,
-//  Fut: Future + Send,
-//{
-//  type Future = Fut;
-//  type Output = Fut::Output;
-//
-//  fn call(&self, req: ()) -> Self::Future {
-//    let _ = req;
-//    self()
-//  }
-//}
 
 factory_tuple! {}
 factory_tuple! { A }

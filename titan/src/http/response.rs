@@ -1,6 +1,12 @@
 use std::convert::Infallible;
 
-use titan_http::{body::Body, header, Response, ResponseBuilder, StatusCode};
+use crate::http::{body::Body, header, StatusCode};
+
+pub use http::response::Builder;
+pub use http::response::Parts;
+
+/// The Response type for 'titan'
+pub type Response = http::Response<Body>;
 
 /// A trait for types that can be converted into an HTTP response.
 ///
@@ -66,13 +72,13 @@ impl Respondable for Response {
 
 impl Respondable for Infallible {
   fn respond(self) -> Response {
-    panic!("Not fallible :(")
+    unreachable!("titan error: Reached infallible")
   }
 }
 
 impl Respondable for () {
   fn respond(self) -> Response {
-    ResponseBuilder::new().status(204).body(Body::from(())).unwrap()
+    http::response::Builder::new().status(200).body(Body::from(())).unwrap()
   }
 }
 
@@ -90,8 +96,8 @@ where
 }
 
 impl Respondable for titan_html::tags::html::Html {
-  fn respond(self) -> Response<Body> {
-    let response = ResponseBuilder::new().status(200);
+  fn respond(self) -> Response {
+    let response = Builder::new().status(200);
 
     let mut head_response = response.header(header::CONTENT_TYPE, "text/html");
 

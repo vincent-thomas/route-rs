@@ -3,7 +3,8 @@ use titan::App;
 
 use titan::{
   html::tags::{head::Head, html::Html, *},
-  web, Respondable,
+  http::Respondable,
+  web,
 };
 use titan_html::{css, global_css, StyleRule};
 

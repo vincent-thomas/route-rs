@@ -1,10 +1,12 @@
 use std::{collections::HashMap, future::Future, pin::Pin, task::Poll};
 
+use crate::handler::Handler;
+use crate::http::{Body, FromRequest, Method, Request, Respondable, Response};
 use crate::utils::*;
+use http::StatusCode;
 use pin_project_lite::pin_project;
-use titan_core::{FromRequest, Handler, Respondable, Service};
-use titan_http::{body::Body, Method, Request, Response, StatusCode};
 use titan_utils::BoxedSendFuture;
+use tower::Service;
 
 /// Represents a web path with a specific HTTP method.
 ///
@@ -93,7 +95,7 @@ macro_rules! impl_methodrouter {
                   Args::Error: Send
                 {
                     let route = $crate::route::Route::new(route);
-                    self.methods.insert(titan_http::Method::$method, BoxCloneService::new(route));
+                    self.methods.insert(Method::$method, BoxCloneService::new(route));
                     self
                 }
             )*

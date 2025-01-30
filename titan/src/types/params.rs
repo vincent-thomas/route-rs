@@ -1,9 +1,13 @@
 use std::collections::HashMap;
 
+use crate::http::{
+  request::FromRequestParts,
+  request::Parts,
+  response::{Builder, Respondable},
+  Body, Response,
+};
 use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::Value;
-use titan_core::{FromRequestParts, Respondable};
-use titan_http::{body::Body, Parts, Response};
 
 #[derive(Deserialize)]
 pub struct Params<T = HashMap<String, Value>>(pub T);
@@ -21,7 +25,7 @@ impl Respondable for ParamParseError {
         Body::from(format!("Param Parsing Error: {err}"))
       }
     };
-    Response::builder().status(400).body(body).unwrap()
+    Builder::default().status(400).body(body).unwrap()
   }
 }
 

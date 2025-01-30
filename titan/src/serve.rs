@@ -1,19 +1,18 @@
 use std::future::{poll_fn, IntoFuture};
 
-use futures_util::StreamExt as _;
-use titan_core::{Respondable, Service};
-
-use titan_http::{
-  body::Body,
+use crate::http::{
   header::{HeaderValue, CONTENT_LENGTH},
-  HttpRequestExt, HttpResponseExt, Request,
+  request_parser::HttpRequestExt,
+  response_parser::HttpResponseExt,
+  Body, Request, Respondable,
 };
+use futures_util::StreamExt as _;
+
 use tokio::{
-  io::{self, AsyncWriteExt as _, BufReader},
+  io::{self, AsyncWriteExt, BufReader},
   net::{TcpListener, TcpStream},
 };
-
-use crate::utils::{self};
+use tower::Service;
 
 /// Starts a server that listens on the provided `TcpListener` and handles requests using the given `service`.
 ///
@@ -83,10 +82,10 @@ use crate::utils::{self};
 /// - [`TcpListener`]: For details on how to set up a TCP listener.
 /// - [`Service`]: For implementing request handling logic.
 /// - [`Respondable`]: For implementing custom response and error types.
-pub fn serve<S>(listener: TcpListener, service: S) -> Serve<S>
+pub fn serve<'a, S>(listener: TcpListener, service: S) -> Serve<S>
 where
-  S: titan_core::Service<Request> + Send + Clone + 'static,
-  S::Future: Send,
+  S: Service<Request> + Send + Clone + 'static,
+  S::Future: Send + 'a,
   S::Response: Respondable,
   S::Error: Respondable,
 {
@@ -164,23 +163,10 @@ where
         let nice_service = service.clone();
         let mut nice_service = std::mem::replace(&mut service, nice_service);
         tokio::spawn(async move {
-          #[allow(unused_mut)]
-          let mut response = match nice_service.call(req).await {
+          let response = match nice_service.call(req).await {
             Ok(result) => result.respond(),
             Err(result) => result.respond(),
           };
-
-          #[cfg(feature = "date-header")]
-          {
-            use titan_http::header::HeaderName;
-            response.headers_mut().extend([(
-              HeaderName::from_static("date"),
-              HeaderValue::from_str(&chrono::Utc::now()
-                .format("%a, %d %b %Y %H:%M:%S GMT")
-                .to_string()())
-              .unwrap(),
-            )]);
-          }
 
           let (parts, body) = HttpResponseExt(response).parse_parts();
 
@@ -188,9 +174,7 @@ where
           tcp_stream.write_all(b"\r\n").await.unwrap();
 
           match body {
-            Body::Full(body) => {
-              tcp_stream.write_all(&body).await.unwrap();
-            }
+            Body::Full(body) => tcp_stream.write_all(&body).await.unwrap(),
             Body::Stream(stream) => {
               futures_util::pin_mut!(stream);
 
@@ -235,5 +219,45 @@ mod private {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
       f.debug_struct("ServeFuture").finish_non_exhaustive()
     }
+  }
+}
+
+mod utils {
+  use crate::http::Request;
+  use tokio::{
+    io::{AsyncBufReadExt as _, AsyncReadExt as _, BufReader},
+    net::TcpStream,
+  };
+
+  pub(crate) async fn read_request(
+    reader: &mut BufReader<&mut TcpStream>,
+  ) -> Vec<String> {
+    let mut request_lines = Vec::new();
+    loop {
+      let mut line = String::new();
+      if let Ok(0) = reader.read_line(&mut line).await {
+        // End of buffer if 0 bytes left.
+        break;
+      }
+      if line.trim().is_empty() {
+        break;
+      }
+      request_lines.push(line.trim().to_string());
+    }
+    request_lines
+  }
+
+  pub(crate) async fn fill_req_body(
+    mut req: Request,
+    body_length: usize,
+    mut reader: BufReader<&mut TcpStream>,
+  ) -> Request {
+    if body_length == 0 {
+      return req;
+    };
+    let mut body = vec![0u8; body_length];
+    reader.read_exact(&mut body).await.unwrap();
+    *req.body_mut() = body.into();
+    req
   }
 }

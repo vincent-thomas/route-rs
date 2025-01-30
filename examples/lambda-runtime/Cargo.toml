@@ -1,19 +1,15 @@
 [package]
-name = "titan-http"
-description = "Base http structs for titan"
+name = "lambda-runtime"
 authors.workspace = true
 categories.workspace = true
+keywords.workspace = true
 license.workspace = true
 edition.workspace = true
 version.workspace = true
-keywords.workspace = true
 repository.workspace = true
 documentation.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-bytes = "1.9.0"
-futures-core = "0.3.31"
-http = "1.1.0"
-http-body = "1.0.1"
-mime = "0.3.17"
+titan = { path = "../../titan", features = ["lambda"] }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }

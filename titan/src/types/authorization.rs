@@ -1,5 +1,6 @@
-use titan_core::{FromRequestParts, Respondable};
-use titan_http::{Parts, StatusCode};
+use crate::http::{
+  request::Parts, FromRequestParts, Respondable, Response, StatusCode,
+};
 
 pub enum AuthorizationError {
   Invalid,
@@ -7,7 +8,7 @@ pub enum AuthorizationError {
 }
 
 impl Respondable for AuthorizationError {
-  fn respond(self) -> titan_http::Response<titan_http::body::Body> {
+  fn respond(self) -> Response {
     match self {
       AuthorizationError::Invalid => {
         (StatusCode::BAD_REQUEST, "Invalid Authorization format").respond()

@@ -5,7 +5,11 @@ use std::{
 use futures_util::FutureExt as _;
 use lambda_http::{Request, Response};
 use serde_json::Value;
-use titan_core::Service;
+use tower::Service;
+
+use crate::{always_ready, macros};
+
+use crate::http::{Body, Extensions};
 
 use crate::AppFuture;
 
@@ -13,32 +17,25 @@ use super::App;
 #[derive(Debug)]
 pub struct LambdaError;
 
-//impl From<LambdaError> for Diagnostic {
-//  fn from(_: LambdaError) -> Diagnostic {
-//    Diagnostic {
-//      error_type: "strange".into(),
-//      error_message: "this shouldn't happen".into(),
-//    }
-//  }
-//}
-
-pub struct LambdaAppService {
-  app: App,
+pub struct LambdaService<S> {
+  service: S,
 }
 
-impl LambdaAppService {
-  pub fn new(app: App) -> Self {
-    LambdaAppService { app }
-  }
-
-  pub async fn run(self) -> Result<(), lambda_http::Error> {
-    lambda_http::run(self.app).await
-  }
+pub async fn run<'a, S>(service: S) -> Result<(), lambda_http::Error>
+where
+  S: Service<
+    Request,
+    Error = Infallible,
+    Response = Response<lambda_http::Body>,
+  >,
+  S::Future: Future<Output = Result<S::Response, S::Error>> + Send + 'a,
+{
+  lambda_http::run(service).await
 }
 
 pub fn from_lambda_request_titan(
   req: lambda_http::http::Request<lambda_http::Body>,
-) -> titan_http::Request {
+) -> crate::http::Request {
   let (parts, body) = req.into_parts();
 
   let new_body = match body {
@@ -48,18 +45,18 @@ pub fn from_lambda_request_titan(
   };
 
   let body = new_body.into_boxed_slice();
-  let req = titan_http::Request::from_parts(parts, body);
+  let req = crate::http::Request::from_parts(parts, body);
   req
 }
 
 pub fn from_titan_response_lambda(
-  req: titan_http::Response,
+  req: crate::http::Response,
 ) -> lambda_http::Response<lambda_http::Body> {
   let (parts, body) = req.into_parts();
 
   let new_body = lambda_http::Body::Binary(match body {
-    titan_http::body::Body::Full(vec) => vec.to_vec(),
-    titan_http::body::Body::Stream(_) => {
+    Body::Full(vec) => vec.to_vec(),
+    Body::Stream(_) => {
       unimplemented!("stream not supported in lambda")
     }
   });
@@ -72,12 +69,7 @@ impl Service<Request> for App {
   type Future =
     Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
 
-  fn poll_ready(
-    &mut self,
-    _cx: &mut std::task::Context<'_>,
-  ) -> std::task::Poll<Result<(), Self::Error>> {
-    std::task::Poll::Ready(Ok(()))
-  }
+  always_ready!();
 
   fn call(&mut self, req: Request) -> Self::Future {
     let uri = req.uri().clone();
@@ -90,7 +82,7 @@ impl Service<Request> for App {
           HashMap::from_iter(endpoint.params.iter().map(|(key, value)| {
             (key.to_string(), Value::from(value.to_string()))
           }));
-        let mut extensions = titan_http::Extensions::new();
+        let mut extensions = Extensions::new();
         extensions.insert(params);
 
         *req.extensions_mut() = extensions;

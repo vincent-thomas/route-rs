@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use titan_core::FromRequestParts;
-use titan_http::{header::HeaderValue, Parts};
+use crate::http::{header::HeaderValue, request::Parts, FromRequestParts};
 
 pub struct Cookies(pub HashMap<String, String>);
 

@@ -1,9 +1,10 @@
 use serde::{de::DeserializeOwned, Serialize};
-use titan_core::Respondable;
-use titan_http::{body::Body, Request, Response};
+
+use crate::http::{
+  header, mime, Body, FromRequest, Request, Respondable, Response,
+};
 
 use super::BodyParsingError;
-use crate::FromRequest;
 
 #[derive(Clone)]
 pub struct UrlEncoded<T>(pub T);
@@ -49,14 +50,11 @@ where
     let headers = res.headers_mut();
 
     headers.insert(
-      titan_http::header::CONTENT_TYPE,
-      titan_http::mime::APPLICATION_WWW_FORM_URLENCODED
-        .to_string()
-        .parse()
-        .unwrap(),
+      header::CONTENT_TYPE,
+      mime::APPLICATION_WWW_FORM_URLENCODED.to_string().parse().unwrap(),
     );
 
-    headers.insert(titan_http::header::CONTENT_LENGTH, body_len.into());
+    headers.insert(header::CONTENT_LENGTH, body_len.into());
     res
   }
 }

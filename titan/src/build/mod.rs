@@ -1,13 +1,12 @@
 use futures_util::StreamExt;
+use http::header;
 use std::path::PathBuf;
-use titan_core::Service;
-
-use titan_http::body::Body;
-use titan_http::header;
-use titan_http::Request;
+use tower::Service;
 
 use std::fs;
 use std::io::Write;
+
+use crate::http::{Body, Request};
 pub async fn build_static(app: crate::App, path: PathBuf) {
   let inner_app = app.into_inner();
 

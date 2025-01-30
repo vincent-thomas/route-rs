@@ -1,4 +1,10 @@
-use crate::utils::BoxCloneService;
+use crate::handler::Handler;
+use crate::{
+  http::{FromRequest, Method, Respondable},
+  utils::BoxCloneService,
+};
+
+use std::future::Future;
 
 #[cfg(feature = "types")]
 pub use crate::types::*;
@@ -8,17 +14,17 @@ macro_rules! impl_method {
             $(
     pub fn $method_name<H, Args>(handler: H) -> $crate::endpoint::Endpoint
     where
-      H: titan_core::Handler<Args> + Sync + Clone,
-      H::Future: std::future::Future<Output = H::Output> + Send,
-      H::Output: titan_core::Respondable,
-      Args: titan_core::FromRequest + Send + Sync + 'static,
+      H: Handler<Args> + Sync + Clone,
+      H::Future: Future<Output = H::Output> + Send,
+      H::Output: Respondable,
+      Args: FromRequest + Send + Sync + 'static,
       Args::Error: Send
 
     {
       let mut methods = std::collections::HashMap::default();
       let route = $crate::route::Route::new(handler);
 
-      methods.insert(titan_http::Method::$method, BoxCloneService::new(route));
+      methods.insert(Method::$method, BoxCloneService::new(route));
       $crate::endpoint::Endpoint { methods }
     }
             )*
@@ -27,21 +33,20 @@ macro_rules! impl_method {
 
 pub fn any<H, Args>(handler: H) -> crate::endpoint::Endpoint
 where
-  H: titan_core::Handler<Args> + Sync + Clone,
-  H::Future: std::future::Future<Output = H::Output> + Send,
-  H::Output: titan_core::Respondable,
-  Args: titan_core::FromRequest + Send + Sync + 'static,
+  H: Handler<Args> + Sync + Clone,
+  H::Future: Future<Output = H::Output> + Send,
+  H::Output: Respondable,
+  Args: FromRequest + Send + Sync + 'static,
   Args::Error: Send,
 {
   let mut methods = std::collections::HashMap::default();
   let route = crate::route::Route::new(handler);
 
-  methods.insert(titan_http::Method::GET, BoxCloneService::new(route.clone()));
-  methods.insert(titan_http::Method::POST, BoxCloneService::new(route.clone()));
-  methods.insert(titan_http::Method::PUT, BoxCloneService::new(route.clone()));
-  methods
-    .insert(titan_http::Method::DELETE, BoxCloneService::new(route.clone()));
-  methods.insert(titan_http::Method::PATCH, BoxCloneService::new(route));
+  methods.insert(Method::GET, BoxCloneService::new(route.clone()));
+  methods.insert(Method::POST, BoxCloneService::new(route.clone()));
+  methods.insert(Method::PUT, BoxCloneService::new(route.clone()));
+  methods.insert(Method::DELETE, BoxCloneService::new(route.clone()));
+  methods.insert(Method::PATCH, BoxCloneService::new(route));
   crate::endpoint::Endpoint { methods }
 }
 

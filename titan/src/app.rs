@@ -1,10 +1,13 @@
-use crate::{route::Route, utils::BoxCloneService};
+use crate::{
+  http::{Request, Respondable, Response, StatusCode},
+  route::Route,
+  utils::BoxCloneService,
+};
 use serde_json::Value;
 use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc};
-use titan_core::{Respondable, Service};
-use titan_http::{body::Body, Request, Response, StatusCode};
 use titan_router::Router;
 use titan_utils::BoxedSendFuture;
+use tower::Service;
 
 #[derive(Clone)]
 pub struct App {
@@ -66,9 +69,9 @@ impl App {
   }
   pub fn fallback<H>(self, handler: H) -> Self
   where
-    H: titan_core::Handler<()> + Sync + Clone,
+    H: crate::handler::Handler<()> + Sync + Clone,
     H::Future: std::future::Future<Output = H::Output> + Send,
-    H::Output: titan_core::Respondable,
+    H::Output: crate::http::Respondable,
   {
     tap_inner!(self, mut this => {
         this.fallback = BoxCloneService::new(Route::new(handler));
@@ -94,8 +97,8 @@ impl App {
 }
 
 impl Service<Request> for App {
-  type Response = Response<Body>;
-  type Error = Response<Body>;
+  type Response = Response;
+  type Error = Response;
   type Future = BoxedSendFuture<Result<Self::Response, Self::Error>>;
 
   fn poll_ready(
@@ -113,7 +116,7 @@ impl Service<Request> for App {
           HashMap::from_iter(endpoint.params.iter().map(|(key, value)| {
             (key.to_string(), Value::from(value.to_string()))
           }));
-        let mut extensions = titan_http::Extensions::new();
+        let mut extensions = crate::http::Extensions::new();
         extensions.insert(params);
 
         *req.extensions_mut() = extensions;

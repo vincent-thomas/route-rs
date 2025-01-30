@@ -1,6 +1,4 @@
-use titan_http::{body::Body, Request, Response};
-
-use crate::{FromRequest, Respondable};
+use crate::http::{Body, FromRequest, Request, Respondable, Response};
 
 #[derive(Debug)]
 pub struct Bytes(pub Vec<u8>);

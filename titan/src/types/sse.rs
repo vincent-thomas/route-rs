@@ -1,9 +1,8 @@
 use futures_util::{Stream, StreamExt};
-use titan_core::Respondable;
-use titan_http::{
-  body::Body,
+
+use crate::http::{
   header::{HeaderMap, HeaderName, HeaderValue},
-  Response,
+  Body, Respondable, Response,
 };
 
 #[derive(Clone)]
@@ -15,7 +14,7 @@ impl<T> Respondable for Sse<T>
 where
   T: Stream<Item = Event> + Send + 'static,
 {
-  fn respond(self) -> titan_http::Response<Body> {
+  fn respond(self) -> Response {
     let stream = self.0.map(|item| {
       let t: String = item.into();
       t.as_bytes().to_vec()

@@ -1,12 +1,12 @@
 use std::task::{Context, Poll};
 
 use futures_util::future::BoxFuture;
-use titan_core::{Service, ServiceExt};
 
 // Required for titan-derive
 pub use lazy_static::lazy_static;
 
 pub use futures_util::FutureExt;
+use tower::Service;
 
 pub trait CloneService<R>: Service<R> {
   fn clone_box(
@@ -63,7 +63,7 @@ impl<T, U, E> BoxCloneService<T, U, E> {
     S: Service<T, Response = U, Error = E> + Clone + Send + Sync + 'static,
     S::Future: Send + 'static,
   {
-    let inner = inner.map_future(|f| Box::pin(f) as _);
+    let inner = tower::ServiceExt::map_future(inner, |f| Box::pin(f) as _);
     BoxCloneService(Box::new(inner))
   }
 }

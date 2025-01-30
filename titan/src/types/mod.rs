@@ -1,5 +1,6 @@
-use titan_core::Respondable;
-use titan_http::{body::Body, header::HeaderName, Response};
+use crate::http::{
+  header::HeaderName, response::Builder, Body, Respondable, Response,
+};
 
 macro_rules! host_use {
   ($($name:ident),*) => {
@@ -32,7 +33,7 @@ pub enum BodyParsingError {
 }
 
 impl Respondable for BodyParsingError {
-  fn respond(self) -> titan_http::Response<titan_http::body::Body> {
+  fn respond(self) -> Response {
     let body = match self {
       Self::NoBody => "Body is empty".into(),
       Self::InvalidBody => "Invalid Body".into(),
@@ -40,7 +41,7 @@ impl Respondable for BodyParsingError {
       Self::ParsingError(err) => format!("Body Parsing Error: {}", err),
     };
 
-    Response::builder()
+    Builder::default()
       .status(400)
       .header(HeaderName::from_static("content-type"), "text/plain")
       .header(HeaderName::from_static("content-length"), body.len().to_string())

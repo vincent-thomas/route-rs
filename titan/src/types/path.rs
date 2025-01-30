@@ -1,7 +1,6 @@
 use std::convert::Infallible;
 
-use titan_core::FromRequestParts;
-use titan_http::Parts;
+use crate::http::{request::Parts, FromRequestParts};
 
 /// A struct representing the path component of a request's URI.
 ///

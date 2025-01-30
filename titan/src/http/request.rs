@@ -1,6 +1,11 @@
-use crate::Respondable;
+use crate::all_the_tuples;
+use crate::http::{Respondable, Response};
 use std::convert::Infallible;
-use titan_http::{Parts, Request, Response};
+
+pub use http::request::Builder;
+pub use http::request::Parts;
+
+pub type Request = http::Request<Box<[u8]>>;
 
 /// Types that can be extracted from a request.
 ///
@@ -141,7 +146,7 @@ macro_rules! impl_from_request {
 
 all_the_tuples!(impl_from_request);
 
-#[cfg(feature = "deploy-lambda")]
+#[cfg(feature = "lambda")]
 impl FromRequest for lambda_http::http::Request<lambda_http::Body> {
   type Error = ();
   fn from_request(req: Request) -> Result<Self, Self::Error> {

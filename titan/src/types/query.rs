@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 
 use serde::{de::DeserializeOwned, Deserialize};
-use titan_core::{FromRequestParts, Respondable};
-use titan_http::{body::Body, Parts, Response};
+
+use crate::http::{
+  request::Parts, response::Builder, Body, FromRequestParts, Respondable,
+  Response,
+};
 
 #[derive(Deserialize)]
 pub struct Query<T = HashMap<String, String>>(pub T);
@@ -22,7 +25,7 @@ impl Respondable for QueryParseError {
         Body::from(format!("Query Parsing Error: {err}"))
       }
     };
-    Response::builder().status(400).body(body).unwrap()
+    Builder::default().status(400).body(body).unwrap()
   }
 }
 

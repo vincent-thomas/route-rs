@@ -1,6 +1,8 @@
-use titan_core::Respondable;
-use titan_http::body::Body;
-use titan_http::{Parts, Response, StatusCode};
+use http::{response, StatusCode};
+
+use crate::http::{Body, Respondable, Response};
+
+use http::request::Parts;
 
 pub trait Guard: Sync + Send {
   fn check(&self, head: &Parts) -> GuardOutcome;
@@ -15,7 +17,7 @@ pub enum GuardReason {
   Custom((StatusCode, String)),
 }
 
-impl From<GuardReason> for Response<Body> {
+impl From<GuardReason> for Response {
   fn from(value: GuardReason) -> Self {
     let body = match value {
       GuardReason::Custom((_, ref text)) => Body::from(text.clone()),
@@ -43,7 +45,7 @@ impl From<GuardReason> for Response<Body> {
 }
 
 impl Respondable for GuardReason {
-  fn respond(self) -> Response<Body> {
+  fn respond(self) -> Response {
     let status = match self {
       GuardReason::Unauthorized => StatusCode::UNAUTHORIZED,
       GuardReason::Forbidden => StatusCode::FORBIDDEN,
@@ -54,7 +56,7 @@ impl Respondable for GuardReason {
     };
 
     let body = Body::from(());
-    Response::builder().status(status).body(body).unwrap()
+    response::Builder::default().status(status).body(body).unwrap()
   }
 }
 

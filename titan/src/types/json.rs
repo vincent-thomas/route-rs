@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
+use crate::http::{
+  header, mime, Body, FromRequest, Request, Respondable, Response,
+};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::Value;
-use titan_http::{body::Body, Request, Response};
-
-use crate::{FromRequest, Respondable};
 
 use super::BodyParsingError;
 
@@ -75,11 +75,11 @@ impl<S: Serialize> Respondable for Json<S> {
     let headers = res.headers_mut();
 
     headers.insert(
-      titan_http::header::CONTENT_TYPE,
-      titan_http::mime::APPLICATION_JSON.to_string().parse().unwrap(),
+      header::CONTENT_TYPE,
+      mime::APPLICATION_JSON.to_string().parse().unwrap(),
     );
 
-    headers.insert(titan_http::header::CONTENT_LENGTH, body_len.into());
+    headers.insert(header::CONTENT_LENGTH, body_len.into());
     res
   }
 }
