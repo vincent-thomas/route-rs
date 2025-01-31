@@ -98,7 +98,7 @@ mod tests {
   #[test]
   fn test_http_request_ext_from_string() {
     let request_str = "GET / HTTP/1.1\nHost: localhost".to_string();
-    let http_ext = HttpRequestExt::from(request_str);
+    let http_ext = HttpRequestExt::try_from(request_str).unwrap();
 
     assert_eq!(http_ext.0.method(), &Method::GET);
     assert_eq!(http_ext.0.uri(), &Uri::from_str("/").unwrap());
