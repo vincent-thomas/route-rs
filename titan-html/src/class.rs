@@ -4,8 +4,6 @@ use titan_html_core::StyleRule;
 pub enum TagClass {
   /// Just a class
   Normal(String),
-  /// Style that needs processing.
-  //Style(String),
   StyleRule(StyleRule),
 }
 

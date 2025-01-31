@@ -2,11 +2,14 @@ use std::io;
 use titan::App;
 
 use titan::{
-  html::tags::{head::Head, html::Html, *},
+  html::{
+    css, global_css,
+    tags::{head::Head, html::Html, *},
+    StyleRule,
+  },
   http::Respondable,
   web,
 };
-use titan_html::{css, global_css, StyleRule};
 
 const LINK_CSS: &[StyleRule] = css!(
   "
@@ -27,6 +30,7 @@ const TESTING: &[StyleRule] = css!(
 "
 );
 
+#[titan::ssg]
 async fn index() -> impl Respondable {
   Html::from((
     Head::default().global_style(global_css!("")).reset_css(),
@@ -52,7 +56,8 @@ async fn index() -> impl Respondable {
   .with_csp("examplenonce")
 }
 
-pub async fn testing() -> titan_html::tags::html::Html {
+#[titan::ssg]
+fn testing() -> Html {
   println!("ran");
   Html::from((Head::default(), Body::default()))
 }

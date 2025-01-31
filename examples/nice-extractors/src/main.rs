@@ -2,8 +2,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::io;
 use titan::{
+  html::tags::{head::Head, html::Html, Body},
+  http::Respondable,
   web::{self, authorization, Cookies, Json, Query},
-  App, Respondable,
+  App,
 };
 use tokio::net::TcpListener;
 
@@ -20,11 +22,8 @@ struct Queries {
 }
 
 #[titan::ssg]
-async fn testing() -> titan_html::tags::html::Html {
-  titan::html::tags::html::Html::from((
-    titan::html::tags::head::Head::default(),
-    titan::html::tags::Body::default(),
-  ))
+async fn testing() -> Html {
+  Html::from((Head::default(), Body::default()))
 }
 
 async fn index(
@@ -35,7 +34,7 @@ async fn index(
 ) -> impl Respondable {
   Json(json!({
       "body": body,
-      "nice_cookie": cookies.get("nice").unwrap(),
+      "nice_cookie": cookies,
       "auth": token,
       "queries": queries
   }))
@@ -46,5 +45,5 @@ async fn main() -> io::Result<()> {
   let app = App::default().at("/", web::post(index));
 
   let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
-  titan::serve(listener, app).await
+  titan::serve(listener, app).await // Or titan::serve(listener, web::post(index)).await for any path, web::any for any method
 }

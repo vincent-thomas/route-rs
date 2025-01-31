@@ -2,9 +2,9 @@ use std::time::Duration;
 
 use futures_util::{stream, StreamExt as _};
 use titan::{
-  http::Request,
+  http::{Request, Respondable},
   web::{self, Event, Sse},
-  App, Respondable,
+  App,
 };
 use tokio::{net::TcpListener, time::sleep};
 

@@ -20,12 +20,19 @@ pub fn ssg(_: TokenStream, input: TokenStream) -> TokenStream {
 
 fn impl_ssg(item: ItemFn) -> TokenStream2 {
   let struct_ident = item.sig.ident.clone();
+  let is_async = item.sig.asyncness;
 
   let ident_cache_str =
     format!("{}_CACHE", item.sig.ident.to_string().to_uppercase());
   let ident_cache = syn::Ident::new(&ident_cache_str, item.sig.ident.span());
 
   let nice_fn = item.block;
+
+  let response = if is_async.is_some() {
+    quote::quote! { titan::FutureExt::map(#is_async #nice_fn, |x| x.respond()).await }
+  } else {
+    quote::quote! { #nice_fn.respond() }
+  };
 
   quote::quote! {
     titan::lazy_static! {
@@ -36,7 +43,7 @@ fn impl_ssg(item: ItemFn) -> TokenStream2 {
     #[derive(Clone)]
     pub struct #struct_ident;
 
-    impl titan::Handler<()> for #struct_ident {
+    impl titan::handler::Handler<()> for #struct_ident {
       type Output = titan::http::Response;
       type Future =
         std::pin::Pin<Box<dyn std::future::Future<Output = Self::Output> + Send>>;
@@ -48,22 +55,22 @@ fn impl_ssg(item: ItemFn) -> TokenStream2 {
 
         if let Some(cache) = _lock.as_ref() {
           let body =
-            titan::http::body::Body::Full(cache.clone().into_boxed_slice());
+            titan::http::Body::Full(cache.clone().into_boxed_slice());
           return Box::pin(async move {
-            titan::http::ResponseBuilder::new().status(200).body(body).unwrap()
+            titan::http::response::Builder::new().status(200).body(body).unwrap()
           });
         };
 
         Box::pin(async move {
-          let response = titan::FutureExt::map(async #nice_fn, |x| x.respond()).await;
+          let response = #response;
 
 
           match response.body() {
-            titan::http::body::Body::Full(ref body) => {
+            titan::http::Body::Full(ref body) => {
               let mut refs = #ident_cache.write().unwrap();
               *refs = Some(body.clone().to_vec());
             }
-            titan::http::body::Body::Stream(_) => {
+            titan::http::Body::Stream(_) => {
               panic!(
                 "Body::Stream is not available in a cached request response :("
               )

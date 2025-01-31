@@ -990,6 +990,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "nice-extractors"
+version = "0.4.2"
+dependencies = [
+ "serde",
+ "serde_json",
+ "titan",
+ "tokio",
+]
+
+[[package]]
 name = "num-traits"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1425,10 +1435,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "sse"
+version = "0.4.2"
+dependencies = [
+ "futures-util",
+ "titan",
+ "tokio",
+]
+
+[[package]]
 name = "stable_deref_trait"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
+
+[[package]]
+name = "static-html"
+version = "0.4.2"
+dependencies = [
+ "titan",
+ "tokio",
+]
 
 [[package]]
 name = "syn"
@@ -1504,6 +1531,7 @@ name = "titan"
 version = "0.4.2"
 dependencies = [
  "bytes",
+ "criterion",
  "futures-core",
  "futures-util",
  "http",
@@ -1517,8 +1545,6 @@ dependencies = [
  "serde_urlencoded",
  "titan-derive",
  "titan-html",
- "titan-router",
- "titan-utils",
  "tokio",
  "tower 0.5.2",
 ]
@@ -1543,7 +1569,6 @@ dependencies = [
  "rand",
  "titan-html-core",
  "titan-html-derive",
- "titan-utils",
  "url",
 ]
 
@@ -1566,32 +1591,6 @@ dependencies = [
  "quote",
  "syn 2.0.95",
  "titan-html-core",
- "titan-utils",
-]
-
-[[package]]
-name = "titan-router"
-version = "0.4.2"
-dependencies = [
- "criterion",
- "titan-router-derive",
-]
-
-[[package]]
-name = "titan-router-derive"
-version = "0.4.2"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.95",
-]
-
-[[package]]
-name = "titan-utils"
-version = "0.4.2"
-dependencies = [
- "cssparser",
- "lightningcss",
 ]
 
 [[package]]

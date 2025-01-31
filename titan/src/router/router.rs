@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::segments::{FindSegmentResult, Segments};
+use super::segments::{FindSegmentResult, Segments};
 
 #[derive(Clone)]
 pub struct Router<V>

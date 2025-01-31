@@ -18,7 +18,7 @@ use super::BodyParsingError;
 /// # Example
 ///
 /// ```
-/// use titan::{web, Respondable};
+/// use titan::{web, http::Respondable};
 /// use serde::{Deserialize, Serialize};
 /// use serde_json::Value;
 ///

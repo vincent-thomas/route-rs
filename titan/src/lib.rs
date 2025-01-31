@@ -1,6 +1,11 @@
 mod build;
 pub mod html;
+mod router;
+use std::future::Future;
+use std::pin::Pin;
+
 pub use build::build_static;
+pub use router::Router;
 
 mod utils;
 
@@ -34,3 +39,7 @@ mod macros;
 pub use titan_derive::ssg;
 pub use utils::lazy_static;
 pub use utils::FutureExt;
+
+pub use tower::Service;
+
+pub(crate) type BoxedSendFuture<O> = Pin<Box<dyn Future<Output = O> + Send>>;

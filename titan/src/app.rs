@@ -1,12 +1,13 @@
 use crate::{
+  always_ready,
   http::{Request, Respondable, Response, StatusCode},
   route::Route,
+  router::Router,
   utils::BoxCloneService,
+  BoxedSendFuture,
 };
 use serde_json::Value;
 use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc};
-use titan_router::Router;
-use titan_utils::BoxedSendFuture;
 use tower::Service;
 
 #[derive(Clone)]
@@ -101,12 +102,7 @@ impl Service<Request> for App {
   type Error = Response;
   type Future = BoxedSendFuture<Result<Self::Response, Self::Error>>;
 
-  fn poll_ready(
-    &mut self,
-    _cx: &mut std::task::Context<'_>,
-  ) -> std::task::Poll<Result<(), Self::Error>> {
-    std::task::Poll::Ready(Ok(()))
-  }
+  always_ready!();
 
   fn call(&mut self, mut req: Request) -> Self::Future {
     let uri = req.uri().clone();

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::segment::{CompareSegment, CompareSegmentOut, Segment};
+use super::segment::{CompareSegment, CompareSegmentOut, Segment};
 
 #[derive(Default, Hash, Clone, Debug, Eq, PartialEq)]
 pub struct Segments(pub(crate) Vec<Segment>);

@@ -1,7 +1,9 @@
 use std::task::Poll;
 
-use crate::http::{header, Body, Request, Respondable, Response, StatusCode};
-use titan_utils::BoxedSendFuture;
+use crate::{
+  http::{header, Body, Request, Respondable, Response, StatusCode},
+  BoxedSendFuture,
+};
 use tower::Service;
 
 /// A struct representing an HTTP redirect.
@@ -16,17 +18,14 @@ use tower::Service;
 /// ```no_run
 /// use titan::{web, App, web::Redirect};
 ///
-/// #[tokio::main]
-/// async fn main() {
-///   // Create a permanent redirect
-///   let redirect = Redirect::permanent("https://example.com");
+/// // Create a permanent redirect
+/// let redirect = Redirect::permanent("https://example.com");
 ///
-///   // Create a temporary redirect
-///   let _ = Redirect::temporary("https://example.com");
+/// // Create a temporary redirect
+/// let _ = Redirect::temporary("https://example.com");
 ///
-///   let app = App::default().at("to-google", redirect);
-///   // ...
-/// }
+/// let app = App::default().at("to-google", redirect);
+/// // ...
 /// ```
 #[derive(Clone)]
 pub struct Redirect {

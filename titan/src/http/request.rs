@@ -31,8 +31,7 @@ pub type Request = http::Request<Box<[u8]>>;
 /// # Example
 ///
 /// ```
-/// use titan_core::{FromRequest, Respondable};
-/// use titan_http::{Request, body::Body};
+/// use titan::http::{FromRequest, Respondable, Request, Body};
 ///
 /// // A custom extractor type that implements `FromRequest`.
 /// struct MyExtractor {
@@ -50,7 +49,7 @@ pub type Request = http::Request<Box<[u8]>>;
 ///     }
 /// }
 ///
-/// async fn handler(data: MyExtractor) -> impl titan_core::Respondable { /* ... */}
+/// async fn handler(data: MyExtractor) -> impl Respondable { /* ... */}
 ///
 /// // Now, `MyExtractor` can be used in a handler to extract data from the request.
 /// ```

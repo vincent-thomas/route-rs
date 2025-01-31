@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use titan_router::Router;
+use titan::Router;
 
 pub fn criterion_benchmark(c: &mut Criterion) {
   let mut router = Router::default();

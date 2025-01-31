@@ -28,8 +28,7 @@ pub type Response = http::Response<Body>;
 /// # Example
 ///
 /// ```
-/// use titan_http::{body::Body, Response};
-/// use titan_core::Respondable;
+/// use titan::http::{Body, Response,Respondable};
 ///
 /// // Define a type that represents a response body.
 /// pub struct MyResponse {
@@ -38,7 +37,7 @@ pub type Response = http::Response<Body>;
 ///
 /// // Implement `Respondable` for `MyResponse`.
 /// impl Respondable for MyResponse {
-///     fn respond(self) -> Response<Body> {
+///     fn respond(self) -> Response {
 ///         // Convert the struct into an HTTP response with the message in the body.
 ///         Response::new(Body::from(self.message))
 ///     }

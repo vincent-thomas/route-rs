@@ -34,3 +34,16 @@ factory_tuple! { A B C D E F I }
 factory_tuple! { A B C D E F I J }
 factory_tuple! { A B C D E F I J K }
 factory_tuple! { A B C D E F I J K L }
+
+#[cfg(test)]
+mod will_compile {
+  #[test]
+  fn no_params() {
+    async fn handler() -> &'static str {
+      ""
+    }
+
+    #[allow(unused_must_use)]
+    super::Handler::call(&mut handler, ());
+  }
+}

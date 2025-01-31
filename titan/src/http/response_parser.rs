@@ -19,3 +19,37 @@ impl HttpResponseExt {
     (res, body)
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use http::StatusCode;
+
+  use crate::http::{
+    response::Builder, response_parser::HttpResponseExt, Body,
+  };
+
+  #[test]
+  fn test_http_response_ext_parse_parts() {
+    let response = Builder::default()
+      .status(StatusCode::OK)
+      .header("Content-Type", "text/plain")
+      .body(Body::from("Hello, world!"))
+      .unwrap();
+
+    let http_ext = HttpResponseExt(response);
+    let (parsed_response, body) = http_ext.parse_parts();
+
+    assert!(parsed_response.contains("HTTP/1.1 200 OK"));
+    assert!(parsed_response.contains("content-type: text/plain"));
+
+    match body {
+      Body::Full(full) => {
+        let to_compare: Box<[u8]> =
+          String::from("Hello, world!").as_bytes().into();
+
+        assert!(full == to_compare)
+      }
+      Body::Stream(_) => unreachable!(),
+    }
+  }
+}

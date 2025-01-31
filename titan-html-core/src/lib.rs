@@ -1,4 +1,5 @@
 mod stylerule;
+pub mod validatecss;
 use std::hash::{DefaultHasher, Hasher};
 
 pub use stylerule::StyleRule;

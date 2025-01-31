@@ -37,9 +37,7 @@ use tower::Service;
 ///
 /// # Examples
 /// ```
-/// use titan_server::{serve};
-/// use titan_core::{Respondable,Service};
-/// use titan_http::Request;
+/// use titan::{http::{Respondable, Request},Service};
 /// use std::{future::Future, task::Poll, pin::Pin};
 /// use tokio::net::TcpListener;
 ///
@@ -51,12 +49,12 @@ use tower::Service;
 ///     type Error = ();
 ///     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
 ///
-///  fn poll_ready(
-///   &mut self,
-///   _cx: &mut std::task::Context<'_>,
-///  ) -> Poll<Result<(), Self::Error>> {
-///    Poll::Ready(Ok(()))
-/// }
+///     fn poll_ready(
+///       &mut self,
+///       _cx: &mut std::task::Context<'_>,
+///      ) -> Poll<Result<(), Self::Error>> {
+///        Poll::Ready(Ok(()))
+///     }
 ///
 ///     fn call(&mut self, req: Request) -> Self::Future {
 ///         // Process the request and return a future
@@ -64,14 +62,13 @@ use tower::Service;
 ///     }
 /// }
 ///
-/// #[tokio::main]
-/// async fn main() {
-///   let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
-///   let service = MyService;
-///   
-///   // Uncomment the last part in your app
-///   serve(listener, service); // .await.unwrap();
-/// }
+/// # async {
+/// let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
+/// let service = MyService;
+///
+/// // Uncomment the last part in your app
+/// titan::serve(listener, service).await.unwrap();
+/// # };
 ///
 /// ```
 ///
@@ -95,29 +92,6 @@ where
 pub struct Serve<S> {
   listener: TcpListener,
   service: S,
-}
-
-fn is_connection_error(e: &io::Error) -> bool {
-  matches!(
-    e.kind(),
-    io::ErrorKind::ConnectionRefused
-      | io::ErrorKind::ConnectionAborted
-      | io::ErrorKind::ConnectionReset
-  )
-}
-
-impl<S> Serve<S> {
-  async fn tcp_accept(listener: &TcpListener) -> Option<TcpStream> {
-    match listener.accept().await {
-      Ok(conn) => Some(conn.0),
-      Err(e) => {
-        if !is_connection_error(&e) {
-          eprintln!("Accept error: {e}");
-        }
-        None
-      }
-    }
-  }
 }
 
 impl<S> IntoFuture for Serve<S>
@@ -160,8 +134,7 @@ where
 
         let req =
           utils::fill_req_body(req_empty_body, body_length, buf_reader).await;
-        let nice_service = service.clone();
-        let mut nice_service = std::mem::replace(&mut service, nice_service);
+        let mut nice_service = service.clone();
         tokio::spawn(async move {
           let response = match nice_service.call(req).await {
             Ok(result) => result.respond(),
@@ -188,6 +161,20 @@ where
         });
       }
     }))
+  }
+}
+
+impl<S> Serve<S> {
+  async fn tcp_accept(listener: &TcpListener) -> Option<TcpStream> {
+    match listener.accept().await {
+      Ok(conn) => Some(conn.0),
+      Err(e) => {
+        if !utils::is_connection_error(&e) {
+          eprintln!("Accept error: {e}");
+        }
+        None
+      }
+    }
   }
 }
 
@@ -224,10 +211,20 @@ mod private {
 
 mod utils {
   use crate::http::Request;
+  use std::io;
   use tokio::{
     io::{AsyncBufReadExt as _, AsyncReadExt as _, BufReader},
     net::TcpStream,
   };
+
+  pub(crate) fn is_connection_error(e: &io::Error) -> bool {
+    matches!(
+      e.kind(),
+      io::ErrorKind::ConnectionRefused
+        | io::ErrorKind::ConnectionAborted
+        | io::ErrorKind::ConnectionReset
+    )
+  }
 
   pub(crate) async fn read_request(
     reader: &mut BufReader<&mut TcpStream>,

@@ -3,7 +3,7 @@ use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{parse_macro_input, Field, Fields, ItemStruct, LitStr};
-use titan_utils::validatecss::{
+use titan_html_core::validatecss::{
   validate_css, validate_globalcss, CSSValidationError,
 };
 

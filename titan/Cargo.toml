@@ -16,23 +16,19 @@ default = ["types"]
 lambda = ["dep:lambda_http"]
 types = ["dep:serde", "dep:serde_json", "dep:serde_urlencoded"]
 
-[dependencies.serde]
-version = "1"
-features = ["derive"]
-optional = true
+[[bench]]
+name = "router_bench"
+harness = false
 
-[dependencies.serde_json]
-version = "1"
-optional = true
-
-[dependencies.serde_urlencoded]
-version = "0.7"
-optional = true
+[dev-dependencies]
+criterion.workspace = true
 
 [dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+serde_urlencoded = { version = "0.7", optional = true }
+
 titan-html = { path = "../titan-html", version = "0.4.2" }
-titan-router = { path = "../titan-router", version = "0.4.2" }
-titan-utils = { path = "../titan-utils", version = "0.4.2" }
 titan-derive = { path = "../titan-derive", version = "0.4.2" }
 
 futures-util = "0.3.31"

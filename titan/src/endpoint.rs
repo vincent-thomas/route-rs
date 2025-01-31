@@ -2,10 +2,9 @@ use std::{collections::HashMap, future::Future, pin::Pin, task::Poll};
 
 use crate::handler::Handler;
 use crate::http::{Body, FromRequest, Method, Request, Respondable, Response};
-use crate::utils::*;
+use crate::{utils::*, BoxedSendFuture};
 use http::StatusCode;
 use pin_project_lite::pin_project;
-use titan_utils::BoxedSendFuture;
 use tower::Service;
 
 /// Represents a web path with a specific HTTP method.
