@@ -5,9 +5,10 @@ use http::{Error, HeaderMap, HeaderValue, Method, Uri};
 
 pub struct HttpRequestExt(pub Request);
 
-impl From<String> for HttpRequestExt {
-  fn from(value: String) -> Self {
-    HttpRequestExt(from_string(value).unwrap())
+impl TryFrom<String> for HttpRequestExt {
+  type Error = RequestParsingError;
+  fn try_from(value: String) -> Result<Self, Self::Error> {
+    Ok(HttpRequestExt(from_string(value)?))
   }
 }
 
@@ -34,8 +35,6 @@ pub enum RequestParsingError {
 }
 
 fn from_string(str_request: String) -> Result<Request, RequestParsingError> {
-  dbg!(&str_request);
-
   let mut http_req: Vec<String> =
     str_request.split('\n').map(|v| v.to_string()).collect();
 

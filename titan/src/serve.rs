@@ -1,5 +1,3 @@
-use std::future::{poll_fn, IntoFuture};
-
 use crate::http::{
   header::{HeaderValue, CONTENT_LENGTH},
   request_parser::HttpRequestExt,
@@ -7,6 +5,7 @@ use crate::http::{
   Body, Request, Respondable,
 };
 use futures_util::StreamExt as _;
+use std::future::{poll_fn, IntoFuture};
 
 use tokio::{
   io::{self, AsyncWriteExt, BufReader},
@@ -37,7 +36,7 @@ use tower::Service;
 ///
 /// # Examples
 /// ```
-/// use titan::{http::{Respondable, Request},Service};
+/// use titan::{serve, http::{Respondable, Request},Service};
 /// use std::{future::Future, task::Poll, pin::Pin};
 /// use tokio::net::TcpListener;
 ///
@@ -94,6 +93,20 @@ pub struct Serve<S> {
   service: S,
 }
 
+impl<S> Serve<S> {
+  async fn tcp_accept(listener: &TcpListener) -> Option<TcpStream> {
+    match listener.accept().await {
+      Ok(conn) => Some(conn.0),
+      Err(e) => {
+        if !utils::is_connection_error(&e) {
+          eprintln!("Accept error: {e}");
+        }
+        None
+      }
+    }
+  }
+}
+
 impl<S> IntoFuture for Serve<S>
 where
   S: Service<Request> + 'static + Send + Clone,
@@ -106,37 +119,40 @@ where
 
   fn into_future(self) -> Self::IntoFuture {
     private::ServeFuture(Box::pin(async move {
-      let Self { mut service, listener } = self;
+      let Self { service, listener } = self;
       loop {
         let mut tcp_stream = match Self::tcp_accept(&listener).await {
           Some(conn) => conn,
           None => continue,
         };
-
-        if poll_fn(|cx| service.poll_ready(cx)).await.is_err() {
-          eprintln!("Skipping running because poll_ready failed");
-          continue;
-        }
-
-        let mut buf_reader = BufReader::new(&mut tcp_stream);
-        let http_headers =
-          utils::read_request(&mut buf_reader).await.join("\n");
-
-        let req_empty_body = HttpRequestExt::from(http_headers).0;
-        let body_length = req_empty_body
-          .headers()
-          .get(CONTENT_LENGTH)
-          .unwrap_or(&HeaderValue::from(0))
-          .to_str()
-          .unwrap()
-          .parse()
-          .unwrap();
-
-        let req =
-          utils::fill_req_body(req_empty_body, body_length, buf_reader).await;
-        let mut nice_service = service.clone();
+        let mut service = service.clone();
         tokio::spawn(async move {
-          let response = match nice_service.call(req).await {
+          let mut buf_reader = BufReader::new(&mut tcp_stream);
+          let http_headers =
+            utils::read_request(&mut buf_reader).await.join("\n");
+
+          let req_empty_body = match HttpRequestExt::try_from(http_headers) {
+            Ok(value) => value.0,
+            Err(_) => return,
+          };
+          let body_length = req_empty_body
+            .headers()
+            .get(CONTENT_LENGTH)
+            .unwrap_or(&HeaderValue::from(0))
+            .to_str()
+            .unwrap()
+            .parse()
+            .unwrap();
+
+          let req =
+            utils::fill_req_body(req_empty_body, body_length, buf_reader).await;
+
+          if poll_fn(|cx| service.poll_ready(cx)).await.is_err() {
+            eprintln!("Skipping running because poll_ready failed");
+            return;
+          }
+
+          let response = match service.call(req).await {
             Ok(result) => result.respond(),
             Err(result) => result.respond(),
           };
@@ -161,20 +177,6 @@ where
         });
       }
     }))
-  }
-}
-
-impl<S> Serve<S> {
-  async fn tcp_accept(listener: &TcpListener) -> Option<TcpStream> {
-    match listener.accept().await {
-      Ok(conn) => Some(conn.0),
-      Err(e) => {
-        if !utils::is_connection_error(&e) {
-          eprintln!("Accept error: {e}");
-        }
-        None
-      }
-    }
   }
 }
 
